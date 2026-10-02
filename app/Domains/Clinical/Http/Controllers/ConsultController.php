@@ -13,6 +13,7 @@ use App\Domains\Clinical\Models\Icd10Code;
 use App\Domains\Clinical\Models\TriageRecord;
 use App\Domains\Identity\Enums\Permission;
 use App\Domains\Identity\Models\Staff;
+use App\Domains\Lab\Models\LabTest;
 use App\Domains\Prescribing\Actions\CheckPrescriptionSafety;
 use App\Domains\Prescribing\Models\Medicine;
 use App\Domains\Prescribing\Models\Prescription;
@@ -71,6 +72,7 @@ class ConsultController extends Controller
                 'dispensable' => $p->isDispensable(), 'changeReason' => $p->change_reason,
                 'items' => $p->items->map(fn (PrescriptionItem $i) => $i->only(['id', 'medicine_id', 'description', 'schedule', 'dose', 'quantity', 'repeats', 'override_reason']))->values(),
             ])->values(),
+            'labTests' => LabTest::query()->orderBy('name')->get(['code', 'name', 'price_cents']),
             'safety' => $draft instanceof Prescription ? array_map(fn (SafetyIssue $i) => $i->toArray(), $safety->handle($draft)) : [],
         ]);
     }

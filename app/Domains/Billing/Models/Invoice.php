@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property PayerType $payer_type
  * @property InvoiceStatus $status
  * @property int $total_cents
+ * @property int $credited_cents
  * @property int $paid_cents
  * @property bool $needs_review
  * @property string|null $review_note
@@ -89,7 +90,8 @@ class Invoice extends Model
      */
     public function recalculate(): void
     {
-        $this->total_cents = (int) $this->lines()->sum('total_cents');
+        $this->credited_cents = (int) CreditNote::query()->where('invoice_id', $this->id)->sum('amount_cents');
+        $this->total_cents = max(0, (int) $this->lines()->sum('total_cents') - $this->credited_cents);
         $this->paid_cents = (int) $this->payments()->where('status', 'succeeded')->sum('amount_cents')
             - (int) $this->payments()->where('status', 'succeeded')->sum('refunded_cents');
 

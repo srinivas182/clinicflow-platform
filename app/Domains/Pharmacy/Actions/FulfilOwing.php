@@ -53,7 +53,9 @@ class FulfilOwing
             }
 
             $invoice = Invoice::query()->where('visit_id', $owing->visit_id)->firstOrFail();
-            $this->addLine->handle($invoice, LineKind::Medicine, $item->description, $stock->unit_price_cents, $owing->quantity, $item->nappi_code);
+            $prescriber = Prescription::query()->whereKey($owing->prescription_id)->value('prescriber_staff_id');
+            $this->addLine->handle($invoice, LineKind::Medicine, $item->description, $stock->unit_price_cents, $owing->quantity, $item->nappi_code)
+                ->forceFill(['attributed_staff_id' => $prescriber])->save();
             $prescription = Prescription::query()->findOrFail($owing->prescription_id);
             RegisterEntry::record($stock, 'dispensed', -$owing->quantity, [
                 'patient_id' => $owing->patient_id, 'prescription_id' => $owing->prescription_id,

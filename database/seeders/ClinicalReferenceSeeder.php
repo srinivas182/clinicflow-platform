@@ -66,5 +66,23 @@ class ClinicalReferenceSeeder extends Seeder
             [$x, $y] = $a < $b ? [$a, $b] : [$b, $a];
             DB::table('drug_interactions')->updateOrInsert(['ingredient_a' => $x, 'ingredient_b' => $y], ['severity' => $severity, 'message' => $message]);
         }
+
+        // [code, name, unit, ref low, ref high, critical low, critical high, price cents] — DEMO ranges, adults.
+        $tests = [
+            ['HBA1C', 'HbA1c', '%', 4.0, 6.4, null, 15.0, 24000],
+            ['GLU', 'Glucose (random)', 'mmol/L', 3.9, 7.8, 2.5, 25.0, 9000],
+            ['K', 'Potassium', 'mmol/L', 3.5, 5.1, 2.8, 6.0, 11000],
+            ['NA', 'Sodium', 'mmol/L', 135, 145, 120, 160, 11000],
+            ['CREAT', 'Creatinine', 'umol/L', 49, 104, null, 500, 12000],
+            ['HB', 'Haemoglobin', 'g/dL', 12.0, 17.0, 7.0, 20.0, 18000],
+            ['CHOL', 'Total cholesterol', 'mmol/L', null, 5.0, null, null, 15000],
+            ['CRP', 'C-reactive protein', 'mg/L', null, 5.0, null, null, 16000],
+        ];
+        foreach ($tests as [$code, $name, $unit, $low, $high, $critLow, $critHigh, $price]) {
+            DB::table('lab_tests')->updateOrInsert(['code' => $code], [
+                'name' => $name, 'unit' => $unit, 'ref_low' => $low, 'ref_high' => $high,
+                'critical_low' => $critLow, 'critical_high' => $critHigh, 'price_cents' => $price,
+            ]);
+        }
     }
 }

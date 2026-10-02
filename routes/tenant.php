@@ -13,7 +13,9 @@ use App\Domains\Clinical\Http\Controllers\DoctorQueueController;
 use App\Domains\Clinical\Http\Controllers\QuoteController;
 use App\Domains\Clinical\Http\Controllers\TriageController;
 use App\Domains\Documents\Http\Controllers\TemplateController;
+use App\Domains\Finance\Http\Controllers\FinanceController;
 use App\Domains\Identity\Http\Controllers\HandoffController;
+use App\Domains\Lab\Http\Controllers\LabController;
 use App\Domains\Patients\Http\Controllers\PatientController;
 use App\Domains\Pharmacy\Http\Controllers\PharmacyController;
 use App\Domains\Platform\Http\Controllers\SubscriptionBillingController;
@@ -123,6 +125,15 @@ Route::middleware([
         Route::post('/visits/{visit}/quotes', [QuoteController::class, 'store'])->name('quotes.store');
         Route::post('/quotes/{quote}/accept', [QuoteController::class, 'accept'])->name('quotes.accept');
         Route::post('/quotes/{quote}/decline', [QuoteController::class, 'decline'])->name('quotes.decline');
+
+        Route::post('/visits/{visit}/lab-orders', [LabController::class, 'order'])->name('lab.order');
+        Route::get('/lab', [LabController::class, 'worklist'])->name('lab.worklist');
+        Route::get('/results', [LabController::class, 'inbox'])->name('lab.inbox');
+        Route::post('/lab-orders/{order}/{step}', [LabController::class, 'step'])->whereIn('step', ['collect', 'results', 'verify', 'acknowledge', 'review', 'release'])->name('lab.step');
+
+        Route::get('/finance', [FinanceController::class, 'dashboard'])->name('finance.dashboard');
+        Route::get('/cash-up', [FinanceController::class, 'cashUp'])->name('finance.cashup');
+        Route::post('/cash-up', [FinanceController::class, 'closeCashUp'])->name('finance.cashup.close');
         Route::post('/doctor/call-next', [DoctorQueueController::class, 'callNext'])->name('doctor.call');
         Route::post('/doctor/accept/{visit}', [DoctorQueueController::class, 'accept'])->name('doctor.accept');
 
