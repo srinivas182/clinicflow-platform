@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Domains\Identity\Jobs\SeedRolesForProvider;
+use App\Domains\Platform\Models\Provider;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
@@ -55,7 +56,8 @@ class TenancyServiceProvider extends ServiceProvider
             Events\TenancyBootstrapped::class => [
                 function (Events\TenancyBootstrapped $event): void {
                     $registrar = app(PermissionRegistrar::class);
-                    $registrar->cacheKey = 'spatie.permission.cache.provider.'.$event->tenancy->tenant?->getTenantKey();
+                    $tenant = $event->tenancy->tenant;
+                    $registrar->cacheKey = 'spatie.permission.cache.provider.'.($tenant instanceof Provider ? $tenant->id : 'unknown');
                     $registrar->clearPermissionsCollection();
                 },
             ],
