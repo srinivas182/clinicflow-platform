@@ -24,18 +24,31 @@ class ProviderAdminController extends Controller
 {
     public function index(): Response
     {
-        return Inertia::render('Admin/Providers/Index', [
-            'providers' => Provider::query()->with('subscription.package')->latest()->get()
-                ->map(fn (Provider $p): array => [
-                    'id' => $p->id,
-                    'name' => $p->name,
-                    'type' => $p->type->label(),
-                    'status' => $p->status->value,
-                    'package' => $p->subscription?->package->name,
-                    'address' => $p->domains()->value('domain'),
-                    'pendingChecks' => $p->verificationChecks()->where('status', VerificationStatus::Pending->value)->count(),
-                ])->values(),
-        ]);
+        $rows = [];
+
+        foreach (Provider::query()->with('subscription.package')->latest()->get() as $provider) {
+            if ($provider instanceof Provider) {
+                $rows[] = $this->row($provider);
+            }
+        }
+
+        return Inertia::render('Admin/Providers/Index', ['providers' => $rows]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function row(Provider $p): array
+    {
+        return [
+            'id' => $p->id,
+            'name' => $p->name,
+            'type' => $p->type->label(),
+            'status' => $p->status->value,
+            'package' => $p->subscription?->package->name,
+            'address' => $p->domains()->value('domain'),
+            'pendingChecks' => $p->verificationChecks()->where('status', VerificationStatus::Pending->value)->count(),
+        ];
     }
 
     public function show(string $provider): Response

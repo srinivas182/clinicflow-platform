@@ -20,7 +20,7 @@ class PricingController extends Controller
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return array<int, array<string, mixed>>
      */
     public static function packages(): array
     {
