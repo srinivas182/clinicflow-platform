@@ -15,6 +15,10 @@ class DatabaseSeeder extends Seeder
         $this->call(PackageSeeder::class);
 
         if (! app()->isProduction()) {
+            $this->call(ClinicalReferenceSeeder::class);
+        }
+
+        if (! app()->isProduction()) {
             User::query()->firstOrNew(['email' => 'admin@clinicflow.test'])
                 ->forceFill(['name' => 'Platform Admin', 'phone' => '0800000001', 'password' => 'password', 'is_platform_admin' => true])
                 ->save();

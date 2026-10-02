@@ -4,6 +4,18 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.8.0] — Sprint 5: consultations, prescribing and medical aid claims
+
+### Added
+- Consult screen for the doctor who called the patient: SOAP notes, ICD-10 diagnoses (one primary; codes validated against the reference list), triage summary and allergy banner. Saves use optimistic locking — a stale save is refused instead of overwriting another user's change.
+- Prescribing with safety checks: allergy (ingredient or class) and schedule repeat limits (S6 none; S3/S4 at most five) must be fixed; interactions and duplicates (within the script and with the patient's current medicines) need a written reason.
+- Signing with a one-time PIN sent to the prescriber's phone (advanced electronic signature): only the prescribing doctor can sign, safety is re-checked at signing, a SHA-256 signature hash is stored, the version is frozen and the branded prescription PDF is issued with its template version.
+- Script versions: any change after signing opens the next version with a reason; signing it supersedes the previous one; only the newest signed version is dispensable.
+- Completing a consult needs a primary diagnosis and no unsigned draft; the visit moves to Pharmacy when a script was signed, otherwise to Done.
+- Medical aid eligibility checks at the front desk and a claims worklist: claims are built from the invoice (tariff and NAPPI codes) and the consult's ICD-10 codes (primary first), submitted to the switch, and resubmitted after a rejection is fixed.
+- `DrugDatabase` and `ClaimsSwitch` contracts with DEMO implementations (small ICD-10 set, demo medicine catalogue and interaction rules, deterministic test switch) until the client licenses a drug database and chooses a switching house.
+- Permissions `consults.write` (doctors and locums only — cannot be granted to other roles) and `claims.manage` (billing clerk, manager, owner).
+
 ## [0.7.0] — Sprint 4C: automatic subscription payments (auto-debit)
 
 ### Added

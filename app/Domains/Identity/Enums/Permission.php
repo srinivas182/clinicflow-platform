@@ -43,10 +43,14 @@ final class Permission
     /** Connect and change the provider's own payment gateway accounts (owner). */
     public const PAYMENTS_CONFIGURE = 'payments.configure';
 
+    public const CONSULTS_WRITE = 'consults.write';
+
+    public const CLAIMS_MANAGE = 'claims.manage';
+
     /**
      * Only prescribers (doctor, locum doctor) may ever hold these.
      */
-    public const RESTRICTED_TO_PRESCRIBERS = [self::SCRIPTS_SIGN];
+    public const RESTRICTED_TO_PRESCRIBERS = [self::SCRIPTS_SIGN, self::CONSULTS_WRITE];
 
     /**
      * @return list<string>
@@ -58,7 +62,7 @@ final class Permission
             self::STAFF_VIEW, self::STAFF_MANAGE, self::AUDIT_VIEW, self::SETTINGS_MANAGE,
             self::APPOINTMENTS_VIEW, self::APPOINTMENTS_BOOK, self::ROSTERS_MANAGE,
             self::VISITS_MANAGE, self::BILLING_COLLECT, self::BILLING_REFUND, self::TRIAGE_RECORD,
-            self::PAYMENTS_CONFIGURE,
+            self::PAYMENTS_CONFIGURE, self::CONSULTS_WRITE, self::CLAIMS_MANAGE,
         ];
     }
 }

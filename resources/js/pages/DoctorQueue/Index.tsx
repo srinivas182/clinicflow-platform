@@ -1,4 +1,4 @@
-import { Head, router, usePoll } from '@inertiajs/react';
+import { Head, Link, router, usePoll } from '@inertiajs/react';
 import { ArrowRight, Siren } from 'lucide-react';
 import { Flash } from '@/components/Flash';
 import { Badge, Button, Card, Ticket, TriageDot, type TriageColour } from '@/components/ui';
@@ -62,6 +62,9 @@ export default function DoctorQueue({ doctor, current, mine, pool, redAlerts }: 
                     <div className="flex items-center gap-4">
                         <Ticket number={current.ticket} />
                         <span className="flex-1 text-lg font-medium">{current.patient}</span>
+                        <Link href={`/consults/${current.id}`}>
+                            <Button>Open consult</Button>
+                        </Link>
                         <Button variant="secondary" onClick={() => move('pharmacy')}>
                             Send to pharmacy
                         </Button>
