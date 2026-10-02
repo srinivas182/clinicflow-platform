@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Platform\Actions;
 
 use App\Domains\Billing\Models\SubscriptionInvoice;
+use App\Domains\Messaging\Support\MessagingUsage;
 use App\Domains\Platform\Enums\SubscriptionStatus;
 use App\Domains\Platform\Models\Subscription;
 use Illuminate\Support\Carbon;
@@ -38,6 +39,9 @@ class IssueSubscriptionInvoices
 
                 $annual = $subscription->billing_period === 'annual';
                 $amount = $annual ? $subscription->package->price_annual_cents : $subscription->package->price_monthly_cents;
+                // Messaging above the package allowance in the month before this period.
+                $usage = MessagingUsage::overage($subscription->tenant_id, $periodStart->copy()->subMonthNoOverflow()->format('Y-m'), $subscription->package);
+                $amount += $usage['overage_cents'];
                 $vat = (int) round($amount * (float) config('clinicflow.payments.vat_rate', 0.15));
                 $year = now()->format('Y');
                 $next = SubscriptionInvoice::query()->where('number', 'like', "CF-{$year}-%")->count() + 1;
@@ -49,6 +53,8 @@ class IssueSubscriptionInvoices
                     'period_start' => $periodStart,
                     'period_end' => $annual ? $periodStart->copy()->addYear() : $periodStart->copy()->addMonth(),
                     'amount_cents' => $amount,
+                    'messaging_units' => $usage['units'],
+                    'messaging_overage_cents' => $usage['overage_cents'],
                     'vat_cents' => $vat,
                     'total_cents' => $amount + $vat,
                     'status' => 'open',

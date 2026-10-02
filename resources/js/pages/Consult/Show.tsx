@@ -46,6 +46,7 @@ interface Props {
     consultation: { id: string; subjective: string | null; objective: string | null; assessment: string | null; plan: string | null; lockVersion: number; completed: boolean; diagnoses: Diagnosis[] };
     prescriptions: Script[];
     safety: Issue[];
+    labTests: { code: string; name: string; price_cents: number }[];
 }
 
 function useSearch<T>(url: string, q: string): T[] {
@@ -66,7 +67,8 @@ function useSearch<T>(url: string, q: string): T[] {
     return rows;
 }
 
-export default function ConsultShow({ visit, patient, triage, consultation, prescriptions, safety }: Props) {
+export default function ConsultShow({ visit, patient, triage, consultation, prescriptions, safety, labTests }: Props) {
+    const [tests, setTests] = useState<string[]>([]);
     const notes = useForm({
         subjective: consultation.subjective ?? '',
         objective: consultation.objective ?? '',
@@ -281,7 +283,22 @@ export default function ConsultShow({ visit, patient, triage, consultation, pres
                         </ul>
                     )}
                 </Card>
-            </div>
+                        </div>
+            {!locked && (
+                <Card title="Order lab tests" className="mt-4">
+                    <div className="flex flex-wrap gap-3 text-sm">
+                        {labTests.map((t) => (
+                            <label key={t.code} className="flex items-center gap-1.5">
+                                <input type="checkbox" className="accent-teal" checked={tests.includes(t.code)} onChange={(e) => setTests(e.target.checked ? [...tests, t.code] : tests.filter((c) => c !== t.code))} />
+                                {t.name}
+                            </label>
+                        ))}
+                    </div>
+                    <Button className="mt-3" size="sm" variant="secondary" disabled={tests.length === 0} onClick={() => router.post(`/visits/${visit.id}/lab-orders`, { tests }, { preserveScroll: true, onSuccess: () => setTests([]) })}>
+                        Order {tests.length || ''} test{tests.length === 1 ? '' : 's'}
+                    </Button>
+                </Card>
+            )}
         </AppShell>
     );
 }

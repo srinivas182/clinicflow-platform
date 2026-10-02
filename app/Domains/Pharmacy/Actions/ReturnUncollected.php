@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Pharmacy\Actions;
 
+use App\Domains\Billing\Actions\IssueCreditNote;
 use App\Domains\Billing\Models\Invoice;
 use App\Domains\Pharmacy\Models\RegisterEntry;
 use App\Domains\Pharmacy\Models\StockBatch;
@@ -44,7 +45,16 @@ class ReturnUncollected
                     }
                     DB::table('dispensings')->where('visit_id', $visit->id)->whereNull('returned_at')->update(['returned_at' => now()]);
 
-                    Invoice::query()->where('visit_id', $visit->id)->update(['needs_review' => true, 'review_note' => 'Medicine not collected — returned to stock; credit the medicine lines.']);
+                    $invoice = Invoice::query()->where('visit_id', $visit->id)->first();
+                    $value = 0;
+                    foreach ($rows as $row) {
+                        $price = (int) StockItem::query()->whereKey(StockBatch::query()->whereKey($row->stock_batch_id)->value('stock_item_id'))->value('unit_price_cents');
+                        $value += $price * (int) $row->quantity;
+                    }
+                    if ($invoice instanceof Invoice && $value > 0) {
+                        app(IssueCreditNote::class)->handle($invoice, min($value, (int) $invoice->lines()->sum('total_cents') - $invoice->credited_cents), 'Medicine not collected — returned to stock');
+                        $invoice->refresh()->forceFill(['needs_review' => true, 'review_note' => $invoice->review_note ?? 'Medicine not collected — returned to stock; credit note issued.'])->save();
+                    }
                     $this->transition->handle($visit, VisitStage::Done);
                     activity('pharmacy')->performedOn($visit)->log('Uncollected medicine returned to stock');
                 });

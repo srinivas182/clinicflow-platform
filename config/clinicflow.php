@@ -8,7 +8,7 @@ return [
      * Platform release version. Bumped on every release (see CHANGELOG.md)
      * and reported by GET /api/v1/health.
      */
-    'version' => env('CLINICFLOW_VERSION', '0.9.0'),
+    'version' => env('CLINICFLOW_VERSION', '0.10.0'),
 
     /*
      * Hosting region. All patient data must stay in South Africa (POPIA s72).
@@ -27,6 +27,11 @@ return [
          */
         'allow_fake' => (bool) env('PAYMENTS_ALLOW_FAKE', false),
         'vat_rate' => 0.15,
+    ],
+
+    'messaging' => [
+        // Price per message above the package allowance (email or 160-character SMS segment), cents excl. VAT.
+        'unit_price_cents' => (int) env('MESSAGING_UNIT_PRICE_CENTS', 35),
     ],
 
     'tenancy' => [

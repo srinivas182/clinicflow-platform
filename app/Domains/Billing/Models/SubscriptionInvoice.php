@@ -21,6 +21,8 @@ use Stancl\Tenancy\Database\Concerns\CentralConnection;
  * @property Carbon $period_start
  * @property Carbon $period_end
  * @property int $amount_cents
+ * @property int $messaging_units
+ * @property int $messaging_overage_cents
  * @property int $vat_cents
  * @property int $total_cents
  * @property string $status

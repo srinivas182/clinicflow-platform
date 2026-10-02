@@ -75,7 +75,8 @@ class DispensePrescription
                     }
 
                     if ($given > 0) {
-                        $this->addLine->handle($invoice, LineKind::Medicine, $item->description, $stock->unit_price_cents, $given, $item->nappi_code);
+                        $this->addLine->handle($invoice, LineKind::Medicine, $item->description, $stock->unit_price_cents, $given, $item->nappi_code)
+                            ->forceFill(['attributed_staff_id' => $prescription->prescriber_staff_id])->save();
                         RegisterEntry::record($stock, 'dispensed', -$given, [
                             'patient_id' => $prescription->patient_id, 'prescription_id' => $prescription->id,
                             'prescriber_staff_id' => $prescription->prescriber_staff_id, 'pharmacist_staff_id' => $pharmacist->id,

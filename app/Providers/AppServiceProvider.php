@@ -7,10 +7,13 @@ use App\Domains\Billing\Gateways\GatewayFactory;
 use App\Domains\Billing\Support\FakePaymentGateway;
 use App\Domains\Claims\Contracts\ClaimsSwitch;
 use App\Domains\Claims\Support\DemoClaimsSwitch;
+use App\Domains\Finance\Support\LedgerPoster;
 use App\Domains\Identity\Contracts\OtpSender;
 use App\Domains\Identity\Enums\Permission;
 use App\Domains\Identity\Models\Staff;
 use App\Domains\Identity\Support\LogOtpSender;
+use App\Domains\Messaging\Contracts\MessageSender;
+use App\Domains\Messaging\Support\LogMessageSender;
 use App\Domains\Prescribing\Contracts\DrugDatabase;
 use App\Domains\Prescribing\Support\DemoDrugDatabase;
 use App\Models\User;
@@ -27,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
         // Demo implementations until the client licenses a drug database and chooses a switch.
         $this->app->singleton(DrugDatabase::class, DemoDrugDatabase::class);
         $this->app->singleton(ClaimsSwitch::class, DemoClaimsSwitch::class);
+        $this->app->singleton(MessageSender::class, LogMessageSender::class);
         $this->app->singleton(OtpSender::class, LogOtpSender::class);
         // Provider gateway adapters (Paystack, PayFast, Peach, Yoco) bind per provider in production.
         $this->app->singleton(FakePaymentGateway::class);
@@ -35,6 +39,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        LedgerPoster::register();
+
         /*
          * Workspace permissions are answered by the provider-side Staff record
          * (provider database). Outside a workspace they are always denied.

@@ -4,6 +4,18 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.10.0] — Sprint 7: in-house lab, results inbox, finance and messaging
+
+### Added
+- In-house lab: doctors order tests from the consult (billed to the visit and attributed to the ordering doctor); sample collection with barcode; results auto-flagged against reference and critical limits; verification by a second person.
+- Results inbox: critical results first; the ordering doctor acknowledges critical values (with the action taken), reviews with a comment and releases to the patient. The patient gets an SMS that results are ready — never the values.
+- Credit notes: credit part of an invoice without editing paid lines; overpayments are flagged for refund. Uncollected medicine now issues a credit note automatically.
+- Double-entry ledger (append-only), posted automatically for invoice lines, payments, refunds and credit notes.
+- Cash-up per cashier: expected takings by method (less cash refunds), counted cash, reason for any difference; once per day; locks the day's payments.
+- Finance dashboard (owner, manager): takings today by method, revenue by doctor and source (consults and procedures to the seeing doctor, medicines to the prescriber, lab to the ordering doctor), unpaid claims by age, recent cash-ups, messages used.
+- Messaging: email and SMS share one monthly allowance per package (each email or 160-character SMS segment is one message); every message is logged; usage above the allowance is charged on the next subscription invoice.
+- Permissions `lab.process` (lab technician) and `finance.view` (owner, manager).
+
 ## [0.9.0] — Sprint 6: pharmacy, dispatch, discharge gate, remittances and quotes
 
 ### Added
