@@ -32,6 +32,9 @@ use Illuminate\Support\Carbon;
  * @property LeftReason|null $left_reason
  * @property string|null $left_note
  * @property string $check_in_channel
+ * @property Carbon|null $called_at
+ * @property int|null $room_id
+ * @property Carbon|null $alert_accepted_at
  * @property Carbon $stage_changed_at
  * @property Carbon $created_at
  * @property-read Patient $patient
@@ -54,6 +57,8 @@ class Visit extends Model
             'payer_type' => PayerType::class,
             'left_reason' => LeftReason::class,
             'stage_changed_at' => 'datetime',
+            'called_at' => 'datetime',
+            'alert_accepted_at' => 'datetime',
         ];
     }
 

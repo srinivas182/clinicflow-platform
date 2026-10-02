@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use App\Domains\Billing\Http\Controllers\BillingSettingsController;
 use App\Domains\Billing\Http\Controllers\InvoiceController;
+use App\Domains\Clinical\Http\Controllers\DoctorQueueController;
+use App\Domains\Clinical\Http\Controllers\TriageController;
+use App\Domains\Documents\Http\Controllers\TemplateController;
 use App\Domains\Identity\Http\Controllers\HandoffController;
 use App\Domains\Patients\Http\Controllers\PatientController;
 use App\Domains\Scheduling\Http\Controllers\AppointmentController;
@@ -57,5 +60,22 @@ Route::middleware([
 
         Route::get('/settings/billing', [BillingSettingsController::class, 'edit'])->name('settings.billing');
         Route::put('/settings/billing', [BillingSettingsController::class, 'update'])->name('settings.billing.update');
+
+        Route::get('/triage', [TriageController::class, 'index'])->name('triage.index');
+        Route::post('/triage/suggest', [TriageController::class, 'suggest'])->name('triage.suggest');
+        Route::get('/triage/{visit}', [TriageController::class, 'show'])->name('triage.show');
+        Route::post('/triage/{visit}', [TriageController::class, 'store'])->name('triage.store');
+        Route::post('/patients/{patient}/allergies', [TriageController::class, 'addAllergy'])->name('allergies.store');
+        Route::post('/allergies/{allergy}/remove', [TriageController::class, 'removeAllergy'])->name('allergies.remove');
+
+        Route::get('/doctor', [DoctorQueueController::class, 'index'])->name('doctor.queue');
+        Route::post('/doctor/call-next', [DoctorQueueController::class, 'callNext'])->name('doctor.call');
+        Route::post('/doctor/accept/{visit}', [DoctorQueueController::class, 'accept'])->name('doctor.accept');
+
+        Route::get('/settings/templates', [TemplateController::class, 'index'])->name('templates.index');
+        Route::put('/settings/templates/{type}', [TemplateController::class, 'update'])->name('templates.update');
+        Route::get('/settings/templates/{type}/preview', [TemplateController::class, 'preview'])->name('templates.preview');
+        Route::put('/settings/branding', [TemplateController::class, 'branding'])->name('branding.update');
+        Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
     });
 });

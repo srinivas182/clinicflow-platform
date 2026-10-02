@@ -38,6 +38,8 @@ final class Permission
 
     public const BILLING_REFUND = 'billing.refund';
 
+    public const TRIAGE_RECORD = 'triage.record';
+
     /**
      * Only prescribers (doctor, locum doctor) may ever hold these.
      */
@@ -52,7 +54,7 @@ final class Permission
             self::PATIENTS_VIEW, self::PATIENTS_REGISTER, self::PATIENTS_EDIT, self::SCRIPTS_SIGN,
             self::STAFF_VIEW, self::STAFF_MANAGE, self::AUDIT_VIEW, self::SETTINGS_MANAGE,
             self::APPOINTMENTS_VIEW, self::APPOINTMENTS_BOOK, self::ROSTERS_MANAGE,
-            self::VISITS_MANAGE, self::BILLING_COLLECT, self::BILLING_REFUND,
+            self::VISITS_MANAGE, self::BILLING_COLLECT, self::BILLING_REFUND, self::TRIAGE_RECORD,
         ];
     }
 }

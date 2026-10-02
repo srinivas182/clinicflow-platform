@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Domains\Documents\Jobs\SeedDefaultTemplates;
 use App\Domains\Identity\Jobs\SeedRolesForProvider;
 use App\Domains\Platform\Models\Provider;
 use Illuminate\Contracts\Http\Kernel;
@@ -38,6 +39,7 @@ class TenancyServiceProvider extends ServiceProvider
                     Jobs\CreateDatabase::class,
                     Jobs\MigrateDatabase::class,
                     SeedRolesForProvider::class,
+                    SeedDefaultTemplates::class,
                 ])->send(fn (Events\TenantCreated $event) => $event->tenant)
                     ->shouldBeQueued($queued),
             ],

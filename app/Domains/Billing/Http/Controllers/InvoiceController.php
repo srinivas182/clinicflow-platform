@@ -14,14 +14,19 @@ use App\Domains\Billing\Models\Invoice;
 use App\Domains\Billing\Models\InvoiceLine;
 use App\Domains\Billing\Models\Payment;
 use App\Domains\Billing\Support\BillingSettings;
+use App\Domains\Documents\Actions\RenderDocument;
+use App\Domains\Documents\Support\DocumentType;
+use App\Domains\Documents\Support\PracticeData;
 use App\Domains\Identity\Enums\Permission;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InvoiceController extends Controller
 {
@@ -103,6 +108,22 @@ class InvoiceController extends Controller
         $action->handle($payment, (int) round(((float) $data['amount']) * 100), $data['reason'], $this->user($request), $data['reference'] ?? null);
 
         return back()->with('success', 'Refund recorded.');
+    }
+
+    public function pdf(Request $request, Invoice $invoice, RenderDocument $render): StreamedResponse
+    {
+        $this->authorize(Permission::BILLING_COLLECT);
+        $invoice->load(['lines', 'patient']);
+        $money = fn (int $cents): string => 'R'.number_format($cents / 100, 2, '.', ' ');
+
+        $issued = $render->issue(DocumentType::Invoice, $invoice, [
+            'practice' => PracticeData::get(),
+            'patient' => ['name' => $invoice->patient->fullName(), 'medical_aid' => $invoice->patient->medical_aid_scheme ?? 'Cash'],
+            'invoice' => ['number' => $invoice->number, 'date' => $invoice->created_at?->format('j F Y'), 'total' => $money($invoice->total_cents), 'paid' => $money($invoice->paid_cents), 'balance' => $money($invoice->balanceCents())],
+            'lines' => $invoice->lines->map(fn (InvoiceLine $l) => ['code' => $l->code ?? '', 'description' => $l->description, 'quantity' => (string) $l->quantity, 'total' => $money($l->total_cents)])->all(),
+        ], $this->user($request));
+
+        return Storage::disk('local')->download($issued->file_path, "{$invoice->number}.pdf", ['Content-Type' => 'application/pdf']);
     }
 
     private function user(Request $request): User
