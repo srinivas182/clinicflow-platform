@@ -25,14 +25,14 @@ class ProviderAdminController extends Controller
     public function index(): Response
     {
         return Inertia::render('Admin/Providers/Index', [
-            'providers' => Provider::query()->with(['subscription.package', 'domains'])->latest()->get()
+            'providers' => Provider::query()->with('subscription.package')->latest()->get()
                 ->map(fn (Provider $p): array => [
                     'id' => $p->id,
                     'name' => $p->name,
                     'type' => $p->type->label(),
                     'status' => $p->status->value,
                     'package' => $p->subscription?->package->name,
-                    'address' => $p->domains->first()?->domain,
+                    'address' => $p->domains()->value('domain'),
                     'pendingChecks' => $p->verificationChecks()->where('status', VerificationStatus::Pending->value)->count(),
                 ])->values(),
         ]);

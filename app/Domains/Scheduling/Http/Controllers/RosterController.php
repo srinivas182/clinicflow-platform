@@ -62,10 +62,10 @@ class RosterController extends Controller
         ]);
 
         $action->handle(
-            Staff::query()->findOrFail($data['staff_id']),
+            Staff::query()->findOrFail((int) $data['staff_id']),
             CarbonImmutable::parse($data['starts_at']),
             CarbonImmutable::parse($data['ends_at']),
-            isset($data['room_id']) ? Room::query()->findOrFail($data['room_id']) : null,
+            isset($data['room_id']) ? Room::query()->findOrFail((int) $data['room_id']) : null,
             SessionType::from($data['session_type']),
             (int) $data['slot_minutes'],
         );

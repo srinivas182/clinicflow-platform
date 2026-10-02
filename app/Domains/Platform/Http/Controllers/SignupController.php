@@ -58,7 +58,7 @@ class SignupController extends Controller
             $data['name'],
             ProviderType::from($data['type']),
             $data['subdomain'],
-            Package::query()->findOrFail($data['package_id']),
+            Package::query()->findOrFail((int) $data['package_id']),
             $data['owner_name'],
             $data['owner_email'],
             $data['owner_phone'],

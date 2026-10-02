@@ -68,8 +68,8 @@ class AppointmentController extends Controller
         ]);
 
         $appointment = $action->handle(
-            Patient::query()->findOrFail($data['patient_id']),
-            Staff::query()->findOrFail($data['staff_id']),
+            Patient::query()->findOrFail((string) $data['patient_id']),
+            Staff::query()->findOrFail((int) $data['staff_id']),
             CarbonImmutable::parse($data['starts_at']),
             ConsultType::from($data['consult_type']),
             $data['reason'] ?? null,

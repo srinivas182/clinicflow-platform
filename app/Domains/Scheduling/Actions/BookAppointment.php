@@ -58,7 +58,7 @@ class BookAppointment
                 throw ValidationException::withMessages(['starts_at' => 'Choose one of the available slot times.']);
             }
 
-            $clash = fn (int|string $column, int|string $value) => Appointment::query()
+            $clash = fn (string $column, int|string $value) => Appointment::query()
                 ->where($column, $value)
                 ->whereIn('status', AppointmentStatus::occupying())
                 ->where('starts_at', '<', $endsAt)
