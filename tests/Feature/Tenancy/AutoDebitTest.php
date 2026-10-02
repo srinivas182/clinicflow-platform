@@ -97,7 +97,7 @@ it('saves the card only with the owner\'s consent and pays the first invoice', f
     $this->actingAs($this->receptionist)->post("http://sunrise.clinicflow.test/settings/subscription/invoices/{$this->invoice->number}/auto-pay", ['consent' => true])->assertForbidden();
     $this->actingAs($this->owner)->post("http://sunrise.clinicflow.test/settings/subscription/invoices/{$this->invoice->number}/auto-pay", [])->assertSessionHasErrors('consent');
     $this->actingAs($this->owner)->post("http://sunrise.clinicflow.test/settings/subscription/invoices/{$this->invoice->number}/auto-pay", ['consent' => true])
-        ->assertRedirect("http://localhost/billing/pay/{$this->invoice->checkout_token}");
+        ->assertRedirect(rtrim((string) config('app.url'), '/')."/billing/pay/{$this->invoice->checkout_token}");
     expect($this->invoice->fresh()?->save_card)->toBeTrue();
 
     Http::fake(['api.paystack.co/transaction/initialize' => Http::response(['status' => true, 'data' => ['authorization_url' => 'https://checkout.paystack.com/x']])]);
