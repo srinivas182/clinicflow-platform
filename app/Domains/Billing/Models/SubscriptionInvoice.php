@@ -25,6 +25,9 @@ use Stancl\Tenancy\Database\Concerns\CentralConnection;
  * @property int $total_cents
  * @property string $status
  * @property string $checkout_token
+ * @property bool $save_card
+ * @property int|null $save_card_consented_by
+ * @property string|null $save_card_consent_ip
  * @property string|null $gateway
  * @property string|null $gateway_reference
  * @property Carbon $due_at
@@ -43,7 +46,7 @@ class SubscriptionInvoice extends Model
      */
     protected function casts(): array
     {
-        return ['period_start' => 'date', 'period_end' => 'date', 'due_at' => 'datetime', 'paid_at' => 'datetime'];
+        return ['period_start' => 'date', 'period_end' => 'date', 'due_at' => 'datetime', 'paid_at' => 'datetime', 'save_card' => 'boolean'];
     }
 
     /**

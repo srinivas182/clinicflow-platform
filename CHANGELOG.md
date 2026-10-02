@@ -4,6 +4,18 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.7.0] — Sprint 4C: automatic subscription payments (auto-debit)
+
+### Added
+- Auto-debit for provider subscriptions with PayFast, Paystack and Peach Payments (Yoco has no recurring billing, so Yoco stays pay-by-link and the screen says so).
+- Owner-only consent: "Pay and turn on automatic payment" on Settings → Subscription saves the card used for that invoice; consent, user and IP are recorded. Paying without consent never saves a card.
+- Saved-card mandates in the Platform database hold only the gateway's encrypted token, card brand, last four digits and expiry — never card numbers. A new card replaces the old one.
+- Daily `subscriptions:collect` (06:00): Paystack (charge authorisation) and Peach (recurring registration, merchant-initiated) cards are charged on the due date; up to three attempts two days apart; owner emailed after every attempt, and told when retries stop.
+- PayFast runs the subscription itself (monthly or annual, no end date); each later charge arrives by ITN and settles the oldest open invoice of the same amount; repeated ITNs are ignored.
+- Switch off at any time: the card is removed at the gateway (Paystack deactivate, Peach registration delete, PayFast subscription cancel) and Clinic Flow never charges it again, even if the gateway does not confirm.
+- Super admin → Auto-debit: providers on auto-debit, gateway, card label, last charge and failures.
+- Peach settings gain optional "Recurring entity ID" and "Access token" for auto-debit.
+
 ## [0.6.0] — Sprint 4B: payment gateways (PayFast, Paystack, Peach Payments, Yoco)
 
 ### Added

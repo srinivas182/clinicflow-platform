@@ -2,6 +2,7 @@
 
 use App\Domains\Identity\Http\Controllers\LoginController;
 use App\Domains\Identity\Http\Controllers\WorkspaceController;
+use App\Domains\Platform\Http\Controllers\Admin\AutoDebitAdminController;
 use App\Domains\Platform\Http\Controllers\Admin\PackageAdminController;
 use App\Domains\Platform\Http\Controllers\Admin\PaymentAdminController;
 use App\Domains\Platform\Http\Controllers\Admin\ProviderAdminController;
@@ -52,6 +53,7 @@ foreach ($centralDomains as $index => $domain) {
             Route::post('/providers/{provider}/approve', [ProviderAdminController::class, 'approve'])->name('providers.approve');
             Route::post('/verification-checks/{check}', [ProviderAdminController::class, 'review'])->name('checks.review');
             Route::get('/packages', [PackageAdminController::class, 'index'])->name('packages.index');
+            Route::get('/auto-debits', [AutoDebitAdminController::class, 'index'])->name('autodebits.index');
             Route::put('/packages/{package}', [PackageAdminController::class, 'update'])->name('packages.update');
             Route::get('/payments', [PaymentAdminController::class, 'index'])->name('payments.index');
             Route::put('/payments/{gateway}', [PaymentAdminController::class, 'update'])->name('payments.update');

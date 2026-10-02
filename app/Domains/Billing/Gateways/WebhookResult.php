@@ -15,5 +15,6 @@ final readonly class WebhookResult
         public bool $paid,
         public ?int $amountCents = null,
         public ?string $gatewayReference = null,
+        public ?MandateDetails $mandate = null,
     ) {}
 }

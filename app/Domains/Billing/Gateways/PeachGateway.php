@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Billing\Gateways;
 
 use App\Domains\Billing\Contracts\PaymentGateway;
+use App\Domains\Billing\Contracts\RecurringPaymentGateway;
 use App\Domains\Billing\Enums\GatewayMode;
 use App\Domains\Billing\Support\GatewayResult;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ use Illuminate\Support\Str;
  * forged notification can never mark a payment paid. Refunds are done in the
  * Peach dashboard.
  */
-class PeachGateway implements PaymentGateway
+class PeachGateway implements PaymentGateway, RecurringPaymentGateway
 {
     /**
      * @param  array<string, string>  $credentials
@@ -66,6 +67,7 @@ class PeachGateway implements PaymentGateway
                 'nonce' => Str::uuid()->toString(),
                 'shopperResultUrl' => $request->returnUrl,
                 'notificationUrl' => $request->notifyUrl,
+                ...($request->saveCard ? ['createRegistration' => true] : []),
             ]);
 
         $url = $response->json('redirectUrl');
@@ -98,7 +100,59 @@ class PeachGateway implements PaymentGateway
             paid: preg_match('/^(000\.000\.|000\.100\.1|000\.[36])/', $code) === 1,
             amountCents: is_numeric($status->json('amount')) ? (int) round(((float) $status->json('amount')) * 100) : null,
             gatewayReference: $checkoutId,
+            mandate: is_string($status->json('registrationId')) ? new MandateDetails(
+                token: $status->json('registrationId'),
+                brand: is_string($status->json('paymentBrand')) ? $status->json('paymentBrand') : null,
+                last4: is_string($status->json('card.last4Digits')) ? $status->json('card.last4Digits') : null,
+                expiry: is_string($status->json('card.expiryMonth')) && is_string($status->json('card.expiryYear'))
+                    ? $status->json('card.expiryMonth').'/'.$status->json('card.expiryYear') : null,
+            ) : null,
         ) : null;
+    }
+
+    private function recurringHost(): string
+    {
+        return $this->mode === GatewayMode::Live ? 'https://eu-prod.oppwa.com' : 'https://eu-test.oppwa.com';
+    }
+
+    /**
+     * Merchant-initiated charge on a saved card (Peach recurring API).
+     */
+    public function chargeMandate(string $token, string $email, int $amountCents, string $reference): ChargeResult
+    {
+        $accessToken = (string) ($this->credentials['access_token'] ?? '');
+        $entity = (string) ($this->credentials['recurring_entity_id'] ?? '');
+        if ($accessToken === '' || $entity === '') {
+            return new ChargeResult(false, error: 'Peach auto-debit needs the recurring entity ID and access token.');
+        }
+
+        $response = Http::withToken($accessToken)->asForm()->post($this->recurringHost()."/v1/registrations/{$token}/payments", [
+            'entityId' => $entity,
+            'amount' => number_format($amountCents / 100, 2, '.', ''),
+            'currency' => 'ZAR',
+            'paymentType' => 'DB',
+            'merchantTransactionId' => $reference,
+            'standingInstruction.mode' => 'REPEATED',
+            'standingInstruction.type' => 'UNSCHEDULED',
+            'standingInstruction.source' => 'MIT',
+        ]);
+
+        $code = (string) $response->json('result.code');
+        if (preg_match('/^(000\.000\.|000\.100\.1|000\.[36])/', $code) === 1) {
+            return new ChargeResult(true, is_string($response->json('id')) ? $response->json('id') : $reference);
+        }
+
+        $message = $response->json('result.description');
+
+        return new ChargeResult(false, $reference, is_string($message) ? $message : 'The card was declined.');
+    }
+
+    public function revokeMandate(string $token, string $email): GatewayResult
+    {
+        $accessToken = (string) ($this->credentials['access_token'] ?? '');
+        $response = Http::withToken($accessToken)->delete($this->recurringHost()."/v1/registrations/{$token}?entityId=".urlencode((string) ($this->credentials['recurring_entity_id'] ?? '')));
+
+        return $response->successful() ? new GatewayResult(true) : new GatewayResult(false, error: 'Peach did not confirm the card was removed.');
     }
 
     public function refund(string $gatewayReference, int $amountCents): GatewayResult
