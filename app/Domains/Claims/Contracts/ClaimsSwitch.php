@@ -25,7 +25,7 @@ interface ClaimsSwitch
      * Remittance advice for accepted claims. Real switches deliver remittance
      * files; the outstanding list lets the demo switch answer deterministically.
      *
-     * @param  list<array{reference: string, total_cents: int, member_number: string}>  $outstanding
+     * @param  array<int, array{reference: string, total_cents: int, member_number: string}>  $outstanding
      * @return list<RemittanceLine>
      */
     public function fetchRemittances(array $outstanding): array;
