@@ -42,14 +42,14 @@ it('accepts a PayFast ITN only with a valid signature and PayFast validation', f
     $fields = ['m_payment_id' => 'tok_abc', 'pf_payment_id' => '1089250', 'payment_status' => 'COMPLETE', 'amount_gross' => '520.00', 'merchant_id' => '10000100'];
     $fields['signature'] = $gateway->signature($fields);
 
-    Http::fake(['sandbox.payfast.co.za/eng/query/validate' => Http::response('VALID')]);
+    // First validation call says VALID, the next says INVALID (a tampered or replayed ITN).
+    Http::fake(['sandbox.payfast.co.za/eng/query/validate' => Http::sequence()->push('VALID')->push('INVALID')]);
     $result = $gateway->handleWebhook(Request::create('/itn', 'POST', $fields));
     expect($result?->paid)->toBeTrue()->and($result?->amountCents)->toBe(52000)->and($result?->reference)->toBe('tok_abc');
 
     $tampered = [...$fields, 'amount_gross' => '1.00'];
     expect($gateway->handleWebhook(Request::create('/itn', 'POST', $tampered)))->toBeNull();
 
-    Http::fake(['sandbox.payfast.co.za/eng/query/validate' => Http::response('INVALID')]);
     expect($gateway->handleWebhook(Request::create('/itn', 'POST', $fields)))->toBeNull();
 });
 
