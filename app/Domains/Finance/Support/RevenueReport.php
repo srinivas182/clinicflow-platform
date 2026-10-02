@@ -39,7 +39,7 @@ final class RevenueReport
 
         usort($report, fn (array $a, array $b) => $b['total'] <=> $a['total']);
 
-        return array_values($report);
+        return $report;
     }
 
     /**
