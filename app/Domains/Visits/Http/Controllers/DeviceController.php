@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Visits\Http\Controllers;
 
 use App\Domains\Platform\Models\Provider;
+use App\Domains\Scheduling\Models\Room;
 use App\Domains\Visits\Actions\DeviceTokens;
 use App\Domains\Visits\Actions\KioskCheckIn;
 use App\Domains\Visits\Enums\VisitStage;
@@ -42,14 +43,14 @@ class DeviceController extends Controller
     {
         abort_unless($tokens->verify('display', $token), 404);
 
-        $today = Visit::query()->whereDate('visit_date', today())->get(['ticket', 'stage', 'stage_changed_at']);
+        $today = Visit::query()->whereDate('visit_date', today())->whereNull('called_at')->get(['ticket', 'stage', 'stage_changed_at', 'called_at']);
 
         return Inertia::render('Devices/Display', [
             'provider' => $this->providerName(),
-            'calling' => $today
-                ->filter(fn (Visit $v) => in_array($v->stage, [VisitStage::Triage, VisitStage::Doctor], true) && $v->stage_changed_at->gt(now()->subMinutes(10)))
-                ->sortByDesc('stage_changed_at')->take(3)
-                ->map(fn (Visit $v) => ['ticket' => $v->ticket, 'to' => $v->stage === VisitStage::Triage ? 'Triage' : 'Doctor'])->values(),
+            'calling' => Visit::query()->whereDate('visit_date', today())->where('stage', VisitStage::Doctor->value)
+                ->whereNotNull('called_at')->where('called_at', '>', now()->subMinutes(10))
+                ->orderByDesc('called_at')->limit(3)->get()
+                ->map(fn (Visit $v) => ['ticket' => $v->ticket, 'to' => $v->room_id !== null ? (Room::query()->whereKey($v->room_id)->value('name') ?? 'Doctor') : 'Doctor'])->values(),
             'waiting' => $today->filter(fn (Visit $v) => $v->stage->isWaiting())
                 ->map(fn (Visit $v) => ['ticket' => $v->ticket, 'stage' => $v->stage->label()])->values(),
         ]);

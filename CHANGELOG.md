@@ -4,6 +4,18 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.5.0] — Sprint 4: triage, routing, red alerts and document templates
+
+### Added
+- Triage capture: vitals (BP, pulse, temperature, SpO2, respiratory rate, glucose, weight, height), presenting complaint and nurse-assigned colour (red, orange, yellow, green) with a live server-side colour suggestion; the nurse always decides.
+- Allergy register per patient: duplicates merged, removal only with a reason, shown on every clinical screen.
+- Doctor queue routing: bookings first, then patients who asked for that doctor, then the shared pool ordered by colour and wait time; a doctor cannot call a second patient while one is with them.
+- Red triage alerts: `RedTriageAlert` broadcast to every on-duty doctor; first to accept owns the patient, others are refused.
+- Document template studio: invoice, prescription, sick note and referral templates with safe merge fields and lists, HTML sanitising, versioning, A4/A5 paper and live preview; the legal block (practice and HPCSA details, signature statement) is always added.
+- PDF rendering with dompdf; every issued document records the template version used. Branded invoice PDF download.
+- Default templates seeded for every new provider during provisioning.
+- Permission `triage.record`; the template studio uses `settings.manage`.
+
 ## [0.4.0] — Sprint 3: front desk, queue, invoicing and payments
 
 ### Added
