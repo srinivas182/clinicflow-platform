@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Billing\Gateways;
 
 use App\Domains\Billing\Contracts\PaymentGateway;
+use App\Domains\Billing\Contracts\RecurringPaymentGateway;
 use App\Domains\Billing\Enums\GatewayMode;
 use App\Domains\Billing\Support\GatewayResult;
 use Illuminate\Http\Request;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Http;
  * ITN (instant transaction notification) that we verify by signature and by
  * asking PayFast to validate it. Refunds are done in the PayFast dashboard.
  */
-class PayFastGateway implements PaymentGateway
+class PayFastGateway implements PaymentGateway, RecurringPaymentGateway
 {
     /**
      * @param  array<string, string>  $credentials
@@ -69,6 +70,16 @@ class PayFastGateway implements PaymentGateway
             'amount' => number_format($request->amountCents / 100, 2, '.', ''),
             'item_name' => mb_substr($request->description, 0, 100),
         ];
+        if ($request->saveCard) {
+            // PayFast subscription: PayFast charges the card each period and sends an ITN.
+            $fields += [
+                'subscription_type' => '1',
+                'billing_date' => now()->toDateString(),
+                'recurring_amount' => $fields['amount'],
+                'frequency' => $request->billingFrequency === 'annual' ? '6' : '3',
+                'cycles' => '0',
+            ];
+        }
         $fields = array_filter($fields, fn (string $v) => $v !== '');
         $fields['signature'] = $this->signature($fields);
 
@@ -101,7 +112,50 @@ class PayFastGateway implements PaymentGateway
             paid: ($posted['payment_status'] ?? '') === 'COMPLETE',
             amountCents: isset($posted['amount_gross']) ? (int) round(((float) $posted['amount_gross']) * 100) : null,
             gatewayReference: $posted['pf_payment_id'] ?? null,
+            mandate: isset($posted['token']) && $posted['token'] !== ''
+                ? new MandateDetails(token: $posted['token'], email: $posted['email_address'] ?? null, brand: 'Card')
+                : null,
         );
+    }
+
+    public function chargeMandate(string $token, string $email, int $amountCents, string $reference): ChargeResult
+    {
+        return new ChargeResult(false, error: 'PayFast charges subscriptions itself; payments arrive by ITN.');
+    }
+
+    /**
+     * Cancels the PayFast subscription through the PayFast API (sandbox with ?testing=true).
+     */
+    public function revokeMandate(string $token, string $email): GatewayResult
+    {
+        $headers = [
+            'merchant-id' => (string) ($this->credentials['merchant_id'] ?? ''),
+            'timestamp' => now()->format('Y-m-d\TH:i:sP'),
+            'version' => 'v1',
+        ];
+        $headers['signature'] = $this->apiSignature($headers);
+
+        $url = "https://api.payfast.co.za/subscriptions/{$token}/cancel".($this->mode === GatewayMode::Live ? '' : '?testing=true');
+        $response = Http::withHeaders($headers)->acceptJson()->put($url);
+
+        return $response->successful() ? new GatewayResult(true) : new GatewayResult(false, error: 'PayFast did not confirm the cancellation. Cancel the subscription in the PayFast dashboard.');
+    }
+
+    /**
+     * PayFast API signature: all header and body values plus the passphrase,
+     * sorted by name, URL-encoded, MD5.
+     *
+     * @param  array<string, string>  $values
+     */
+    public function apiSignature(array $values): string
+    {
+        $passphrase = (string) ($this->credentials['passphrase'] ?? '');
+        if ($passphrase !== '') {
+            $values['passphrase'] = $passphrase;
+        }
+        ksort($values);
+
+        return md5(http_build_query($values));
     }
 
     public function refund(string $gatewayReference, int $amountCents): GatewayResult

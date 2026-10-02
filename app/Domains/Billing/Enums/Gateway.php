@@ -46,6 +46,8 @@ enum Gateway: string
                 ['key' => 'merchant_id', 'label' => 'Merchant ID', 'secret' => false],
                 ['key' => 'client_id', 'label' => 'Client ID', 'secret' => false],
                 ['key' => 'client_secret', 'label' => 'Client secret', 'secret' => true],
+                ['key' => 'recurring_entity_id', 'label' => 'Recurring entity ID (auto-debit)', 'secret' => false],
+                ['key' => 'access_token', 'label' => 'Access token (auto-debit)', 'secret' => true],
             ],
             self::Yoco => [
                 ['key' => 'secret_key', 'label' => 'Secret key', 'secret' => true],
@@ -58,6 +60,20 @@ enum Gateway: string
      * Refunds through the gateway API. Others are refunded in the gateway's
      * own dashboard and recorded in Clinic Flow.
      */
+    public function supportsAutoDebit(): bool
+    {
+        return $this !== self::Yoco;
+    }
+
+    /**
+     * PayFast runs the subscription and charges the card itself; the others
+     * are charged by Clinic Flow's daily collection run.
+     */
+    public function chargesMandateItself(): bool
+    {
+        return $this === self::PayFast;
+    }
+
     public function supportsApiRefund(): bool
     {
         return in_array($this, [self::Paystack, self::Yoco], true);

@@ -15,5 +15,7 @@ final readonly class CheckoutRequest
         public string $notifyUrl,
         public string $email,
         public string $customerName = '',
+        public bool $saveCard = false,
+        public string $billingFrequency = 'monthly',
     ) {}
 }

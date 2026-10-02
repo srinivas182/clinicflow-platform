@@ -8,3 +8,4 @@ use Illuminate\Support\Facades\Schedule;
  */
 Schedule::command('subscriptions:enforce')->dailyAt('02:00')->onOneServer();
 Schedule::command('subscriptions:invoice')->dailyAt('01:00')->onOneServer();
+Schedule::command('subscriptions:collect')->dailyAt('06:00')->onOneServer();

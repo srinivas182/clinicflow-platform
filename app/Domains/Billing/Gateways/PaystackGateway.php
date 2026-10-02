@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Billing\Gateways;
 
 use App\Domains\Billing\Contracts\PaymentGateway;
+use App\Domains\Billing\Contracts\RecurringPaymentGateway;
 use App\Domains\Billing\Enums\GatewayMode;
 use App\Domains\Billing\Support\GatewayResult;
 use Illuminate\Http\Request;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Http;
  * Paystack: initialise a transaction, redirect to its authorisation URL, and
  * verify webhooks with the HMAC-SHA512 signature of the raw body.
  */
-class PaystackGateway implements PaymentGateway
+class PaystackGateway implements PaymentGateway, RecurringPaymentGateway
 {
     private const API = 'https://api.paystack.co';
 
@@ -41,7 +42,8 @@ class PaystackGateway implements PaymentGateway
             'currency' => 'ZAR',
             'reference' => $request->reference,
             'callback_url' => $request->returnUrl,
-            'metadata' => ['description' => $request->description],
+            'metadata' => ['description' => $request->description, 'save_card' => $request->saveCard],
+            ...($request->saveCard ? ['channels' => ['card']] : []),
         ]);
 
         $url = $response->json('data.authorization_url');
@@ -72,7 +74,53 @@ class PaystackGateway implements PaymentGateway
             paid: $request->input('data.status') === 'success',
             amountCents: is_numeric($request->input('data.amount')) ? (int) $request->input('data.amount') : null,
             gatewayReference: $reference,
+            mandate: $this->mandateFrom($request),
         ) : null;
+    }
+
+    private function mandateFrom(Request $request): ?MandateDetails
+    {
+        $code = $request->input('data.authorization.authorization_code');
+        if (! is_string($code) || $request->input('data.authorization.reusable') !== true) {
+            return null;
+        }
+
+        $month = (string) $request->input('data.authorization.exp_month');
+        $year = (string) $request->input('data.authorization.exp_year');
+
+        return new MandateDetails(
+            token: $code,
+            email: is_string($request->input('data.customer.email')) ? $request->input('data.customer.email') : null,
+            brand: is_string($request->input('data.authorization.card_type')) ? trim($request->input('data.authorization.card_type')) : null,
+            last4: is_string($request->input('data.authorization.last4')) ? $request->input('data.authorization.last4') : null,
+            expiry: $month !== '' && $year !== '' ? str_pad($month, 2, '0', STR_PAD_LEFT).'/'.$year : null,
+        );
+    }
+
+    public function chargeMandate(string $token, string $email, int $amountCents, string $reference): ChargeResult
+    {
+        $response = Http::withToken($this->secret())->acceptJson()->post(self::API.'/transaction/charge_authorization', [
+            'authorization_code' => $token,
+            'email' => $email,
+            'amount' => $amountCents,
+            'currency' => 'ZAR',
+            'reference' => $reference,
+        ]);
+
+        if ($response->successful() && $response->json('data.status') === 'success') {
+            return new ChargeResult(true, $reference);
+        }
+
+        $message = $response->json('data.gateway_response') ?? $response->json('message') ?? 'The card was declined.';
+
+        return new ChargeResult(false, $reference, is_string($message) ? $message : 'The card was declined.');
+    }
+
+    public function revokeMandate(string $token, string $email): GatewayResult
+    {
+        $response = Http::withToken($this->secret())->acceptJson()->post(self::API.'/customer/deactivate_authorization', ['authorization_code' => $token]);
+
+        return $response->successful() ? new GatewayResult(true) : new GatewayResult(false, error: 'Paystack did not confirm the card was removed.');
     }
 
     public function refund(string $gatewayReference, int $amountCents): GatewayResult
