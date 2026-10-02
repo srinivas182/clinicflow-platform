@@ -35,7 +35,7 @@ class CheckPrescriptionSafety
         $ingredients = [];
         foreach ($items as $item) {
             $medicine = $this->drugs->find($item->medicine_id);
-            $ingredients[$item->id] = $medicine?->ingredients ?? [];
+            $ingredients[$item->id] = $medicine->ingredients ?? [];
         }
 
         $current = $this->currentMedicines($prescription);
@@ -123,7 +123,7 @@ class CheckPrescriptionSafety
 
         foreach ($scripts as $script) {
             foreach ($script->items as $item) {
-                $current[] = ['description' => $item->description, 'ingredients' => $this->drugs->find($item->medicine_id)?->ingredients ?? []];
+                $current[] = ['description' => $item->description, 'ingredients' => $this->drugs->find($item->medicine_id)->ingredients ?? []];
             }
         }
 

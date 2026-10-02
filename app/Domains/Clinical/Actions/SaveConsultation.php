@@ -36,7 +36,8 @@ class SaveConsultation
         if (count($primary) > 1) {
             throw ValidationException::withMessages(['diagnoses' => 'Choose one primary diagnosis.']);
         }
-        if ($primary !== [] && ! $known[strtoupper($primary[0]['code'])]->valid_primary) {
+        $primaryCode = $primary === [] ? null : $known->get(strtoupper($primary[0]['code']));
+        if ($primaryCode instanceof Icd10Code && ! $primaryCode->valid_primary) {
             throw ValidationException::withMessages(['diagnoses' => strtoupper($primary[0]['code']).' cannot be a primary diagnosis.']);
         }
 
@@ -57,7 +58,10 @@ class SaveConsultation
             $consultation->diagnoses()->delete();
             foreach ($diagnoses as $d) {
                 $code = strtoupper(trim($d['code']));
-                $consultation->diagnoses()->create(['icd10_code' => $code, 'description' => $known[$code]->description, 'is_primary' => $d['primary']]);
+                $entry = $known->get($code);
+                if ($entry instanceof Icd10Code) {
+                    $consultation->diagnoses()->create(['icd10_code' => $code, 'description' => $entry->description, 'is_primary' => $d['primary']]);
+                }
             }
 
             return $consultation->refresh();

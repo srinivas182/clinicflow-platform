@@ -95,7 +95,7 @@ class SubmitClaim
                 lines: $claim->lines()->get()->map(fn (ClaimLine $l) => [
                     'tariff_code' => $l->tariff_code, 'nappi_code' => $l->nappi_code, 'icd10_codes' => $l->icd10_codes,
                     'description' => $l->description, 'quantity' => $l->quantity, 'amount_cents' => $l->amount_cents,
-                ])->all(),
+                ])->values()->all(),
             ));
 
             $claim->forceFill([
