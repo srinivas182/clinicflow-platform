@@ -2,10 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Domains\Billing\Http\Controllers\BillingSettingsController;
+use App\Domains\Billing\Http\Controllers\InvoiceController;
 use App\Domains\Identity\Http\Controllers\HandoffController;
 use App\Domains\Patients\Http\Controllers\PatientController;
 use App\Domains\Scheduling\Http\Controllers\AppointmentController;
 use App\Domains\Scheduling\Http\Controllers\RosterController;
+use App\Domains\Visits\Http\Controllers\DeviceController;
+use App\Domains\Visits\Http\Controllers\FrontDeskController;
 use App\Http\Controllers\Provider\ProviderHomeController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
@@ -22,6 +26,10 @@ Route::middleware([
 ])->group(function (): void {
     Route::get('/auth/handoff/{token}', HandoffController::class)->name('provider.handoff');
 
+    Route::get('/kiosk/{token}', [DeviceController::class, 'kiosk'])->name('kiosk');
+    Route::post('/kiosk/{token}', [DeviceController::class, 'kioskCheckIn'])->middleware('throttle:20,1')->name('kiosk.checkin');
+    Route::get('/display/{token}', [DeviceController::class, 'display'])->name('display');
+
     Route::middleware(['auth', 'workspace', 'provider.writable'])->group(function (): void {
         Route::get('/', ProviderHomeController::class)->name('provider.home');
         Route::get('/patients', [PatientController::class, 'index'])->name('patients.index');
@@ -35,5 +43,19 @@ Route::middleware([
         Route::get('/rosters', [RosterController::class, 'index'])->name('rosters.index');
         Route::post('/rosters', [RosterController::class, 'store'])->name('rosters.store');
         Route::post('/rooms', [RosterController::class, 'storeRoom'])->name('rooms.store');
+
+        Route::get('/front-desk', [FrontDeskController::class, 'index'])->name('frontdesk');
+        Route::post('/visits', [FrontDeskController::class, 'checkIn'])->name('visits.checkin');
+        Route::post('/visits/{visit}/stage', [FrontDeskController::class, 'move'])->name('visits.move');
+        Route::post('/visits/{visit}/remove', [FrontDeskController::class, 'remove'])->name('visits.remove');
+
+        Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+        Route::post('/invoices/{invoice}/lines', [InvoiceController::class, 'addLine'])->name('invoices.lines.store');
+        Route::delete('/invoice-lines/{line}', [InvoiceController::class, 'removeLine'])->name('invoices.lines.destroy');
+        Route::post('/invoices/{invoice}/payments', [InvoiceController::class, 'pay'])->name('invoices.pay');
+        Route::post('/payments/{payment}/refunds', [InvoiceController::class, 'refund'])->name('payments.refund');
+
+        Route::get('/settings/billing', [BillingSettingsController::class, 'edit'])->name('settings.billing');
+        Route::put('/settings/billing', [BillingSettingsController::class, 'update'])->name('settings.billing.update');
     });
 });
