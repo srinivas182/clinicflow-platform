@@ -20,18 +20,16 @@ class AutoDebitAdminController extends Controller
     {
         $mandates = [];
         foreach (BillingMandate::query()->with('provider')->latest('id')->limit(200)->get() as $m) {
-            if ($m instanceof BillingMandate) {
-                $mandates[] = [
-                    'provider' => $m->provider->name,
-                    'gateway' => $m->gateway->label(),
-                    'mode' => $m->mode->value,
-                    'card' => $m->label(),
-                    'status' => $m->status,
-                    'failures' => $m->failure_count,
-                    'lastCharged' => $m->last_charged_at?->toDateString(),
-                    'since' => $m->consented_at->toDateString(),
-                ];
-            }
+            $mandates[] = [
+                'provider' => $m->provider->name,
+                'gateway' => $m->gateway->label(),
+                'mode' => $m->mode->value,
+                'card' => $m->label(),
+                'status' => $m->status,
+                'failures' => $m->failure_count,
+                'lastCharged' => $m->last_charged_at?->toDateString(),
+                'since' => $m->consented_at->toDateString(),
+            ];
         }
 
         return Inertia::render('Admin/AutoDebits', [
