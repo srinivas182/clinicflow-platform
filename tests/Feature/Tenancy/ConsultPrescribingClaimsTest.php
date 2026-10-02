@@ -159,7 +159,7 @@ it('creates a new version for changes and only the newest signed version is disp
     $v2 = app(AmendPrescription::class)->handle($v1, 'Pharmacist query: out of stock');
     expect($v2->version)->toBe(2)->and($v2->items()->count())->toBe(1)->and($v1->fresh()?->isDispensable())->toBeTrue();
 
-    $v2 = app(SaveDraftPrescription::class)->handle($this->consult, $this->doctor, [['medicine_id' => med('Cefalexin'), 'dose' => '1 four times daily', 'quantity' => 20, 'repeats' => 0]]);
+    $v2 = app(SaveDraftPrescription::class)->handle($this->consult, $this->doctor, [['medicine_id' => med('Amoxicillin'), 'dose' => '1 three times daily', 'quantity' => 15, 'repeats' => 0]]);
     expect(issueTypes($v2))->toContain('allergy:block');
 
     $v2 = app(SaveDraftPrescription::class)->handle($this->consult, $this->doctor, [['medicine_id' => med('Nitrofurantoin'), 'dose' => '1 twice daily', 'quantity' => 10, 'repeats' => 0]]);
