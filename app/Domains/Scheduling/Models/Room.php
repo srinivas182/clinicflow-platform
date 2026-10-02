@@ -15,6 +15,9 @@ class Room extends Model
 {
     protected $guarded = ['id'];
 
+    /** @var array<string, mixed> */
+    protected $attributes = ['is_active' => true];
+
     /**
      * @return array<string, string>
      */

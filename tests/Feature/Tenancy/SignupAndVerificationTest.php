@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Identity\Enums\StaffRole;
 use App\Domains\Identity\Models\Membership;
 use App\Domains\Identity\Models\Staff;
 use App\Domains\Platform\Actions\EnforceSubscriptionStatus;
@@ -61,7 +62,7 @@ it('signs up a clinic with its own address, trial, checklist and owner', functio
         ->and($provider->verificationChecks()->where('type', 'bhf_practice_number')->value('reference'))->toBe('0123456');
 
     $owner = User::query()->where('email', 'sizwe@sunrise.test')->sole();
-    expect(Membership::query()->where('user_id', $owner->id)->value('role'))->toBe('owner');
+    expect(Membership::query()->where('user_id', $owner->id)->firstOrFail()->role)->toBe(StaffRole::Owner);
     $provider->run(fn () => expect(Staff::query()->findOrFail($owner->id)->hasRole('owner'))->toBeTrue());
 });
 
