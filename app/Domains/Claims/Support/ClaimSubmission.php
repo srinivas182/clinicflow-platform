@@ -10,7 +10,7 @@ namespace App\Domains\Claims\Support;
 final readonly class ClaimSubmission
 {
     /**
-     * @param  list<array{tariff_code: ?string, nappi_code: ?string, icd10_codes: list<string>, description: string, quantity: int, amount_cents: int}>  $lines
+     * @param  array<int, array{tariff_code: ?string, nappi_code: ?string, icd10_codes: list<string>, description: string, quantity: int, amount_cents: int}>  $lines
      */
     public function __construct(
         public string $claimId,
