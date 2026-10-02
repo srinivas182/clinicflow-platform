@@ -1,6 +1,8 @@
 <?php
 
 use App\Domains\Identity\Http\Middleware\EnsureWorkspaceMember;
+use App\Domains\Platform\Http\Middleware\EnsurePlatformAdmin;
+use App\Domains\Platform\Http\Middleware\EnsureProviderWritable;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -15,11 +17,16 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withCommands([
+        __DIR__.'/../app/Domains/Platform/Console',
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo(fn () => route('login'));
         $middleware->redirectUsersTo(fn () => route('workspaces'));
         $middleware->alias([
             'workspace' => EnsureWorkspaceMember::class,
+            'platform.admin' => EnsurePlatformAdmin::class,
+            'provider.writable' => EnsureProviderWritable::class,
         ]);
         $middleware->web(append: [
             HandleInertiaRequests::class,

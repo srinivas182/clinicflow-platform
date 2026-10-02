@@ -35,6 +35,7 @@
         <env name="INERTIA_SSR_ENABLED" value="false"/>
         <env name="CENTRAL_DOMAINS" value="localhost,127.0.0.1,clinicflow.test"/>
         <env name="TENANCY_QUEUE_PROVISIONING" value="false"/>
+        <env name="PROVIDER_DOMAIN" value="clinicflow.test"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
