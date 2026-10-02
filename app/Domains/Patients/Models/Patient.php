@@ -29,6 +29,9 @@ use LogicException;
  * @property Channel $preferred_channel
  * @property string|null $guardian_name
  * @property string|null $medical_aid_scheme
+ * @property string|null $medical_aid_plan
+ * @property string|null $medical_aid_number
+ * @property string|null $medical_aid_dependant_code
  */
 class Patient extends Model
 {

@@ -7,12 +7,15 @@ use App\Domains\Billing\Http\Controllers\GatewayWebhookController;
 use App\Domains\Billing\Http\Controllers\InvoiceController;
 use App\Domains\Billing\Http\Controllers\PayLinkController;
 use App\Domains\Billing\Http\Controllers\PaymentSettingsController;
+use App\Domains\Claims\Http\Controllers\ClaimController;
+use App\Domains\Clinical\Http\Controllers\ConsultController;
 use App\Domains\Clinical\Http\Controllers\DoctorQueueController;
 use App\Domains\Clinical\Http\Controllers\TriageController;
 use App\Domains\Documents\Http\Controllers\TemplateController;
 use App\Domains\Identity\Http\Controllers\HandoffController;
 use App\Domains\Patients\Http\Controllers\PatientController;
 use App\Domains\Platform\Http\Controllers\SubscriptionBillingController;
+use App\Domains\Prescribing\Http\Controllers\PrescriptionController;
 use App\Domains\Scheduling\Http\Controllers\AppointmentController;
 use App\Domains\Scheduling\Http\Controllers\RosterController;
 use App\Domains\Visits\Http\Controllers\DeviceController;
@@ -91,6 +94,21 @@ Route::middleware([
         Route::post('/allergies/{allergy}/remove', [TriageController::class, 'removeAllergy'])->name('allergies.remove');
 
         Route::get('/doctor', [DoctorQueueController::class, 'index'])->name('doctor.queue');
+
+        Route::get('/consults/{visit}', [ConsultController::class, 'show'])->name('consults.show');
+        Route::put('/consultations/{consultation}', [ConsultController::class, 'save'])->name('consults.save');
+        Route::post('/consultations/{consultation}/complete', [ConsultController::class, 'complete'])->name('consults.complete');
+        Route::get('/reference/icd10', [ConsultController::class, 'icd10'])->name('reference.icd10');
+        Route::get('/reference/medicines', [ConsultController::class, 'medicines'])->name('reference.medicines');
+        Route::post('/consultations/{consultation}/prescription', [PrescriptionController::class, 'saveDraft'])->name('prescriptions.draft');
+        Route::post('/prescriptions/{prescription}/pin', [PrescriptionController::class, 'requestPin'])->middleware('throttle:10,1')->name('prescriptions.pin');
+        Route::post('/prescriptions/{prescription}/sign', [PrescriptionController::class, 'sign'])->middleware('throttle:20,1')->name('prescriptions.sign');
+        Route::post('/prescriptions/{prescription}/amend', [PrescriptionController::class, 'amend'])->name('prescriptions.amend');
+        Route::get('/prescriptions/{prescription}/pdf', [PrescriptionController::class, 'pdf'])->name('prescriptions.pdf');
+
+        Route::get('/claims', [ClaimController::class, 'index'])->name('claims.index');
+        Route::post('/invoices/{invoice}/claim', [ClaimController::class, 'submit'])->name('claims.submit');
+        Route::post('/patients/{patient}/eligibility', [ClaimController::class, 'eligibility'])->name('eligibility.check');
         Route::post('/doctor/call-next', [DoctorQueueController::class, 'callNext'])->name('doctor.call');
         Route::post('/doctor/accept/{visit}', [DoctorQueueController::class, 'accept'])->name('doctor.accept');
 
