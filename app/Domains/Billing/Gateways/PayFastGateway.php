@@ -62,7 +62,7 @@ class PayFastGateway implements PaymentGateway
             'return_url' => $request->returnUrl,
             'cancel_url' => $request->cancelUrl,
             'notify_url' => $request->notifyUrl,
-            'name_first' => $names[0] ?? '',
+            'name_first' => $names[0],
             'name_last' => $names[1] ?? '',
             'email_address' => $request->email,
             'm_payment_id' => $request->reference,

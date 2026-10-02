@@ -64,13 +64,13 @@ class PaymentSettingsController extends Controller
      */
     public static function present(Gateway $g, GatewayConfig|PlatformGatewayConfig|null $c, string $webhookUrl): array
     {
-        $stored = $c?->credentials ?? [];
+        $stored = $c === null ? [] : ($c->credentials ?? []);
 
         return [
             'gateway' => $g->value,
             'label' => $g->label(),
-            'enabled' => $c?->enabled ?? false,
-            'isDefault' => $c?->is_default ?? false,
+            'enabled' => $c !== null && $c->enabled,
+            'isDefault' => $c !== null && $c->is_default,
             'mode' => $c?->mode->value ?? 'test',
             'offered' => $c instanceof PlatformGatewayConfig ? $c->offered_to_providers : true,
             'apiRefunds' => $g->supportsApiRefund(),

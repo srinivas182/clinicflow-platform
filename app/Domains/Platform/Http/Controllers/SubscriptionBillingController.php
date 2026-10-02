@@ -69,8 +69,8 @@ class SubscriptionBillingController extends Controller
             returnUrl: "{$root}/billing/done",
             cancelUrl: "{$root}/billing/done?cancelled=1",
             notifyUrl: "{$root}/api/webhooks/platform/{$config->gateway->value}",
-            email: $owner?->email ?? 'billing@clinicflow.co.za',
-            customerName: $owner?->name ?? $invoice->provider->name,
+            email: $owner instanceof User ? $owner->email : 'billing@clinicflow.co.za',
+            customerName: $owner instanceof User ? $owner->name : $invoice->provider->name,
         ));
 
         $invoice->forceFill(['gateway' => $config->gateway->value, 'gateway_reference' => $start->gatewayReference])->save();
