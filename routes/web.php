@@ -3,9 +3,11 @@
 use App\Domains\Identity\Http\Controllers\LoginController;
 use App\Domains\Identity\Http\Controllers\WorkspaceController;
 use App\Domains\Platform\Http\Controllers\Admin\PackageAdminController;
+use App\Domains\Platform\Http\Controllers\Admin\PaymentAdminController;
 use App\Domains\Platform\Http\Controllers\Admin\ProviderAdminController;
 use App\Domains\Platform\Http\Controllers\PricingController;
 use App\Domains\Platform\Http\Controllers\SignupController;
+use App\Domains\Platform\Http\Controllers\SubscriptionBillingController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +25,8 @@ foreach ($centralDomains as $index => $domain) {
     Route::domain($domain)->name($index === 0 ? '' : "central{$index}.")->group(function (): void {
         Route::get('/', HomeController::class)->name('home');
         Route::get('/pricing', PricingController::class)->name('pricing');
+        Route::get('/billing/pay/{token}', [SubscriptionBillingController::class, 'pay'])->middleware('throttle:30,1')->name('billing.pay');
+        Route::get('/billing/done', [SubscriptionBillingController::class, 'done'])->name('billing.done');
 
         Route::get('/start', [SignupController::class, 'create'])->name('signup');
         Route::post('/start', [SignupController::class, 'store'])->middleware('throttle:10,1')->name('signup.store');
@@ -49,6 +53,9 @@ foreach ($centralDomains as $index => $domain) {
             Route::post('/verification-checks/{check}', [ProviderAdminController::class, 'review'])->name('checks.review');
             Route::get('/packages', [PackageAdminController::class, 'index'])->name('packages.index');
             Route::put('/packages/{package}', [PackageAdminController::class, 'update'])->name('packages.update');
+            Route::get('/payments', [PaymentAdminController::class, 'index'])->name('payments.index');
+            Route::put('/payments/{gateway}', [PaymentAdminController::class, 'update'])->name('payments.update');
+            Route::post('/payments/{gateway}/test', [PaymentAdminController::class, 'test'])->name('payments.test');
         });
     });
 }

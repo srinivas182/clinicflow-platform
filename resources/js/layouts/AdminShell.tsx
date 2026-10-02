@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BadgeCheck, Building2, Layers } from 'lucide-react';
+import { BadgeCheck, Building2, CreditCard, Layers } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Logo } from '@/components/Logo';
 
@@ -7,6 +7,7 @@ const nav = [
     { label: 'Providers', icon: Building2, href: '/admin/providers' },
     { label: 'Verification', icon: BadgeCheck, href: '/admin/providers' },
     { label: 'Packages', icon: Layers, href: '/admin/packages' },
+    { label: 'Payments', icon: CreditCard, href: '/admin/payments' },
 ];
 
 /**

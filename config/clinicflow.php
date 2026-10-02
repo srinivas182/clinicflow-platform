@@ -8,7 +8,7 @@ return [
      * Platform release version. Bumped on every release (see CHANGELOG.md)
      * and reported by GET /api/v1/health.
      */
-    'version' => env('CLINICFLOW_VERSION', '0.5.0'),
+    'version' => env('CLINICFLOW_VERSION', '0.6.0'),
 
     /*
      * Hosting region. All patient data must stay in South Africa (POPIA s72).
@@ -19,6 +19,15 @@ return [
      * Parent domain for free provider subdomains: <slug>.clinicflow.co.za.
      */
     'provider_domain' => env('PROVIDER_DOMAIN', 'clinicflow.co.za'),
+
+    'payments' => [
+        /*
+         * Allow the fake gateway when no real gateway is connected. Local and
+         * test environments only — never in production.
+         */
+        'allow_fake' => (bool) env('PAYMENTS_ALLOW_FAKE', false),
+        'vat_rate' => 0.15,
+    ],
 
     'tenancy' => [
         /*

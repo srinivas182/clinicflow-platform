@@ -3,7 +3,7 @@ import type { SharedProps } from '@/types';
 
 export function Flash() {
     const { flash, errors } = usePage<SharedProps>().props;
-    const firstError = Object.values(errors ?? {})[0];
+    const firstError = flash.error ?? Object.values(errors ?? {})[0];
 
     return (
         <>

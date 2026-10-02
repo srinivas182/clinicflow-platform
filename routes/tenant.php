@@ -3,12 +3,16 @@
 declare(strict_types=1);
 
 use App\Domains\Billing\Http\Controllers\BillingSettingsController;
+use App\Domains\Billing\Http\Controllers\GatewayWebhookController;
 use App\Domains\Billing\Http\Controllers\InvoiceController;
+use App\Domains\Billing\Http\Controllers\PayLinkController;
+use App\Domains\Billing\Http\Controllers\PaymentSettingsController;
 use App\Domains\Clinical\Http\Controllers\DoctorQueueController;
 use App\Domains\Clinical\Http\Controllers\TriageController;
 use App\Domains\Documents\Http\Controllers\TemplateController;
 use App\Domains\Identity\Http\Controllers\HandoffController;
 use App\Domains\Patients\Http\Controllers\PatientController;
+use App\Domains\Platform\Http\Controllers\SubscriptionBillingController;
 use App\Domains\Scheduling\Http\Controllers\AppointmentController;
 use App\Domains\Scheduling\Http\Controllers\RosterController;
 use App\Domains\Visits\Http\Controllers\DeviceController;
@@ -22,12 +26,23 @@ use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
  * Provider routes: answer on a provider's subdomain or verified custom
  * domain, inside that provider's own database.
  */
+/*
+ * Gateway webhooks: no session or CSRF; verified by the gateway adapter.
+ */
+Route::middleware([InitializeTenancyByDomain::class, PreventAccessFromCentralDomains::class])
+    ->post('/webhooks/payments/{gateway}', [GatewayWebhookController::class, 'provider'])
+    ->whereIn('gateway', ['payfast', 'paystack', 'peach', 'yoco'])
+    ->name('webhooks.provider');
+
 Route::middleware([
     'web',
     InitializeTenancyByDomain::class,
     PreventAccessFromCentralDomains::class,
 ])->group(function (): void {
     Route::get('/auth/handoff/{token}', HandoffController::class)->name('provider.handoff');
+
+    Route::get('/pay/{token}', [PayLinkController::class, 'show'])->middleware('throttle:30,1')->name('paylink.show');
+    Route::get('/pay/{token}/done', [PayLinkController::class, 'done'])->name('paylink.done');
 
     Route::get('/kiosk/{token}', [DeviceController::class, 'kiosk'])->name('kiosk');
     Route::post('/kiosk/{token}', [DeviceController::class, 'kioskCheckIn'])->middleware('throttle:20,1')->name('kiosk.checkin');
@@ -57,6 +72,11 @@ Route::middleware([
         Route::delete('/invoice-lines/{line}', [InvoiceController::class, 'removeLine'])->name('invoices.lines.destroy');
         Route::post('/invoices/{invoice}/payments', [InvoiceController::class, 'pay'])->name('invoices.pay');
         Route::post('/payments/{payment}/refunds', [InvoiceController::class, 'refund'])->name('payments.refund');
+
+        Route::get('/settings/payments', [PaymentSettingsController::class, 'index'])->name('settings.payments');
+        Route::put('/settings/payments/{gateway}', [PaymentSettingsController::class, 'update'])->name('settings.payments.update');
+        Route::post('/settings/payments/{gateway}/test', [PaymentSettingsController::class, 'test'])->name('settings.payments.test');
+        Route::get('/settings/subscription', [SubscriptionBillingController::class, 'index'])->name('settings.subscription');
 
         Route::get('/settings/billing', [BillingSettingsController::class, 'edit'])->name('settings.billing');
         Route::put('/settings/billing', [BillingSettingsController::class, 'update'])->name('settings.billing.update');

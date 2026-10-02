@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Domains\Billing\Contracts\PaymentGateway;
+use App\Domains\Billing\Gateways\GatewayFactory;
 use App\Domains\Billing\Support\FakePaymentGateway;
 use App\Domains\Identity\Contracts\OtpSender;
 use App\Domains\Identity\Enums\Permission;
@@ -21,7 +22,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(OtpSender::class, LogOtpSender::class);
         // Provider gateway adapters (Paystack, PayFast, Peach, Yoco) bind per provider in production.
-        $this->app->singleton(PaymentGateway::class, FakePaymentGateway::class);
+        $this->app->singleton(FakePaymentGateway::class);
+        $this->app->bind(PaymentGateway::class, fn () => GatewayFactory::forProvider());
     }
 
     public function boot(): void
