@@ -65,11 +65,11 @@ enum StaffRole: string
     {
         return match ($this) {
             self::Owner => array_values(array_diff(Permission::all(), Permission::RESTRICTED_TO_PRESCRIBERS)),
-            self::Manager => [Permission::PATIENTS_VIEW, Permission::PATIENTS_REGISTER, Permission::STAFF_VIEW, Permission::AUDIT_VIEW],
-            self::PracticeAdmin => [Permission::PATIENTS_VIEW, Permission::STAFF_VIEW, Permission::STAFF_MANAGE, Permission::AUDIT_VIEW, Permission::SETTINGS_MANAGE],
-            self::Receptionist => [Permission::PATIENTS_VIEW, Permission::PATIENTS_REGISTER, Permission::PATIENTS_EDIT],
-            self::Nurse => [Permission::PATIENTS_VIEW, Permission::PATIENTS_EDIT],
-            self::Doctor, self::LocumDoctor => [Permission::PATIENTS_VIEW, Permission::PATIENTS_EDIT, Permission::SCRIPTS_SIGN],
+            self::Manager => [Permission::PATIENTS_VIEW, Permission::PATIENTS_REGISTER, Permission::STAFF_VIEW, Permission::AUDIT_VIEW, Permission::APPOINTMENTS_VIEW, Permission::APPOINTMENTS_BOOK, Permission::ROSTERS_MANAGE],
+            self::PracticeAdmin => [Permission::PATIENTS_VIEW, Permission::STAFF_VIEW, Permission::STAFF_MANAGE, Permission::AUDIT_VIEW, Permission::SETTINGS_MANAGE, Permission::APPOINTMENTS_VIEW, Permission::ROSTERS_MANAGE],
+            self::Receptionist => [Permission::PATIENTS_VIEW, Permission::PATIENTS_REGISTER, Permission::PATIENTS_EDIT, Permission::APPOINTMENTS_VIEW, Permission::APPOINTMENTS_BOOK],
+            self::Nurse => [Permission::PATIENTS_VIEW, Permission::PATIENTS_EDIT, Permission::APPOINTMENTS_VIEW],
+            self::Doctor, self::LocumDoctor => [Permission::PATIENTS_VIEW, Permission::PATIENTS_EDIT, Permission::SCRIPTS_SIGN, Permission::APPOINTMENTS_VIEW],
             self::Pharmacist, self::Dispatch, self::LabTechnician, self::BillingClerk => [Permission::PATIENTS_VIEW],
         };
     }

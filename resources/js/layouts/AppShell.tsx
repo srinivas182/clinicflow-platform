@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Bell, CircleHelp, LayoutDashboard, Search, Settings, Users } from 'lucide-react';
+import { Bell, CalendarDays, CircleHelp, Clock, LayoutDashboard, Search, Settings, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Logo } from '@/components/Logo';
 import type { SharedProps } from '@/types';
@@ -7,6 +7,8 @@ import type { SharedProps } from '@/types';
 const nav = [
     { label: 'Overview', icon: LayoutDashboard, href: '/' },
     { label: 'Patients', icon: Users, href: '/patients' },
+    { label: 'Appointments', icon: CalendarDays, href: '/appointments' },
+    { label: 'Rosters', icon: Clock, href: '/rosters' },
     { label: 'Settings', icon: Settings, href: '#' },
 ];
 

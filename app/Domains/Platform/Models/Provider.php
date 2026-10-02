@@ -6,6 +6,8 @@ namespace App\Domains\Platform\Models;
 
 use App\Domains\Platform\Enums\ProviderStatus;
 use App\Domains\Platform\Enums\ProviderType;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDomains;
@@ -48,5 +50,23 @@ class Provider extends BaseTenant implements TenantWithDatabase
             'type' => ProviderType::class,
             'status' => ProviderStatus::class,
         ];
+    }
+
+    /**
+     * @return HasMany<VerificationCheck, $this>
+     */
+    public function verificationChecks(): HasMany
+    {
+        return $this->hasMany(VerificationCheck::class, 'tenant_id');
+    }
+
+    /**
+     * Current subscription (latest).
+     *
+     * @return HasOne<Subscription, $this>
+     */
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class, 'tenant_id')->latestOfMany();
     }
 }

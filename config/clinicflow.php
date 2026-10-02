@@ -8,12 +8,17 @@ return [
      * Platform release version. Bumped on every release (see CHANGELOG.md)
      * and reported by GET /api/v1/health.
      */
-    'version' => env('CLINICFLOW_VERSION', '0.2.0'),
+    'version' => env('CLINICFLOW_VERSION', '0.3.0'),
 
     /*
      * Hosting region. All patient data must stay in South Africa (POPIA s72).
      */
     'region' => env('CLINICFLOW_REGION', 'af-south-1'),
+
+    /*
+     * Parent domain for free provider subdomains: <slug>.clinicflow.co.za.
+     */
+    'provider_domain' => env('PROVIDER_DOMAIN', 'clinicflow.co.za'),
 
     'tenancy' => [
         /*

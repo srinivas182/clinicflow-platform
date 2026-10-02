@@ -4,6 +4,18 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.3.0] — Sprint 2: onboarding, packages, rosters and appointments
+
+### Added
+- Self-service provider sign-up: practice type, free subdomain (`<name>.clinicflow.co.za`, reserved words blocked), package choice, owner account, registration numbers; creates the provider database, 30-day trial and verification checklist. Independent doctors are owner and prescriber.
+- Package builder and subscriptions: seeded sample packages per provider type, public pricing page read live from active packages, admin price/trial/active editing.
+- Super admin console: providers list, registration checks (verify/reject), approval that requires every check for the provider type.
+- Daily `subscriptions:enforce`: expired trials and unpaid subscriptions become read-only after a 7-day grace period; read-only providers can view but not change anything (HTTP 423). Data is never deleted.
+- Rooms and rosters with clash rules (no person or room in two sessions at once; 10–60 minute slots).
+- Appointments: free-slot calculation, booking only into real slots of a rostered doctor, no double booking of doctor or patient, cancellation with reason; video/audio/chat wait for the telemedicine module.
+- New permissions `appointments.view`, `appointments.book`, `rosters.manage`; `providers:sync-roles` command updates existing providers' role templates.
+- GitHub Actions bumped (checkout 7, cache 6, setup-node 7).
+
 ## [0.2.0] — Sprint 1: identity and patient registry
 
 ### Added

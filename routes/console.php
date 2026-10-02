@@ -1,6 +1,9 @@
 <?php
 
+use Illuminate\Support\Facades\Schedule;
+
 /*
- * Console routes and scheduled tasks are registered here.
- * Scheduled jobs (reminders, claim polling, wallet alerts) arrive in later sprints.
+ * Scheduled tasks. Run the scheduler every minute on the server:
+ * * * * * * php /var/www/html/artisan schedule:run
  */
+Schedule::command('subscriptions:enforce')->dailyAt('02:00')->onOneServer();

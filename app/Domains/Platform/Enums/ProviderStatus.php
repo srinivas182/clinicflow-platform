@@ -17,8 +17,17 @@ enum ProviderStatus: string
 
     /**
      * Non-payment never deletes data; the provider drops to read-only.
+     * Providers awaiting verification can already set up staff, rooms and rosters.
      */
     public function canWrite(): bool
+    {
+        return in_array($this, [self::PendingVerification, self::Trial, self::Active], true);
+    }
+
+    /**
+     * Listed in the directory and able to take patient bookings.
+     */
+    public function isLive(): bool
     {
         return in_array($this, [self::Trial, self::Active], true);
     }

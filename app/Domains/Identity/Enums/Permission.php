@@ -26,6 +26,12 @@ final class Permission
 
     public const SETTINGS_MANAGE = 'settings.manage';
 
+    public const APPOINTMENTS_VIEW = 'appointments.view';
+
+    public const APPOINTMENTS_BOOK = 'appointments.book';
+
+    public const ROSTERS_MANAGE = 'rosters.manage';
+
     /**
      * Only prescribers (doctor, locum doctor) may ever hold these.
      */
@@ -39,6 +45,7 @@ final class Permission
         return [
             self::PATIENTS_VIEW, self::PATIENTS_REGISTER, self::PATIENTS_EDIT, self::SCRIPTS_SIGN,
             self::STAFF_VIEW, self::STAFF_MANAGE, self::AUDIT_VIEW, self::SETTINGS_MANAGE,
+            self::APPOINTMENTS_VIEW, self::APPOINTMENTS_BOOK, self::ROSTERS_MANAGE,
         ];
     }
 }
