@@ -4,6 +4,20 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.9.0] — Sprint 6: pharmacy, dispatch, discharge gate, remittances and quotes
+
+### Added
+- In-house pharmacy: stock by batch and expiry; dispensing of the newest signed script version only, earliest expiry first, never expired stock; shortfalls go on the owing list and are billed only when supplied; dispensed medicines are added to the visit invoice with their NAPPI codes.
+- Append-only S5/S6 register: every receipt, dispensing and return with balance, patient, prescriber and pharmacist.
+- Pharmacist query sends the visit back to the doctor; the doctor answers with a new script version.
+- Collection window: 4-digit collection code, collector name and ID when someone else collects; uncollected medicine returns to stock after the clinic's collection window (default 7 days) and the invoice is flagged for a credit.
+- Discharge gate: a visit closes only when the patient owes nothing (medical aid patients with a submitted or accepted claim owe only co-payments after remittance). Owners and managers can override with a reason; every override is logged.
+- Completing a consult without a script sends the patient to pay at the front desk when a balance is due; the doctor's queue is free for the next patient.
+- Remittances: scheme payments recorded on invoices (new payment method "Medical aid"), claims marked paid or part-paid, shortfalls flagged as patient co-payments; each remittance applied once (hourly `claims:remittances`).
+- Claim ageing by 0–30, 31–60, 61–90 and 90+ days.
+- Procedure quotes: prepared by the doctor; accepting adds the procedure lines to the invoice; medical aid patients need a pre-authorisation number.
+- Permissions `pharmacy.dispense` (pharmacist) and `discharge.override` (owner, manager).
+
 ## [0.8.0] — Sprint 5: consultations, prescribing and medical aid claims
 
 ### Added

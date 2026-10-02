@@ -19,7 +19,7 @@ interface ClaimRow {
 
 const tone: Record<string, BadgeTone> = { accepted: 'success', rejected: 'danger', draft: 'neutral', paid: 'success' };
 
-export default function ClaimsIndex({ status, claims, unclaimed }: { status: string; claims: ClaimRow[]; unclaimed: { id: string; number: string; patient: string; total: number }[] }) {
+export default function ClaimsIndex({ status, claims, unclaimed, ageing }: { status: string; claims: ClaimRow[]; unclaimed: { id: string; number: string; patient: string; total: number }[]; ageing: Record<string, number> }) {
     return (
         <AppShell active="Front desk">
             <Head title="Claims" />
@@ -37,6 +37,16 @@ export default function ClaimsIndex({ status, claims, unclaimed }: { status: str
                 </div>
             </div>
             <Flash />
+            <Card title="Unpaid claims by age (days)" className="mb-4" aside={<Button size="sm" variant="secondary" onClick={() => router.post('/claims/remittances/import', {}, { preserveScroll: true })}>Import remittances</Button>}>
+                <div className="grid grid-cols-4 gap-3 text-sm">
+                    {Object.entries(ageing).map(([bucket, amount]) => (
+                        <div key={bucket} className="rounded-lg border border-line px-3 py-2">
+                            <div className="text-xs text-muted">{bucket}</div>
+                            <div className={`text-lg font-semibold ${bucket === '90+' && amount > 0 ? 'text-status-danger' : ''}`}>{rand(amount, 2)}</div>
+                        </div>
+                    ))}
+                </div>
+            </Card>
             {unclaimed.length > 0 && (
                 <Card title="Ready to claim" className="mb-4">
                     <ul className="divide-y divide-[#EBF0EE] text-sm">

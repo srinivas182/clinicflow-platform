@@ -12,6 +12,7 @@ use App\Domains\Patients\Models\Patient;
 use App\Domains\Scheduling\Enums\AppointmentStatus;
 use App\Domains\Scheduling\Models\Appointment;
 use App\Domains\Visits\Actions\CheckInPatient;
+use App\Domains\Visits\Actions\DischargeVisit;
 use App\Domains\Visits\Actions\RemoveFromQueue;
 use App\Domains\Visits\Actions\TransitionVisit;
 use App\Domains\Visits\Enums\LeftReason;
@@ -97,8 +98,18 @@ class FrontDeskController extends Controller
     {
         $this->authorize(Permission::VISITS_MANAGE);
 
-        $data = $request->validate(['stage' => ['required', Rule::enum(VisitStage::class)]]);
-        $action->handle($visit, VisitStage::from($data['stage']), $this->user($request));
+        $data = $request->validate(['stage' => ['required', Rule::enum(VisitStage::class)], 'override_reason' => ['nullable', 'string', 'max:255']]);
+        $stage = VisitStage::from($data['stage']);
+
+        if ($stage === VisitStage::Done) {
+            $override = $data['override_reason'] ?? null;
+            if (filled($override)) {
+                $this->authorize(Permission::DISCHARGE_OVERRIDE);
+            }
+            app(DischargeVisit::class)->handle($visit, $this->user($request), $override);
+        } else {
+            $action->handle($visit, $stage, $this->user($request));
+        }
 
         return back()->with('success', "{$visit->ticket} moved to {$visit->stage->label()}.");
     }

@@ -10,10 +10,12 @@ use App\Domains\Billing\Http\Controllers\PaymentSettingsController;
 use App\Domains\Claims\Http\Controllers\ClaimController;
 use App\Domains\Clinical\Http\Controllers\ConsultController;
 use App\Domains\Clinical\Http\Controllers\DoctorQueueController;
+use App\Domains\Clinical\Http\Controllers\QuoteController;
 use App\Domains\Clinical\Http\Controllers\TriageController;
 use App\Domains\Documents\Http\Controllers\TemplateController;
 use App\Domains\Identity\Http\Controllers\HandoffController;
 use App\Domains\Patients\Http\Controllers\PatientController;
+use App\Domains\Pharmacy\Http\Controllers\PharmacyController;
 use App\Domains\Platform\Http\Controllers\SubscriptionBillingController;
 use App\Domains\Prescribing\Http\Controllers\PrescriptionController;
 use App\Domains\Scheduling\Http\Controllers\AppointmentController;
@@ -109,6 +111,18 @@ Route::middleware([
         Route::get('/claims', [ClaimController::class, 'index'])->name('claims.index');
         Route::post('/invoices/{invoice}/claim', [ClaimController::class, 'submit'])->name('claims.submit');
         Route::post('/patients/{patient}/eligibility', [ClaimController::class, 'eligibility'])->name('eligibility.check');
+        Route::post('/claims/remittances/import', [ClaimController::class, 'importRemittances'])->name('claims.remittances');
+
+        Route::get('/pharmacy', [PharmacyController::class, 'index'])->name('pharmacy.index');
+        Route::post('/pharmacy/visits/{visit}/dispense', [PharmacyController::class, 'dispense'])->name('pharmacy.dispense');
+        Route::post('/pharmacy/visits/{visit}/query', [PharmacyController::class, 'query'])->name('pharmacy.query');
+        Route::post('/pharmacy/visits/{visit}/collect', [PharmacyController::class, 'collect'])->middleware('throttle:30,1')->name('pharmacy.collect');
+        Route::post('/pharmacy/stock', [PharmacyController::class, 'receive'])->name('pharmacy.stock');
+        Route::post('/pharmacy/owing/{owing}/fulfil', [PharmacyController::class, 'fulfil'])->name('pharmacy.owing.fulfil');
+
+        Route::post('/visits/{visit}/quotes', [QuoteController::class, 'store'])->name('quotes.store');
+        Route::post('/quotes/{quote}/accept', [QuoteController::class, 'accept'])->name('quotes.accept');
+        Route::post('/quotes/{quote}/decline', [QuoteController::class, 'decline'])->name('quotes.decline');
         Route::post('/doctor/call-next', [DoctorQueueController::class, 'callNext'])->name('doctor.call');
         Route::post('/doctor/accept/{visit}', [DoctorQueueController::class, 'accept'])->name('doctor.accept');
 
