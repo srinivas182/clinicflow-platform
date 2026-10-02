@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Clinical\Actions;
 
 use App\Domains\Clinical\Enums\TriageColour;
+use App\Domains\Clinical\Models\Consultation;
 use App\Domains\Identity\Models\Staff;
 use App\Domains\Scheduling\Models\RosterSession;
 use App\Domains\Visits\Enums\VisitStage;
@@ -67,6 +68,7 @@ class CallNextPatient
             ->where('stage', VisitStage::Doctor->value)
             ->where('doctor_id', $doctor->id)
             ->whereNotNull('called_at')
+            ->whereNotIn('id', Consultation::query()->where('status', 'completed')->select('visit_id'))
             ->first();
     }
 }

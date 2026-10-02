@@ -43,4 +43,18 @@ class DemoClaimsSwitch implements ClaimsSwitch
 
         return new SubmissionResult(true, 'DEMO-'.Str::upper(Str::random(10)), null, ['code' => '00']);
     }
+
+    /**
+     * Pays in full, except member numbers ending in 9999, which are paid at 80%
+     * (the shortfall becomes the patient's co-payment).
+     */
+    public function fetchRemittances(array $outstanding): array
+    {
+        return array_values(array_map(fn (array $c) => new RemittanceLine(
+            $c['reference'],
+            'RA-'.substr($c['reference'], -8),
+            str_ends_with($c['member_number'], '9999') ? (int) round($c['total_cents'] * 0.8) : $c['total_cents'],
+            str_ends_with($c['member_number'], '9999') ? 'Paid at scheme rate; balance is a member co-payment.' : 'Paid in full.',
+        ), $outstanding));
+    }
 }

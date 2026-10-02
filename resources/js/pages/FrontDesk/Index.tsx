@@ -160,6 +160,18 @@ export default function FrontDesk({
                                                 {n.label}
                                             </Button>
                                         ))}
+                                        {v.next.some((n) => n.value === 'done') && v.balance > 0 && (
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => {
+                                                    const reason = window.prompt('Discharge without full payment — reason (owner or manager only)?');
+                                                    if (reason) router.post(`/visits/${v.id}/stage`, { stage: 'done', override_reason: reason }, { preserveScroll: true });
+                                                }}
+                                            >
+                                                Override
+                                            </Button>
+                                        )}
                                         {v.canRemove && (
                                             <Button size="sm" variant="ghost" onClick={() => remove(v)}>
                                                 Remove

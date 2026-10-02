@@ -6,8 +6,10 @@ namespace App\Domains\Claims\Http\Controllers;
 
 use App\Domains\Billing\Models\Invoice;
 use App\Domains\Claims\Actions\CheckEligibility;
+use App\Domains\Claims\Actions\ImportRemittances;
 use App\Domains\Claims\Actions\SubmitClaim;
 use App\Domains\Claims\Models\Claim;
+use App\Domains\Claims\Support\ClaimAgeing;
 use App\Domains\Identity\Enums\Permission;
 use App\Domains\Patients\Models\Patient;
 use App\Domains\Visits\Enums\PayerType;
@@ -40,6 +42,7 @@ class ClaimController extends Controller
                 'member' => $c->member_number, 'total' => $c->total_cents / 100, 'status' => $c->status,
                 'reason' => $c->rejection_reason, 'reference' => $c->switch_reference, 'submissions' => $c->submissions,
             ])->values(),
+            'ageing' => array_map(fn (int $c) => $c / 100, ClaimAgeing::buckets()),
             'unclaimed' => $unclaimed->map(fn (Invoice $i) => [
                 'id' => $i->id, 'number' => $i->number, 'patient' => $i->patient->fullName(), 'total' => $i->total_cents / 100,
             ])->values(),
@@ -52,6 +55,14 @@ class ClaimController extends Controller
         $claim = $action->handle($invoice, $this->user($request));
 
         return back()->with('success', $claim->status === 'accepted' ? "Claim accepted ({$claim->switch_reference})." : "Claim rejected: {$claim->rejection_reason}");
+    }
+
+    public function importRemittances(ImportRemittances $action): RedirectResponse
+    {
+        $this->authorize(Permission::CLAIMS_MANAGE);
+        $result = $action->handle();
+
+        return back()->with('success', "{$result['applied']} remittance(s) applied, {$result['shortfalls']} with a patient co-payment.");
     }
 
     public function eligibility(Request $request, Patient $patient, CheckEligibility $action): RedirectResponse

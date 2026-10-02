@@ -14,6 +14,7 @@ enum PaymentMethod: string
     case CardMachine = 'card_machine';
     case Eft = 'eft';
     case PayLink = 'pay_link';
+    case MedicalAid = 'medical_aid';
 
     public function label(): string
     {
@@ -22,6 +23,7 @@ enum PaymentMethod: string
             self::CardMachine => 'Card machine',
             self::Eft => 'EFT',
             self::PayLink => 'Pay link',
+            self::MedicalAid => 'Medical aid',
         };
     }
 

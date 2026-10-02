@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Activity, Bell, CalendarDays, CircleHelp, ClipboardList, Clock, FileCheck, FileText, LayoutDashboard, Search, Settings, Stethoscope, Users } from 'lucide-react';
+import { Activity, Bell, CalendarDays, CircleHelp, ClipboardList, Clock, FileCheck, FileText, LayoutDashboard, Pill, Search, Settings, Stethoscope, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Logo } from '@/components/Logo';
 import type { SharedProps } from '@/types';
@@ -13,6 +13,7 @@ const nav = [
     { label: 'Appointments', icon: CalendarDays, href: '/appointments' },
     { label: 'Rosters', icon: Clock, href: '/rosters' },
     { label: 'Templates', icon: FileText, href: '/settings/templates' },
+    { label: 'Pharmacy', icon: Pill, href: '/pharmacy' },
     { label: 'Claims', icon: FileCheck, href: '/claims' },
     { label: 'Settings', icon: Settings, href: '/settings/billing' },
 ];
