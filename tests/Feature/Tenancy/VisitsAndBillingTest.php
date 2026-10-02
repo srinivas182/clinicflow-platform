@@ -4,7 +4,6 @@ use App\Domains\Billing\Actions\AddInvoiceLine;
 use App\Domains\Billing\Actions\RecordPayment;
 use App\Domains\Billing\Actions\RefundPayment;
 use App\Domains\Billing\Actions\RemoveInvoiceLine;
-use App\Domains\Billing\Contracts\PaymentGateway;
 use App\Domains\Billing\Enums\InvoiceStatus;
 use App\Domains\Billing\Enums\LineKind;
 use App\Domains\Billing\Enums\PaymentMethod;
@@ -178,7 +177,8 @@ it('settles a pay link only when the gateway confirms it', function (): void {
 
     expect($payment->status)->toBe(PaymentStatus::Pending)
         ->and($invoice->fresh()?->status)->toBe(InvoiceStatus::Open)
-        ->and(app(PaymentGateway::class)->calls)->toHaveCount(1);
+        ->and($payment->checkout_token)->not->toBeNull()
+        ->and($payment->gateway)->toBe('fake');
 
     app(RecordPayment::class)->confirm($payment);
     expect($invoice->fresh()?->status)->toBe(InvoiceStatus::Paid);

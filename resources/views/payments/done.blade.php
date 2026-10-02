@@ -1,0 +1,6 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Payment</title>
+<style>body{font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;color:#12232E;text-align:center;padding:24px}</style></head>
+<body><div><h1>Thank you</h1><p>{{ $message }}</p></div></body>
+</html>

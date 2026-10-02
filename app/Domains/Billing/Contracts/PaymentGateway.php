@@ -4,21 +4,30 @@ declare(strict_types=1);
 
 namespace App\Domains\Billing\Contracts;
 
+use App\Domains\Billing\Gateways\CheckoutRequest;
+use App\Domains\Billing\Gateways\CheckoutStart;
+use App\Domains\Billing\Gateways\WebhookResult;
 use App\Domains\Billing\Support\GatewayResult;
+use Illuminate\Http\Request;
 
 /**
- * A provider's own merchant account (e.g. Paystack, PayFast, Peach, Yoco).
- * Each provider connects its own credentials; money never passes through
- * Clinic Flow (ADR 0009).
+ * One merchant account at PayFast, Paystack, Peach Payments or Yoco — either
+ * a provider's own (patient payments) or the platform's (subscriptions).
+ * Money never passes through Clinic Flow (ADR 0009).
  */
 interface PaymentGateway
 {
     public function name(): string;
 
+    public function startCheckout(CheckoutRequest $request): CheckoutStart;
+
     /**
-     * Create a pay link the patient opens on their phone.
+     * Verify an incoming notification. Returns null when it is not genuine
+     * or not about a payment.
      */
-    public function createPayLink(int $amountCents, string $reference, string $description): GatewayResult;
+    public function handleWebhook(Request $request): ?WebhookResult;
 
     public function refund(string $gatewayReference, int $amountCents): GatewayResult;
+
+    public function testConnection(): GatewayResult;
 }

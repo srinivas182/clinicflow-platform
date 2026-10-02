@@ -40,6 +40,9 @@ final class Permission
 
     public const TRIAGE_RECORD = 'triage.record';
 
+    /** Connect and change the provider's own payment gateway accounts (owner). */
+    public const PAYMENTS_CONFIGURE = 'payments.configure';
+
     /**
      * Only prescribers (doctor, locum doctor) may ever hold these.
      */
@@ -55,6 +58,7 @@ final class Permission
             self::STAFF_VIEW, self::STAFF_MANAGE, self::AUDIT_VIEW, self::SETTINGS_MANAGE,
             self::APPOINTMENTS_VIEW, self::APPOINTMENTS_BOOK, self::ROSTERS_MANAGE,
             self::VISITS_MANAGE, self::BILLING_COLLECT, self::BILLING_REFUND, self::TRIAGE_RECORD,
+            self::PAYMENTS_CONFIGURE,
         ];
     }
 }

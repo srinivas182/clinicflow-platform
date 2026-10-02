@@ -17,6 +17,7 @@ export interface SharedProps {
     };
     flash: {
         success: string | null;
+        error?: string | null;
     };
     errors: Record<string, string>;
     provider: SharedProvider | null;

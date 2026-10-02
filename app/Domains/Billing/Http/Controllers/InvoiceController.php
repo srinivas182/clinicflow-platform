@@ -54,6 +54,7 @@ class InvoiceController extends Controller
                 'payments' => $invoice->payments->map(fn (Payment $p) => [
                     'id' => $p->id, 'method' => $p->method->label(), 'amount' => $p->amount_cents / 100, 'refunded' => $p->refunded_cents / 100,
                     'status' => $p->status->value, 'reference' => $p->reference, 'refundable' => $p->refundableCents() / 100,
+                    'gateway' => $p->gateway, 'payLink' => $p->checkout_token !== null && $p->status->value === 'pending' ? '/pay/'.$p->checkout_token : null,
                 ])->values(),
             ],
             'refundRule' => BillingSettings::refundRule()->value,
@@ -94,7 +95,9 @@ class InvoiceController extends Controller
         ]);
         $payment = $action->handle($invoice, PaymentMethod::from($data['method']), (int) round(((float) $data['amount']) * 100), $data['reference'] ?? null, $this->user($request));
 
-        return back()->with('success', $payment->method === PaymentMethod::PayLink ? 'Pay link sent to the patient.' : 'Payment recorded.');
+        return back()->with('success', $payment->method === PaymentMethod::PayLink
+            ? 'Pay link ready — send it to the patient: '.$request->getSchemeAndHttpHost().'/pay/'.$payment->checkout_token
+            : 'Payment recorded.');
     }
 
     public function refund(Request $request, Payment $payment, RefundPayment $action): RedirectResponse

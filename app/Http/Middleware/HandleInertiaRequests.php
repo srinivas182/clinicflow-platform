@@ -35,6 +35,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'flash' => [
                 'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
             ],
             'provider' => $provider instanceof Provider ? [
                 'id' => $provider->id,

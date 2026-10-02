@@ -19,6 +19,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property PaymentStatus $status
  * @property string|null $reference
  * @property string|null $gateway
+ * @property string|null $gateway_mode
+ * @property string|null $checkout_token
+ * @property string|null $gateway_reference
  * @property-read Invoice $invoice
  */
 class Payment extends Model

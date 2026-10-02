@@ -4,6 +4,17 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.6.0] — Sprint 4B: payment gateways (PayFast, Paystack, Peach Payments, Yoco)
+
+### Added
+- Gateway connectors for PayFast (signed form + ITN with signature and server validation), Paystack (initialise + HMAC-SHA512 webhooks), Peach Payments Hosted Checkout V2 (OAuth token + webhook re-confirmation with Peach) and Yoco Checkout (Standard Webhooks signatures). Each works in test (sandbox) or live mode.
+- Provider Settings → Payments (owner only, new `payments.configure` permission): connect any offered gateway, test or live, default for pay links, test connection, webhook URL to paste into the gateway. Credentials are encrypted in the provider's own database; secrets are write-only and never sent back to the browser.
+- Super admin → Payments: the platform's own accounts for subscription billing, and which gateways providers may connect.
+- Patient pay links on the provider's domain (`/pay/{token}`): the gateway checkout is created when the patient opens the link (safe for SMS/WhatsApp previews). Payments count only after a verified webhook whose reference and amount match; repeated webhooks are ignored.
+- Refunds through the API for Paystack and Yoco (live keys); PayFast and Peach refunds are made in their dashboards and recorded as manual refunds.
+- Subscription billing: daily `subscriptions:invoice` issues invoices (package price + 15% VAT) 3 days before each period; providers pay from Settings → Subscription through the platform gateway; payment activates the subscription for the period and reopens read-only providers.
+- The fake gateway is now only used when `PAYMENTS_ALLOW_FAKE=true` (local and tests), never in production.
+
 ## [0.5.0] — Sprint 4: triage, routing, red alerts and document templates
 
 ### Added
