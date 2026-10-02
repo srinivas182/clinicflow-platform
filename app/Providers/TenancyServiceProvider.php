@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Domains\Identity\Jobs\SeedRolesForProvider;
+use App\Domains\Platform\Models\Provider;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Spatie\Permission\PermissionRegistrar;
 use Stancl\JobPipeline\JobPipeline;
 use Stancl\Tenancy\Events;
 use Stancl\Tenancy\Jobs;
@@ -34,6 +37,7 @@ class TenancyServiceProvider extends ServiceProvider
                 JobPipeline::make([
                     Jobs\CreateDatabase::class,
                     Jobs\MigrateDatabase::class,
+                    SeedRolesForProvider::class,
                 ])->send(fn (Events\TenantCreated $event) => $event->tenant)
                     ->shouldBeQueued($queued),
             ],
@@ -48,6 +52,21 @@ class TenancyServiceProvider extends ServiceProvider
             ],
             Events\TenancyEnded::class => [
                 Listeners\RevertToCentralContext::class,
+            ],
+            Events\TenancyBootstrapped::class => [
+                function (Events\TenancyBootstrapped $event): void {
+                    $registrar = app(PermissionRegistrar::class);
+                    $tenant = $event->tenancy->tenant;
+                    $registrar->cacheKey = 'spatie.permission.cache.provider.'.($tenant instanceof Provider ? $tenant->id : 'unknown');
+                    $registrar->clearPermissionsCollection();
+                },
+            ],
+            Events\RevertedToCentralContext::class => [
+                function (): void {
+                    $registrar = app(PermissionRegistrar::class);
+                    $registrar->cacheKey = 'spatie.permission.cache';
+                    $registrar->clearPermissionsCollection();
+                },
             ],
         ];
     }

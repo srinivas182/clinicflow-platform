@@ -2,23 +2,45 @@
 
 namespace App\Providers;
 
+use App\Domains\Identity\Contracts\OtpSender;
+use App\Domains\Identity\Enums\Permission;
+use App\Domains\Identity\Models\Staff;
+use App\Domains\Identity\Support\LogOtpSender;
+use App\Models\User;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
-        //
+        $this->app->singleton(OtpSender::class, LogOtpSender::class);
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        //
+        /*
+         * Workspace permissions are answered by the provider-side Staff record
+         * (provider database). Outside a workspace they are always denied.
+         */
+        Gate::before(function (User $user, string $ability): ?bool {
+            if (! in_array($ability, Permission::all(), true)) {
+                return null;
+            }
+
+            if (tenant() === null) {
+                return false;
+            }
+
+            $staff = Staff::query()->find($user->id);
+
+            return $staff instanceof Staff && $staff->checkPermissionTo($ability);
+        });
+
+        RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by(strtolower($request->string('login')->toString()).'|'.$request->ip()));
+        RateLimiter::for('login-code', fn (Request $request) => Limit::perMinute(10)->by((string) $request->ip()));
     }
 }

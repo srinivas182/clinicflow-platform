@@ -1,8 +1,11 @@
 <?php
 
+use App\Domains\Identity\Actions\AddStaffMember;
+use App\Domains\Identity\Enums\StaffRole;
 use App\Domains\Platform\Enums\ProviderStatus;
 use App\Domains\Platform\Enums\ProviderType;
 use App\Domains\Platform\Models\Provider;
+use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -79,11 +82,16 @@ it('drops the provider database when the provider is deleted', function (): void
     expect(databaseExists($database))->toBeFalse();
 });
 
-it('serves a provider page on the provider domain only', function (): void {
+it('serves the provider workspace on its own domain to signed-in staff only', function (): void {
     $provider = Provider::create(['name' => 'Sunrise Medical Centre', 'type' => ProviderType::Clinic, 'status' => ProviderStatus::Trial]);
     $provider->domains()->create(['domain' => 'sunrise.clinicflow.test']);
 
-    $this->withoutVite()
+    $this->get('http://sunrise.clinicflow.test/')->assertRedirect('http://localhost/login');
+
+    $owner = User::factory()->create();
+    app(AddStaffMember::class)->handle($provider, $owner, StaffRole::Owner);
+
+    $this->actingAs($owner)
         ->get('http://sunrise.clinicflow.test/')
         ->assertOk()
         ->assertInertia(fn (AssertableInertia $page) => $page

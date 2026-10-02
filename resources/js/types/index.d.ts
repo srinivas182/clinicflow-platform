@@ -12,6 +12,13 @@ export interface SharedProps {
         name: string;
         version: string;
     };
+    auth: {
+        user: { name: string; email: string } | null;
+    };
+    flash: {
+        success: string | null;
+    };
+    errors: Record<string, string>;
     provider: SharedProvider | null;
     [key: string]: unknown;
 }

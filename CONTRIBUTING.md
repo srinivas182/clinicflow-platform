@@ -9,7 +9,7 @@
 
 1. Open a pull request into `main` using the template.
 2. CI must be green: Backend (Pint, PHPStan level 8, Pest) and Frontend (typecheck, Vitest, build).
-3. **Only the tech lead merges.** The repository is on GitHub Free, which has no branch protection for private repositories, so this rule is enforced by the team until the move to the Team plan.
+3. **Merging:** pull requests are squash-merged into `main` once CI is green. Until other developers join, the tech lead has authorised merging after a green build; when the team grows, only the tech lead merges and branch protection is enabled on the Team plan.
 4. Squash-merge with a Conventional Commit title: `feat(visits): call next patient`, `fix(billing): ...`, `chore(ci): ...`, `docs(adr): ...`.
 
 ## Code rules

@@ -1,20 +1,20 @@
-import { usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { Bell, CircleHelp, LayoutDashboard, Search, Settings, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Logo } from '@/components/Logo';
 import type { SharedProps } from '@/types';
 
 const nav = [
-    { label: 'Overview', icon: LayoutDashboard, active: true },
-    { label: 'Patients', icon: Users, active: false },
-    { label: 'Settings', icon: Settings, active: false },
+    { label: 'Overview', icon: LayoutDashboard, href: '/' },
+    { label: 'Patients', icon: Users, href: '/patients' },
+    { label: 'Settings', icon: Settings, href: '#' },
 ];
 
 /**
  * Provider workspace shell: dark sidebar with workspace switcher, top bar, content.
  * Navigation items become role-based from Sprint 1.
  */
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ children, active = 'Overview' }: { children: ReactNode; active?: string }) {
     const { provider } = usePage<SharedProps>().props;
     const initials = (provider?.name ?? 'CF')
         .split(' ')
@@ -36,16 +36,16 @@ export function AppShell({ children }: { children: ReactNode }) {
                     </div>
                 </div>
                 <nav aria-label="Main">
-                    {nav.map(({ label, icon: Icon, active }) => (
-                        <a
+                    {nav.map(({ label, icon: Icon, href }) => (
+                        <Link
                             key={label}
-                            href="#"
-                            aria-current={active ? 'page' : undefined}
-                            className={`mb-0.5 flex items-center gap-3 rounded-md px-2.5 py-2 text-sm ${active ? 'bg-white/10 font-medium text-white' : 'hover:bg-white/5'}`}
+                            href={href}
+                            aria-current={label === active ? 'page' : undefined}
+                            className={`mb-0.5 flex items-center gap-3 rounded-md px-2.5 py-2 text-sm ${label === active ? 'bg-white/10 font-medium text-white' : 'hover:bg-white/5'}`}
                         >
                             <Icon className="size-4" aria-hidden="true" />
                             {label}
-                        </a>
+                        </Link>
                     ))}
                 </nav>
             </aside>
