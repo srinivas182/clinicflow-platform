@@ -145,7 +145,7 @@ it('seeds templates, versions them and always adds the legal block', function ()
     $v2 = app(PublishTemplate::class)->handle(DocumentType::Prescription, '<p>{{ patient.name }}</p><script>x</script>', 'A5');
     expect($v2->version)->toBe(2)
         ->and($v2->body)->not->toContain('script')
-        ->and(DocumentTemplate::query()->where('type', 'prescription')->where('version', 1)->value('is_active'))->toBe(0);
+        ->and(DocumentTemplate::query()->where('type', 'prescription')->where('version', 1)->value('is_active'))->toBeFalse();
 
     $html = app(RenderDocument::class)->html($v2, DocumentType::Prescription->sampleData());
     expect($html)->toContain('HPCSA MP 0654321')->toContain('advanced electronic signature')
