@@ -50,11 +50,11 @@ class DemoClaimsSwitch implements ClaimsSwitch
      */
     public function fetchRemittances(array $outstanding): array
     {
-        return array_map(fn (array $c) => new RemittanceLine(
+        return array_values(array_map(fn (array $c) => new RemittanceLine(
             $c['reference'],
             'RA-'.substr($c['reference'], -8),
             str_ends_with($c['member_number'], '9999') ? (int) round($c['total_cents'] * 0.8) : $c['total_cents'],
             str_ends_with($c['member_number'], '9999') ? 'Paid at scheme rate; balance is a member co-payment.' : 'Paid in full.',
-        ), $outstanding);
+        ), $outstanding));
     }
 }
