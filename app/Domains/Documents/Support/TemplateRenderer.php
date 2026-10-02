@@ -56,6 +56,11 @@ final class TemplateRenderer
         return $html;
     }
 
+    /**
+     * Resolve a dotted merge-field path (e.g. `patient.name`) against the data.
+     *
+     * @param  array<string, mixed>  $data
+     */
     private static function lookup(array $data, string $path): mixed
     {
         $value = $data;
