@@ -12,3 +12,4 @@
 | 0008 | [Quality gates on every pull request](0008-quality-gates.md) | Accepted |
 | 0009 | [Patient payments go to provider-owned merchant accounts](0009-payments-through-provider-accounts.md) | Accepted |
 | 0010 | [GitHub Free, pull-request workflow, lean CI](0010-source-control-and-ci.md) | Accepted |
+| 0011 | [Roles live on a provider-side Staff record](0011-roles-on-provider-staff-records.md) | Accepted |

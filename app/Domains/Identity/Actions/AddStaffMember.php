@@ -7,6 +7,7 @@ namespace App\Domains\Identity\Actions;
 use App\Domains\Identity\Enums\MembershipStatus;
 use App\Domains\Identity\Enums\StaffRole;
 use App\Domains\Identity\Models\Membership;
+use App\Domains\Identity\Models\Staff;
 use App\Domains\Platform\Models\Provider;
 use App\Models\User;
 use DateTimeInterface;
@@ -29,8 +30,11 @@ class AddStaffMember
         );
 
         $provider->run(function () use ($user, $role): void {
-            $user->unsetRelation('roles')->unsetRelation('permissions');
-            $user->syncRoles([$role->value]);
+            $staff = Staff::query()->updateOrCreate(
+                ['id' => $user->id],
+                ['name' => $user->name, 'email' => $user->email, 'role' => $role->value],
+            );
+            $staff->syncRoles([$role->value]);
             activity('staff')->withProperties(['user_id' => $user->id, 'role' => $role->value])->log('Staff member added');
         });
 
