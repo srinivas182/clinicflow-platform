@@ -1,0 +1,43 @@
+@import 'tailwindcss';
+
+@source '../views/**/*.blade.php';
+@source '../js/**/*.tsx';
+
+/*
+ * Clinic Flow design tokens (see docs/design/design-system.md).
+ * Red, orange, yellow and green are reserved for triage and status only.
+ */
+@theme {
+    --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+
+    --color-ink: #12232e;
+    --color-ink-2: #1d3544;
+    --color-teal: #0f7c74;
+    --color-teal-deep: #0b5c57;
+    --color-mint: #e5f3f1;
+    --color-mint-2: #cde9e5;
+    --color-jacaranda: #6a4fd0;
+    --color-jacaranda-deep: #4b33a8;
+    --color-jacaranda-wash: #eeeafb;
+    --color-paper: #f5f7f6;
+    --color-line: #dce3e1;
+    --color-muted: #5e6e76;
+
+    --color-triage-red: #d32f2f;
+    --color-triage-orange: #ef6c00;
+    --color-triage-yellow: #f2b705;
+    --color-triage-green: #43a047;
+
+    --color-status-danger: #c62828;
+    --color-status-danger-wash: #fdecec;
+    --color-status-warning: #9a7200;
+    --color-status-warning-wash: #fdf5d8;
+    --color-status-success: #2e7d3e;
+    --color-status-success-wash: #e6f3e8;
+}
+
+@layer base {
+    body {
+        font-variant-numeric: tabular-nums;
+    }
+}
