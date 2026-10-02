@@ -75,7 +75,7 @@ jobs:
       HUB_DB_DATABASE: clinicflow_hub
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
 
