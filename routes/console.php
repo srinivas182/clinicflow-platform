@@ -18,3 +18,4 @@ Schedule::command('care:tick')->everyTenMinutes()->withoutOverlapping()->onOneSe
 Schedule::command('care:tick --recalls')->dailyAt('09:00')->onOneServer();
 Schedule::command('accounting:export daily')->dailyAt('02:30')->onOneServer();
 Schedule::command('accounting:export hourly')->hourly()->onOneServer();
+Schedule::command('calendar:busy')->everyFifteenMinutes()->withoutOverlapping()->onOneServer();

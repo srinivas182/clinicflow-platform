@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Domains\Branches\Support\BranchContext;
 use App\Domains\Platform\Models\Provider;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -43,6 +44,10 @@ class HandleInertiaRequests extends Middleware
                 'type' => $provider->type->value,
                 'typeLabel' => $provider->type->label(),
             ] : null,
+            // Branch switcher: only shown once a practice has more than one branch.
+            'branches' => $provider instanceof Provider && $user instanceof User && BranchContext::filterId() !== null
+                ? ['options' => BranchContext::options(), 'current' => BranchContext::current()]
+                : null,
         ];
     }
 }

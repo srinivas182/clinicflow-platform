@@ -1,10 +1,16 @@
-import type { ReactNode } from 'react';
-import { Logo } from '@/components/Logo';
+import type { ReactNode } from "react";
+import { Logo } from "@/components/Logo";
 
 /**
  * Patient-facing layout on the provider's own address. Mobile-first.
  */
-export function PortalLayout({ provider, children }: { provider: string; children: ReactNode }) {
+export function PortalLayout({
+    provider,
+    children,
+}: {
+    provider: string;
+    children: ReactNode;
+}) {
     return (
         <div className="min-h-screen bg-paper">
             <header className="flex items-center gap-3 border-b border-line bg-white px-5 py-3">

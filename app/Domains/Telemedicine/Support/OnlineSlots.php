@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Telemedicine\Support;
 
+use App\Domains\Scheduling\Calendar\CalendarSync;
 use App\Domains\Scheduling\Enums\AppointmentStatus;
 use App\Domains\Scheduling\Models\Appointment;
 use App\Domains\Telemedicine\Models\TeleAvailability;
@@ -43,7 +44,7 @@ final class OnlineSlots
                     continue;
                 }
                 $clash = $busy->contains(fn (Appointment $a) => $t->lt($a->ends_at->copy()->addMinutes($buffer)) && $end->copy()->addMinutes($buffer)->gt($a->starts_at));
-                if (! $clash) {
+                if (! $clash && ! CalendarSync::isBusy($staffId, $t, $end)) {
                     $slots[] = $t->format('H:i');
                 }
             }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Scheduling\Actions;
 
+use App\Domains\Scheduling\Calendar\CalendarSync;
 use App\Domains\Scheduling\Enums\AppointmentStatus;
 use App\Domains\Scheduling\Models\Appointment;
 use App\Domains\Scheduling\Models\RosterSession;
@@ -48,7 +49,7 @@ class AvailableSlots
                 $slotEnd = $cursor->addMinutes($session->slot_minutes);
                 $clash = $taken->contains(fn (Appointment $a) => $a->starts_at->lt($slotEnd) && $a->ends_at->gt($cursor));
 
-                if (! $clash && $cursor->greaterThan($now)) {
+                if (! $clash && $cursor->greaterThan($now) && ! CalendarSync::isBusy($staffId, $cursor, $slotEnd)) {
                     $slots[] = ['starts_at' => $cursor, 'ends_at' => $slotEnd, 'session_id' => $session->id];
                 }
 

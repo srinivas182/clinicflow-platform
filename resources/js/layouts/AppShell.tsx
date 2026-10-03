@@ -1,52 +1,102 @@
-import { Link, usePage } from '@inertiajs/react';
-import { Activity, Bell, BookOpen, BookText, CalendarDays, ChartColumn, CircleHelp, ClipboardList, Clock, FileCheck, FileSignature, FileText, FlaskConical, Forward, Globe, HandCoins, Inbox, LayoutDashboard, Mail, MessagesSquare, PackageSearch, Percent, Pill, Search, Settings, Share2, ShieldAlert, ShieldCheck, Stethoscope, Users, Video, Wallet } from 'lucide-react';
-import type { ReactNode } from 'react';
-import { Logo } from '@/components/Logo';
-import type { SharedProps } from '@/types';
+import { Link, router, usePage } from "@inertiajs/react";
+import {
+    Activity,
+    Bell,
+    BookOpen,
+    BookText,
+    Building2,
+    CalendarDays,
+    ChartColumn,
+    CircleHelp,
+    ClipboardList,
+    Clock,
+    FileCheck,
+    FileSignature,
+    FileText,
+    FlaskConical,
+    Forward,
+    Globe,
+    HandCoins,
+    Inbox,
+    LayoutDashboard,
+    Mail,
+    MessagesSquare,
+    PackageSearch,
+    Percent,
+    Pill,
+    Search,
+    Settings,
+    Share2,
+    ShieldAlert,
+    ShieldCheck,
+    Stethoscope,
+    Users,
+    Video,
+    Wallet,
+} from "lucide-react";
+import type { ReactNode } from "react";
+import { Logo } from "@/components/Logo";
+import type { SharedProps } from "@/types";
 
 const nav = [
-    { label: 'Overview', icon: LayoutDashboard, href: '/workspace' },
-    { label: 'Front desk', icon: ClipboardList, href: '/front-desk' },
-    { label: 'Triage', icon: Activity, href: '/triage' },
-    { label: 'My queue', icon: Stethoscope, href: '/doctor' },
-    { label: 'Patients', icon: Users, href: '/patients' },
-    { label: 'Appointments', icon: CalendarDays, href: '/appointments' },
-    { label: 'Rosters', icon: Clock, href: '/rosters' },
-    { label: 'Templates', icon: FileText, href: '/settings/templates' },
-    { label: 'Pharmacy', icon: Pill, href: '/pharmacy' },
-    { label: 'Lab', icon: FlaskConical, href: '/lab' },
-    { label: 'Lab catalogue', icon: BookOpen, href: '/lab/catalogue' },
-    { label: 'Results', icon: Inbox, href: '/results' },
-    { label: 'Finance', icon: ChartColumn, href: '/finance' },
-    { label: 'Network', icon: Share2, href: '/network' },
-    { label: 'Online consults', icon: Video, href: '/telemedicine' },
-    { label: 'Chats', icon: MessagesSquare, href: '/chats' },
-    { label: 'Messages', icon: Mail, href: '/messages' },
-    { label: 'Referrals', icon: Forward, href: '/referrals' },
-    { label: 'Debtors', icon: HandCoins, href: '/finance/debtors' },
-    { label: 'VAT', icon: Percent, href: '/finance/vat' },
-    { label: 'Stock and ordering', icon: PackageSearch, href: '/procurement' },
-    { label: 'Accounting', icon: BookText, href: '/settings/accounting' },
-    { label: 'Compliance', icon: ShieldAlert, href: '/compliance/break-glass' },
-    { label: 'E-scripts', icon: FileSignature, href: '/escripts' },
-    { label: 'Wallet', icon: Wallet, href: '/settings/wallet' },
-    { label: 'Claims', icon: FileCheck, href: '/claims' },
-    { label: 'Audit', icon: ShieldCheck, href: '/compliance/audit' },
-    { label: 'Website', icon: Globe, href: '/settings/website' },
-    { label: 'Settings', icon: Settings, href: '/settings/billing' },
+    { label: "Overview", icon: LayoutDashboard, href: "/workspace" },
+    { label: "Front desk", icon: ClipboardList, href: "/front-desk" },
+    { label: "Triage", icon: Activity, href: "/triage" },
+    { label: "My queue", icon: Stethoscope, href: "/doctor" },
+    { label: "Patients", icon: Users, href: "/patients" },
+    { label: "Appointments", icon: CalendarDays, href: "/appointments" },
+    { label: "Rosters", icon: Clock, href: "/rosters" },
+    { label: "Templates", icon: FileText, href: "/settings/templates" },
+    { label: "Pharmacy", icon: Pill, href: "/pharmacy" },
+    { label: "Lab", icon: FlaskConical, href: "/lab" },
+    { label: "Lab catalogue", icon: BookOpen, href: "/lab/catalogue" },
+    { label: "Results", icon: Inbox, href: "/results" },
+    { label: "Finance", icon: ChartColumn, href: "/finance" },
+    { label: "Network", icon: Share2, href: "/network" },
+    { label: "Online consults", icon: Video, href: "/telemedicine" },
+    { label: "Chats", icon: MessagesSquare, href: "/chats" },
+    { label: "Messages", icon: Mail, href: "/messages" },
+    { label: "Referrals", icon: Forward, href: "/referrals" },
+    { label: "Debtors", icon: HandCoins, href: "/finance/debtors" },
+    { label: "VAT", icon: Percent, href: "/finance/vat" },
+    { label: "Stock and ordering", icon: PackageSearch, href: "/procurement" },
+    { label: "Accounting", icon: BookText, href: "/settings/accounting" },
+    { label: "Branches", icon: Building2, href: "/settings/branches" },
+    { label: "Your domain", icon: Globe, href: "/settings/domains" },
+    { label: "My calendar", icon: CalendarDays, href: "/me/calendar" },
+    { label: "Compliance", icon: ShieldAlert, href: "/compliance/break-glass" },
+    { label: "E-scripts", icon: FileSignature, href: "/escripts" },
+    { label: "Wallet", icon: Wallet, href: "/settings/wallet" },
+    { label: "Claims", icon: FileCheck, href: "/claims" },
+    { label: "Audit", icon: ShieldCheck, href: "/compliance/audit" },
+    { label: "Website", icon: Globe, href: "/settings/website" },
+    { label: "Settings", icon: Settings, href: "/settings/billing" },
 ];
 
 /**
  * Provider workspace shell: dark sidebar with workspace switcher, top bar, content.
  * Navigation items become role-based from Sprint 1.
  */
-export function AppShell({ children, active = 'Overview' }: { children: ReactNode; active?: string }) {
-    const { provider } = usePage<SharedProps>().props;
-    const initials = (provider?.name ?? 'CF')
-        .split(' ')
+export function AppShell({
+    children,
+    active = "Overview",
+}: {
+    children: ReactNode;
+    active?: string;
+}) {
+    const { provider, branches } = usePage<
+        SharedProps & {
+            branches: {
+                options: { id: number; name: string }[];
+                current: number | null;
+            } | null;
+        }
+    >().props;
+    const initials = (provider?.name ?? "CF")
+        .split(" ")
         .map((word) => word[0])
         .slice(0, 2)
-        .join('');
+        .join("");
 
     return (
         <div className="flex min-h-screen">
@@ -55,19 +105,43 @@ export function AppShell({ children, active = 'Overview' }: { children: ReactNod
                     <Logo tone="light" />
                 </div>
                 <div className="mb-4 flex items-center gap-2.5 rounded-lg bg-ink-2 px-3 py-2.5">
-                    <span className="grid size-8 place-items-center rounded-md bg-[#2D5161] text-xs font-semibold text-white">{initials}</span>
+                    <span className="grid size-8 place-items-center rounded-md bg-[#2D5161] text-xs font-semibold text-white">
+                        {initials}
+                    </span>
                     <div className="leading-tight">
-                        <div className="text-sm font-medium text-white">{provider?.name ?? 'Clinic Flow'}</div>
-                        <div className="text-xs text-[#9FB2B9]">{provider?.typeLabel ?? 'Platform'}</div>
+                        <div className="text-sm font-medium text-white">
+                            {provider?.name ?? "Clinic Flow"}
+                        </div>
+                        <div className="text-xs text-[#9FB2B9]">
+                            {provider?.typeLabel ?? "Platform"}
+                        </div>
                     </div>
                 </div>
+                {branches && (
+                    <select
+                        aria-label="Branch"
+                        className="mb-4 rounded-md bg-ink-2 px-2 py-1.5 text-sm text-white"
+                        value={branches.current ?? ""}
+                        onChange={(e) =>
+                            router.post("/branches/switch", {
+                                branch_id: Number(e.target.value),
+                            })
+                        }
+                    >
+                        {branches.options.map((b) => (
+                            <option key={b.id} value={b.id}>
+                                {b.name}
+                            </option>
+                        ))}
+                    </select>
+                )}
                 <nav aria-label="Main">
                     {nav.map(({ label, icon: Icon, href }) => (
                         <Link
                             key={label}
                             href={href}
-                            aria-current={label === active ? 'page' : undefined}
-                            className={`mb-0.5 flex items-center gap-3 rounded-md px-2.5 py-2 text-sm ${label === active ? 'bg-white/10 font-medium text-white' : 'hover:bg-white/5'}`}
+                            aria-current={label === active ? "page" : undefined}
+                            className={`mb-0.5 flex items-center gap-3 rounded-md px-2.5 py-2 text-sm ${label === active ? "bg-white/10 font-medium text-white" : "hover:bg-white/5"}`}
                         >
                             <Icon className="size-4" aria-hidden="true" />
                             {label}
@@ -80,13 +154,24 @@ export function AppShell({ children, active = 'Overview' }: { children: ReactNod
                     <label className="flex w-96 items-center gap-2 rounded-lg border border-line bg-paper px-3 py-2 text-sm text-muted">
                         <Search className="size-4" aria-hidden="true" />
                         <span className="sr-only">Search</span>
-                        <input className="w-full bg-transparent outline-none" placeholder="Search patients, scripts, invoices" />
+                        <input
+                            className="w-full bg-transparent outline-none"
+                            placeholder="Search patients, scripts, invoices"
+                        />
                     </label>
                     <div className="ml-auto flex gap-1 text-muted">
-                        <button type="button" aria-label="Help" className="grid size-9 place-items-center rounded-lg hover:bg-paper">
+                        <button
+                            type="button"
+                            aria-label="Help"
+                            className="grid size-9 place-items-center rounded-lg hover:bg-paper"
+                        >
                             <CircleHelp className="size-4.5" />
                         </button>
-                        <button type="button" aria-label="Notifications" className="grid size-9 place-items-center rounded-lg hover:bg-paper">
+                        <button
+                            type="button"
+                            aria-label="Notifications"
+                            className="grid size-9 place-items-center rounded-lg hover:bg-paper"
+                        >
                             <Bell className="size-4.5" />
                         </button>
                     </div>

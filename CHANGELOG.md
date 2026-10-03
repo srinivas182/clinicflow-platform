@@ -4,6 +4,15 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.20.0] — Sprint 14A: branches, groups, custom domains, calendars
+
+### Added
+- Branches inside a practice (shared patients): package limits plus an extra-branch add-on billed monthly; staff assignment; a branch switcher; new visits, appointments, invoices, cash-ups, roster sessions and received stock are tagged with the branch in use; the front-desk queue and dispensing use the current branch once a practice has more than one; stock per branch and transfers (earliest expiry first, recorded in the S5/S6 register).
+- Practice groups: group admins see totals per practice (visits, appointments, new patients, takings, amounts owed) — never patient records; optional combined monthly invoice that settles every practice's subscription invoice.
+- Custom domains: add a domain, follow the DNS records shown (CNAME, ownership TXT, email SPF), verify; the practice is then served on its own domain; an endpoint tells the web server which domains may get certificates (on-demand TLS, finished at deployment).
+- Calendars: doctors connect Google Calendar or Microsoft 365/Outlook (super admin registers Clinic Flow once); appointments sync as "Appointment" (initials optional, never names or reasons), cancelled ones are removed, busy times can block bookable slots, and every doctor has a private iCal feed.
+- `calendar:busy` every 15 minutes.
+
 ## [0.19.0] — Sprint 13B: VAT, procurement, debtors and accounting connections
 
 ### Added
