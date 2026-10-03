@@ -89,10 +89,7 @@ function ProviderCard({ p }: { p: ProviderRow }) {
                     <option value="live">Live</option>
                 </select>
                 <label className="flex items-center gap-1.5">
-                    <input type="checkbox" className="accent-teal" checked={state.enabled} onChange={(e) => setState({ ...state, enabled: e.target.checked })} /> Enabled
-                </label>
-                <label className="flex items-center gap-1.5">
-                    <input type="checkbox" className="accent-teal" checked={state.is_default} onChange={(e) => setState({ ...state, is_default: e.target.checked })} /> Default for {p.channel.toUpperCase()}
+                    <input type="checkbox" className="accent-teal" checked={state.enabled} onChange={(e) => setState({ ...state, enabled: e.target.checked, is_default: e.target.checked })} /> Active for {p.channel.toUpperCase()} — switches off the other {p.channel === 'sms' ? 'SMS' : 'email'} suppliers
                 </label>
                 <Button size="sm" onClick={() => router.put(`/admin/messaging/providers/${p.driver}`, state, { preserveScroll: true })}>
                     Save

@@ -4,6 +4,12 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+### Added
+- Email suppliers Twilio SendGrid and Brevo (HTTP APIs) alongside Amazon SES and SMTP; SMS suppliers unchanged (Clickatell, BulkSMS, SMSPortal, Twilio).
+
+### Changed
+- One active messaging supplier per channel: switching a supplier on switches the others in that channel off; their saved keys are kept. A supplier cannot be switched on without all its credentials.
+
 ## [0.13.0] — Sprint 8C: SMS and email suppliers, templates and allowances
 
 ### Added
