@@ -11,6 +11,7 @@ use App\Domains\Wallet\Actions\WalletLedger;
 use App\Domains\Wallet\Models\Wallet;
 use App\Domains\Wallet\Support\WalletSettings;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * Sends a catalogue message by WhatsApp instead of SMS when every condition holds:
@@ -68,7 +69,8 @@ class WhatsAppRouter
             return false;
         }
 
-        $this->wallet->chargeUsage($wallet, $price, "wa-{$key}-".now()->timestamp, 'WhatsApp '.$template->category.' message');
+        // Unique per message: batches (statements, recalls) send many of the same type in one second.
+        $this->wallet->chargeUsage($wallet, $price, 'wa-'.(string) Str::ulid(), 'WhatsApp '.$template->category.' message: '.$key);
         DB::table('message_log')->insert([
             'channel' => 'whatsapp', 'recipient' => $cell, 'subject' => null, 'body' => "[{$key}] ".implode(' | ', $params),
             'status' => 'sent', 'units' => 1, 'related_type' => $relatedType, 'related_id' => $relatedId, 'sent_at' => now(),

@@ -175,3 +175,31 @@ it('compares network pharmacies by published stock and estimated price', functio
     expect($rows[0]['name'])->toBe('Corner Pharmacy')->and($rows[0]['has_all'])->toBeTrue()->and($rows[0]['estimate_cents'])->toBe(60 * 150 + 30 * 300)
         ->and(collect($rows)->firstWhere('name', 'Main Road Pharmacy')['publishes'])->toBeFalse();
 });
+
+it('charges each WhatsApp message separately even when a batch sends several in the same second', function (): void {
+    whatsappReady($this);
+    $this->sub->forceFill(['addons' => ['whatsapp']])->save();
+    Http::fake(['graph.facebook.com/*' => Http::response(['messages' => [['id' => 'wamid.x']]])]);
+    $this->freezeTime();
+
+    expect(sendBooking())->toBeTrue()->and(sendBooking())->toBeTrue()->and(sendBooking())->toBeTrue()
+        ->and(Wallet::for($this->clinic->id)->balance_cents)->toBe(10000 - 3 * 35)
+        ->and(DB::table('message_log')->where('channel', 'whatsapp')->count())->toBe(3);
+});
+
+it('makes WhatsApp the patient\'s channel when staff record opt-in, and lets patients opt in or out in the portal', function (): void {
+    $patient = registerTestPatient('Thandi', '880412', null, '0825550147');
+    $this->sub->forceFill(['addons' => ['whatsapp']])->save();
+    $receptionist = User::factory()->create();
+    app(AddStaffMember::class)->handle($this->clinic, $receptionist, StaffRole::Receptionist);
+    tenancy()->end();
+
+    $this->actingAs($receptionist)->post("http://sunrise.clinicflow.test/patients/{$patient->id}/whatsapp", ['opt_in' => true])->assertSessionHasNoErrors();
+    $this->clinic->run(fn () => expect($patient->fresh()?->preferred_channel)->toBe(Channel::WhatsApp)->and($patient->fresh()?->getAttribute('whatsapp_opt_in_at'))->not->toBeNull());
+
+    $this->withSession(['portal_cell' => '0825550147'])->post('http://sunrise.clinicflow.test/my/whatsapp', ['opt_in' => false])->assertSessionHasNoErrors();
+    $this->clinic->run(fn () => expect($patient->fresh()?->preferred_channel)->toBe(Channel::Sms)->and($patient->fresh()?->getAttribute('whatsapp_opt_in_at'))->toBeNull());
+
+    $this->withSession(['portal_cell' => '0825550147'])->get('http://sunrise.clinicflow.test/my/care')
+        ->assertInertia(fn ($p) => $p->where('whatsapp.available', true)->where('whatsapp.optedIn', false));
+});

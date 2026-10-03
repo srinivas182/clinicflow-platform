@@ -101,6 +101,7 @@ Route::middleware([
             Route::get('/care', [PortalCareController::class, 'index'])->name('care');
             Route::get('/pharmacies', [DeliveryController::class, 'portalCompare'])->name('pharmacies');
             Route::post('/care/sharing', [PortalCareController::class, 'sharing'])->name('care.sharing');
+            Route::post('/whatsapp', [WhatsAppController::class, 'portalOptIn'])->middleware('throttle:10,1')->name('whatsapp');
             Route::post('/results/{order}/request', [PortalResultsController::class, 'request'])->middleware('throttle:10,1')->name('results.request');
             Route::get('/results/{order}/download/{kind}', [PortalResultsController::class, 'download'])->whereIn('kind', ['report', 'lab'])->name('results.download');
             Route::post('/practices/{provider}/revoke', [EscriptController::class, 'patientRevoke'])->name('practices.revoke');

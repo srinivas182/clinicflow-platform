@@ -10,9 +10,11 @@ use App\Domains\Messaging\WhatsApp\WhatsAppClient;
 use App\Domains\Messaging\WhatsApp\WhatsAppProvider;
 use App\Domains\Messaging\WhatsApp\WhatsAppRouter;
 use App\Domains\Messaging\WhatsApp\WhatsAppTemplate;
+use App\Domains\Patients\Enums\Channel;
 use App\Domains\Patients\Models\Patient;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\Subscription;
+use App\Domains\Portal\Actions\PortalSignIn;
 use App\Domains\Wallet\Support\WalletSettings;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -123,10 +125,26 @@ class WhatsAppController extends Controller
     {
         $this->authorize(Permission::PATIENTS_REGISTER);
         $on = $request->boolean('opt_in');
-        $patient->forceFill(['whatsapp_opt_in_at' => $on ? now() : null])->save();
+        // Opting in makes WhatsApp the patient's channel; withdrawing returns them to SMS.
+        $patient->forceFill(['whatsapp_opt_in_at' => $on ? now() : null, 'preferred_channel' => $on ? Channel::WhatsApp : Channel::Sms])->save();
         activity('patients')->performedOn($patient)->causedBy($request->user())->log($on ? 'WhatsApp opt-in recorded' : 'WhatsApp opt-in withdrawn');
 
         return back()->with('success', $on ? 'WhatsApp opt-in recorded.' : 'WhatsApp opt-in withdrawn.');
+    }
+
+    /**
+     * The patient chooses WhatsApp (or stops it) themselves in the portal, for every profile on their cell number.
+     */
+    public function portalOptIn(Request $request, PortalSignIn $signIn): RedirectResponse
+    {
+        $on = $request->boolean('opt_in');
+        foreach ($signIn->profiles((string) $request->session()->get('portal_cell')) as $patient) {
+            /** @var Patient $patient */
+            $patient->forceFill(['whatsapp_opt_in_at' => $on ? now() : null, 'preferred_channel' => $on ? Channel::WhatsApp : Channel::Sms])->save();
+            activity('portal')->performedOn($patient)->log($on ? 'Patient opted in to WhatsApp' : 'Patient stopped WhatsApp messages');
+        }
+
+        return back()->with('success', $on ? 'You will get messages on WhatsApp.' : 'You will get messages by SMS.');
     }
 
     private function provider(): Provider
