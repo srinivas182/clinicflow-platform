@@ -4,6 +4,16 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.19.0] — Sprint 13B: VAT, procurement, debtors and accounting connections
+
+### Added
+- VAT: practice setting (registered or not, VAT number, rate, zero-rated line types); VAT portion on every line, tax invoices for registered practices, VAT on credit notes, VAT201 figures (output, input, payable) and VAT fields on the invoice PDF.
+- Procurement: suppliers, purchase orders (VAT on VAT-registered suppliers), email to supplier, receiving against the order (batch, expiry, selling price; partial receipts), reorder list, stock takes with reasons (earliest expiry first) and expired-batch write-offs; every S5/S6 movement recorded in the register.
+- Debtors: ageing (current, 30, 60, 90+), one monthly statement per patient with a pay link, bad-debt write-off requested by one person and approved by another (issued as a credit note).
+- Accounting connections: super admin offers Xero, Sage Business Cloud Accounting and Zoho Books with Clinic Flow's app credentials and connects the platform's own books; each provider connects its own app (one active), maps its accounts and posts balanced daily journals automatically (daily or hourly) or on demand; tokens are encrypted and refreshed.
+- Built-in exports for every provider: journal, invoices, payments and VAT as CSV, Excel and PDF.
+- `accounting:export` (daily and hourly).
+
 ## [0.18.0] — Sprint 13A: referrals, clinician messaging, chronic and preventive care
 
 ### Added

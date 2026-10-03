@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Activity, Bell, BookOpen, CalendarDays, ChartColumn, CircleHelp, ClipboardList, Clock, FileCheck, FileSignature, FileText, FlaskConical, Forward, Globe, Inbox, LayoutDashboard, Mail, MessagesSquare, Pill, Search, Settings, Share2, ShieldAlert, ShieldCheck, Stethoscope, Users, Video, Wallet } from 'lucide-react';
+import { Activity, Bell, BookOpen, BookText, CalendarDays, ChartColumn, CircleHelp, ClipboardList, Clock, FileCheck, FileSignature, FileText, FlaskConical, Forward, Globe, HandCoins, Inbox, LayoutDashboard, Mail, MessagesSquare, PackageSearch, Percent, Pill, Search, Settings, Share2, ShieldAlert, ShieldCheck, Stethoscope, Users, Video, Wallet } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Logo } from '@/components/Logo';
 import type { SharedProps } from '@/types';
@@ -23,6 +23,10 @@ const nav = [
     { label: 'Chats', icon: MessagesSquare, href: '/chats' },
     { label: 'Messages', icon: Mail, href: '/messages' },
     { label: 'Referrals', icon: Forward, href: '/referrals' },
+    { label: 'Debtors', icon: HandCoins, href: '/finance/debtors' },
+    { label: 'VAT', icon: Percent, href: '/finance/vat' },
+    { label: 'Stock and ordering', icon: PackageSearch, href: '/procurement' },
+    { label: 'Accounting', icon: BookText, href: '/settings/accounting' },
     { label: 'Compliance', icon: ShieldAlert, href: '/compliance/break-glass' },
     { label: 'E-scripts', icon: FileSignature, href: '/escripts' },
     { label: 'Wallet', icon: Wallet, href: '/settings/wallet' },

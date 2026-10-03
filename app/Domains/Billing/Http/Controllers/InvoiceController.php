@@ -14,6 +14,7 @@ use App\Domains\Billing\Models\Invoice;
 use App\Domains\Billing\Models\InvoiceLine;
 use App\Domains\Billing\Models\Payment;
 use App\Domains\Billing\Support\BillingSettings;
+use App\Domains\Billing\Support\Vat;
 use App\Domains\Documents\Actions\RenderDocument;
 use App\Domains\Documents\Support\DocumentType;
 use App\Domains\Documents\Support\PracticeData;
@@ -122,7 +123,8 @@ class InvoiceController extends Controller
         $issued = $render->issue(DocumentType::Invoice, $invoice, [
             'practice' => PracticeData::get(),
             'patient' => ['name' => $invoice->patient->fullName(), 'medical_aid' => $invoice->patient->medical_aid_scheme ?? 'Cash'],
-            'invoice' => ['number' => $invoice->number, 'date' => $invoice->created_at?->format('j F Y'), 'total' => $money($invoice->total_cents), 'paid' => $money($invoice->paid_cents), 'balance' => $money($invoice->balanceCents())],
+            'invoice' => ['number' => $invoice->number, 'date' => $invoice->created_at?->format('j F Y'), 'total' => $money($invoice->total_cents), 'paid' => $money($invoice->paid_cents), 'balance' => $money($invoice->balanceCents()),
+                'title' => $invoice->tax_invoice ? 'Tax invoice' : 'Invoice', 'vat' => $money($invoice->vat_cents), 'vat_number' => (string) Vat::number(), 'vat_rate' => (string) $invoice->vat_rate],
             'lines' => $invoice->lines->map(fn (InvoiceLine $l) => ['code' => $l->code ?? '', 'description' => $l->description, 'quantity' => (string) $l->quantity, 'total' => $money($l->total_cents)])->all(),
         ], $this->user($request));
 

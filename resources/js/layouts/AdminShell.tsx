@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BadgeCheck, Building2, CreditCard, Globe, Layers, MessageSquare, RefreshCw, Video, Wallet } from 'lucide-react';
+import { BadgeCheck, BookText, Building2, CreditCard, Globe, Layers, MessageSquare, RefreshCw, Video, Wallet } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Logo } from '@/components/Logo';
 
@@ -11,6 +11,7 @@ const nav = [
     { label: 'Payments', icon: CreditCard, href: '/admin/payments' },
     { label: 'Wallet', icon: Wallet, href: '/admin/wallet' },
     { label: 'Telemedicine', icon: Video, href: '/admin/telemedicine' },
+    { label: 'Accounting', icon: BookText, href: '/admin/accounting' },
     { label: 'Messaging', icon: MessageSquare, href: '/admin/messaging' },
     { label: 'Website', icon: Globe, href: '/admin/pages' },
 ];

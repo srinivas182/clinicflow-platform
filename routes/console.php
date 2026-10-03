@@ -16,3 +16,5 @@ Schedule::command('telemedicine:tick')->everyMinute()->withoutOverlapping()->onO
 Schedule::command('lab:release-tick')->everyTenMinutes()->withoutOverlapping()->onOneServer();
 Schedule::command('care:tick')->everyTenMinutes()->withoutOverlapping()->onOneServer();
 Schedule::command('care:tick --recalls')->dailyAt('09:00')->onOneServer();
+Schedule::command('accounting:export daily')->dailyAt('02:30')->onOneServer();
+Schedule::command('accounting:export hourly')->hourly()->onOneServer();
