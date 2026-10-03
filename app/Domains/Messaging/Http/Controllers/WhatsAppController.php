@@ -33,7 +33,7 @@ class WhatsAppController extends Controller
                 $p = WhatsAppProvider::query()->where('driver', $key)->first();
 
                 return ['driver' => $key, 'label' => $d['label'], 'fields' => $d['fields'], 'senderLabel' => $d['sender'], 'enabled' => (bool) $p?->enabled,
-                    'sender' => $p?->sender, 'configured' => array_keys(array_filter((array) ($p?->credentials ?? [])))];
+                    'sender' => $p?->sender, 'configured' => $p === null ? [] : array_keys(array_filter((array) ($p->credentials ?? [])))];
             })->values(),
             'templates' => WhatsAppTemplate::query()->orderBy('message_key')->get(['id', 'message_key', 'template_name', 'language', 'category', 'status', 'rejected_reason']),
             'messages' => collect(MessageCatalogue::all())->filter(fn (array $e) => in_array('sms', $e['channels'], true))->map(fn (array $e, string $k) => ['key' => $k, 'label' => $e['label'], 'category' => WhatsAppTemplate::categoryFor($e['category'])])->values(),

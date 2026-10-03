@@ -63,7 +63,7 @@ class WhatsAppRouter
             return false;
         }
 
-        $params = array_values(array_map(fn (string $v) => (string) ($vars[$v] ?? ''), $entry['placeholders']));
+        $params = array_map(fn (string $v) => (string) ($vars[$v] ?? ''), $entry['placeholders']);
         if (! $this->client->sendTemplate($provider, WhatsAppClient::e164($cell), $template, $params)) {
             return false;
         }

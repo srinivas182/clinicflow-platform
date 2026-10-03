@@ -45,27 +45,29 @@ class PharmacyComparison
         $stock = DB::connection('hub')->table('hub_pharmacy_stock')->whereIn('nappi_code', $codes)->get()->groupBy('tenant_id');
         $publishers = DB::connection('hub')->table('hub_pharmacy_stock')->distinct()->pluck('tenant_id')->all();
 
-        $rows = Provider::query()->where('type', ProviderType::Pharmacy->value)->whereIn('status', [ProviderStatus::Trial->value, ProviderStatus::Active->value])->orderBy('name')->get()
-            ->map(function (Provider $p) use ($items, $stock, $publishers): array {
-                $mine = collect($stock->get($p->id, []))->keyBy('nappi_code');
-                $available = 0;
-                $total = 0;
-                foreach ($items as $i) {
-                    $row = $mine->get($i['nappi_code']);
-                    if ($row !== null && (int) $row->quantity >= $i['quantity']) {
-                        $available++;
-                        $total += (int) $row->price_cents * $i['quantity'];
-                    }
+        $rows = [];
+        foreach (Provider::query()->where('type', ProviderType::Pharmacy->value)->whereIn('status', [ProviderStatus::Trial->value, ProviderStatus::Active->value])->orderBy('name')->get() as $p) {
+            if (! $p instanceof Provider) {
+                continue;
+            }
+            $mine = collect($stock->get($p->id, []))->keyBy('nappi_code');
+            $available = 0;
+            $total = 0;
+            foreach ($items as $i) {
+                $row = $mine->get($i['nappi_code']);
+                if ($row !== null && (int) $row->quantity >= $i['quantity']) {
+                    $available++;
+                    $total += (int) $row->price_cents * $i['quantity'];
                 }
-                $publishes = in_array($p->id, $publishers, true);
-
-                return ['id' => $p->id, 'name' => $p->name, 'publishes' => $publishes, 'has_all' => $publishes && $available === count($items),
-                    'available' => $available, 'of' => count($items), 'estimate_cents' => $publishes && $available === count($items) ? $total : null];
-            })->all();
+            }
+            $publishes = in_array($p->id, $publishers, true);
+            $rows[] = ['id' => (string) $p->id, 'name' => $p->name, 'publishes' => $publishes, 'has_all' => $publishes && $available === count($items),
+                'available' => $available, 'of' => count($items), 'estimate_cents' => $publishes && $available === count($items) ? $total : null];
+        }
 
         // Pharmacies with every item first, cheapest estimate next, then by name.
         usort($rows, fn (array $a, array $b): int => [! $a['has_all'], $a['estimate_cents'] ?? PHP_INT_MAX, $a['name']] <=> [! $b['has_all'], $b['estimate_cents'] ?? PHP_INT_MAX, $b['name']]);
 
-        return array_values($rows);
+        return $rows;
     }
 }
