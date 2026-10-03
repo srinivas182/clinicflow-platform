@@ -10,10 +10,14 @@ use App\Domains\Platform\Http\Controllers\Admin\CmsAdminController;
 use App\Domains\Platform\Http\Controllers\Admin\PackageAdminController;
 use App\Domains\Platform\Http\Controllers\Admin\PaymentAdminController;
 use App\Domains\Platform\Http\Controllers\Admin\ProviderAdminController;
+use App\Domains\Platform\Http\Controllers\CustomDomainController;
+use App\Domains\Platform\Http\Controllers\GroupController;
 use App\Domains\Platform\Http\Controllers\PricingController;
 use App\Domains\Platform\Http\Controllers\PublicSiteController;
 use App\Domains\Platform\Http\Controllers\SignupController;
 use App\Domains\Platform\Http\Controllers\SubscriptionBillingController;
+use App\Domains\Scheduling\Http\Controllers\CalendarAdminController;
+use App\Domains\Scheduling\Http\Controllers\CalendarController;
 use App\Domains\Telemedicine\Http\Controllers\TelemedicineAdminController;
 use App\Domains\Wallet\Http\Controllers\WalletController;
 use Illuminate\Support\Facades\Route;
@@ -50,8 +54,12 @@ foreach ($centralDomains as $index => $domain) {
             Route::post('/login/verify', [LoginController::class, 'verify'])->middleware('throttle:login-code')->name('login.verify.store');
         });
 
+        Route::get('/calendar/callback/{driver}', [CalendarController::class, 'callback'])->whereIn('driver', ['google', 'microsoft'])->middleware('throttle:20,1')->name('calendar.callback');
+        Route::get('/internal/tls/allowed', [CustomDomainController::class, 'tlsAllowed'])->middleware('throttle:120,1')->name('tls.allowed');
         Route::get('/accounting/callback/{driver}', AccountingCallbackController::class)->whereIn('driver', ['xero', 'sage', 'zoho'])->middleware('throttle:20,1')->name('accounting.callback');
         Route::middleware('auth')->group(function (): void {
+            Route::get('/groups', [GroupController::class, 'mine'])->name('groups.mine');
+            Route::get('/groups/{group}', [GroupController::class, 'show'])->name('groups.show');
             Route::get('/workspaces', [WorkspaceController::class, 'index'])->name('workspaces');
             Route::post('/workspaces/{provider}/open', [WorkspaceController::class, 'open'])->name('workspaces.open');
             Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
@@ -67,6 +75,10 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/wallet', [WalletController::class, 'adminSettings'])->name('wallet.settings');
             Route::get('/telemedicine', [TelemedicineAdminController::class, 'index'])->name('telemedicine.index');
             Route::get('/accounting', [AccountingAdminController::class, 'index'])->name('accounting.index');
+            Route::get('/groups', [GroupController::class, 'admin'])->name('groups.index');
+            Route::post('/groups/{action}', [GroupController::class, 'adminAction'])->whereIn('action', ['create', 'member', 'admin', 'billing', 'invoice', 'settle'])->name('groups.act');
+            Route::get('/calendars', [CalendarAdminController::class, 'index'])->name('calendars.index');
+            Route::put('/calendars/{driver}', [CalendarAdminController::class, 'save'])->whereIn('driver', ['google', 'microsoft'])->name('calendars.save');
             Route::put('/accounting/{driver}', [AccountingAdminController::class, 'save'])->whereIn('driver', ['xero', 'sage', 'zoho'])->name('accounting.save');
             Route::get('/accounting/{driver}/connect', [AccountingAdminController::class, 'connect'])->whereIn('driver', ['xero', 'sage', 'zoho'])->name('accounting.connect');
             Route::put('/accounting/{driver}/platform', [AccountingAdminController::class, 'updatePlatform'])->whereIn('driver', ['xero', 'sage', 'zoho'])->name('accounting.platform');

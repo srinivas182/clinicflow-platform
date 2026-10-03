@@ -7,6 +7,7 @@ use App\Domains\Billing\Http\Controllers\GatewayWebhookController;
 use App\Domains\Billing\Http\Controllers\InvoiceController;
 use App\Domains\Billing\Http\Controllers\PayLinkController;
 use App\Domains\Billing\Http\Controllers\PaymentSettingsController;
+use App\Domains\Branches\Http\Controllers\BranchController;
 use App\Domains\Claims\Http\Controllers\ClaimController;
 use App\Domains\Clinical\Http\Controllers\CareController;
 use App\Domains\Clinical\Http\Controllers\ConsultController;
@@ -26,6 +27,7 @@ use App\Domains\Patients\Http\Controllers\PatientAdminController;
 use App\Domains\Patients\Http\Controllers\PatientController;
 use App\Domains\Pharmacy\Http\Controllers\PharmacyController;
 use App\Domains\Pharmacy\Http\Controllers\ProcurementController;
+use App\Domains\Platform\Http\Controllers\CustomDomainController;
 use App\Domains\Platform\Http\Controllers\ProviderSiteController;
 use App\Domains\Platform\Http\Controllers\SubscriptionBillingController;
 use App\Domains\Platform\Http\Controllers\WebsiteSettingsController;
@@ -35,6 +37,7 @@ use App\Domains\Portal\Http\Controllers\PortalResultsController;
 use App\Domains\Portal\Http\Middleware\EnsurePortalPatient;
 use App\Domains\Prescribing\Http\Controllers\PrescriptionController;
 use App\Domains\Scheduling\Http\Controllers\AppointmentController;
+use App\Domains\Scheduling\Http\Controllers\CalendarController;
 use App\Domains\Scheduling\Http\Controllers\RosterController;
 use App\Domains\Telemedicine\Http\Controllers\ChatController;
 use App\Domains\Telemedicine\Http\Controllers\OnlineConsultController;
@@ -68,6 +71,7 @@ Route::middleware([
 
     Route::get('/pay/{token}', [PayLinkController::class, 'show'])->middleware('throttle:30,1')->name('paylink.show');
     Route::get('/pay/{token}/done', [PayLinkController::class, 'done'])->name('paylink.done');
+    Route::get('/calendar/{token}.ics', [CalendarController::class, 'ical'])->middleware('throttle:60,1')->name('calendar.ical');
 
     // Patient portal (patients sign in with their cell number and an SMS code).
     Route::prefix('my')->name('portal.')->group(function (): void {
@@ -214,6 +218,18 @@ Route::middleware([
         Route::get('/finance', [FinanceController::class, 'dashboard'])->name('finance.dashboard');
 
         Route::get('/network', [NetworkController::class, 'index'])->name('network.index');
+        Route::get('/settings/branches', [BranchController::class, 'index'])->name('branches.index');
+        Route::post('/settings/branches', [BranchController::class, 'store'])->name('branches.store');
+        Route::put('/settings/branches/{branch}/staff', [BranchController::class, 'staff'])->name('branches.staff');
+        Route::post('/branches/switch', [BranchController::class, 'switch'])->name('branches.switch');
+        Route::post('/branches/transfer', [BranchController::class, 'transfer'])->name('branches.transfer');
+        Route::get('/settings/domains', [CustomDomainController::class, 'index'])->name('domains.index');
+        Route::post('/settings/domains', [CustomDomainController::class, 'store'])->name('domains.store');
+        Route::post('/settings/domains/{domain}/verify', [CustomDomainController::class, 'verify'])->name('domains.verify');
+        Route::delete('/settings/domains/{domain}', [CustomDomainController::class, 'destroy'])->name('domains.destroy');
+        Route::get('/me/calendar', [CalendarController::class, 'show'])->name('calendar.show');
+        Route::get('/me/calendar/{driver}/connect', [CalendarController::class, 'connect'])->whereIn('driver', ['google', 'microsoft'])->name('calendar.connect');
+        Route::put('/me/calendar', [CalendarController::class, 'update'])->name('calendar.update');
         Route::get('/finance/vat', [FinanceOpsController::class, 'vat'])->name('finance.vat');
         Route::put('/settings/vat', [FinanceOpsController::class, 'saveVat'])->name('settings.vat');
         Route::get('/finance/debtors', [FinanceOpsController::class, 'debtors'])->name('finance.debtors');

@@ -31,9 +31,12 @@ class StockItem extends Model
     /**
      * Quantity in unexpired batches.
      */
-    public function onHand(): int
+    /**
+     * Unexpired stock, optionally at one branch.
+     */
+    public function onHand(?int $branchId = null): int
     {
-        return (int) $this->batches()->whereDate('expiry_date', '>=', today())->sum('quantity');
+        return (int) $this->batches()->whereDate('expiry_date', '>=', today())->when($branchId !== null, fn ($q) => $q->where('branch_id', $branchId))->sum('quantity');
     }
 
     public function isScheduledRegister(): bool

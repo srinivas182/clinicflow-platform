@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Domains\Billing\Contracts\PaymentGateway;
 use App\Domains\Billing\Gateways\GatewayFactory;
 use App\Domains\Billing\Support\FakePaymentGateway;
+use App\Domains\Branches\Support\BranchContext;
 use App\Domains\Claims\Contracts\ClaimsSwitch;
 use App\Domains\Claims\Support\DemoClaimsSwitch;
 use App\Domains\Finance\Support\LedgerPoster;
@@ -16,6 +17,8 @@ use App\Domains\Messaging\Contracts\MessageSender;
 use App\Domains\Messaging\Support\GatewayMessageSender;
 use App\Domains\Prescribing\Contracts\DrugDatabase;
 use App\Domains\Prescribing\Support\DemoDrugDatabase;
+use App\Domains\Scheduling\Calendar\CalendarSync;
+use App\Domains\Scheduling\Models\Appointment;
 use App\Domains\Telemedicine\Support\OnlineConsultHooks;
 use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -42,6 +45,12 @@ class AppServiceProvider extends ServiceProvider
     {
         LedgerPoster::register();
         OnlineConsultHooks::register();
+        BranchContext::register();
+        Appointment::saved(function (Appointment $a): void {
+            if (tenant() !== null) {
+                app(CalendarSync::class)->sync($a);
+            }
+        });
 
         /*
          * Workspace permissions are answered by the provider-side Staff record

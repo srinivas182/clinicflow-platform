@@ -7,6 +7,7 @@ namespace App\Domains\Pharmacy\Actions;
 use App\Domains\Billing\Actions\AddInvoiceLine;
 use App\Domains\Billing\Enums\LineKind;
 use App\Domains\Billing\Models\Invoice;
+use App\Domains\Branches\Support\BranchContext;
 use App\Domains\Identity\Models\Staff;
 use App\Domains\Pharmacy\Models\OwingItem;
 use App\Domains\Pharmacy\Models\RegisterEntry;
@@ -58,7 +59,7 @@ class DispensePrescription
                 $given = 0;
 
                 if ($stock instanceof StockItem) {
-                    $batches = $stock->batches()->whereDate('expiry_date', '>=', today())->where('quantity', '>', 0)->orderBy('expiry_date')->lockForUpdate()->get();
+                    $batches = $stock->batches()->whereDate('expiry_date', '>=', today())->where('quantity', '>', 0)->when(BranchContext::filterId(), fn ($q, int $b) => $q->where('branch_id', $b))->orderBy('expiry_date')->lockForUpdate()->get();
                     foreach ($batches as $batch) {
                         /** @var StockBatch $batch */
                         if ($remaining === 0) {

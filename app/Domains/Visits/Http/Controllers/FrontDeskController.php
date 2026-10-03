@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Visits\Http\Controllers;
 
 use App\Domains\Billing\Models\Invoice;
+use App\Domains\Branches\Support\BranchContext;
 use App\Domains\Identity\Enums\Permission;
 use App\Domains\Identity\Models\Staff;
 use App\Domains\Patients\Actions\SearchPatients;
@@ -36,7 +37,7 @@ class FrontDeskController extends Controller
     {
         $this->authorize(Permission::VISITS_MANAGE);
 
-        $visits = Visit::query()->with(['patient', 'invoice'])->whereDate('visit_date', today())->orderBy('created_at')->get();
+        $visits = Visit::query()->with(['patient', 'invoice'])->whereDate('visit_date', today())->when(BranchContext::filterId(), fn ($q, int $b) => $q->where('branch_id', $b))->orderBy('created_at')->get();
         $term = $request->string('search')->toString();
 
         return Inertia::render('FrontDesk/Index', [
