@@ -8,7 +8,7 @@ return [
      * Platform release version. Bumped on every release (see CHANGELOG.md)
      * and reported by GET /api/v1/health.
      */
-    'version' => env('CLINICFLOW_VERSION', '0.11.0'),
+    'version' => env('CLINICFLOW_VERSION', '0.12.0'),
 
     /*
      * Hosting region. All patient data must stay in South Africa (POPIA s72).
@@ -27,6 +27,13 @@ return [
          */
         'allow_fake' => (bool) env('PAYMENTS_ALLOW_FAKE', false),
         'vat_rate' => 0.15,
+    ],
+
+    'website' => [
+        // Contact details shown on clinicflow.co.za.
+        'email' => env('WEBSITE_EMAIL', 'hello@clinicflow.co.za'),
+        'phone' => env('WEBSITE_PHONE', ''),
+        'address' => env('WEBSITE_ADDRESS', 'South Africa'),
     ],
 
     'messaging' => [

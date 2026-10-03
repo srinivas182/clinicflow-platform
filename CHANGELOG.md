@@ -4,6 +4,20 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.12.0] — Sprint 8B: default websites
+
+### Added
+- clinicflow.co.za ships with a complete default website: home (banner, provider types, how a visit flows, features, data residency, FAQ, call to action), For clinics, For doctors, Pharmacies & labs, For patients, About and Contact, with menu, footer and draft privacy and terms pages (unpublished until legal approval). Copy is factual — no invented customer numbers or testimonials.
+- Original brand illustrations in `public/images/site` (no stock-photo licensing); any section image can be replaced with a site image or an https address.
+- Pages are built from editable sections (banner, cards, features, steps, image and list, questions, call to action, contact details, text). The super admin edits clinicflow.co.za in Admin → Website, field by field.
+- Every new provider gets a default website on its own address, written for its type (clinic, independent doctor, pharmacy, lab): Home, Services, About and Contact, linking to the patient portal. Text uses {name}, {phone}, {email}, {address} and {hours}, so it stays correct when details change. Call buttons appear once a phone number is entered.
+- Providers edit their site in Settings → Website (owner and practice admin): pages, menu labels, publishing (the home page always stays published) and contact details.
+- `websites:seed-defaults` adds missing default pages to the platform and existing providers without overwriting edits.
+- Section content is cleaned on save: only known fields, plain text, safe links (/, https, tel:, mailto:) and images; rich text sanitised.
+
+### Changed
+- A provider's address now opens its public website; the staff workspace moved to `/workspace` (sign-in hand-off goes there).
+
 ## [0.11.0] — Sprint 8: patient portal, legacy import, compliance centre and public website
 
 ### Added
