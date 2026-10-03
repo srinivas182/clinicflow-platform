@@ -4,7 +4,7 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
-## [0.11.0] — Sprint 10: Network Hub and telemedicine wallet
+## [0.14.0] — Sprint 10: Network Hub and telemedicine wallet
 
 ### Added
 - Network Hub (separate `hub` database, identity only — no clinical data): one cell number = one identity across the network; a person new to the network gets an identity and link at registration; providers who find an existing identity see a masked match only (initials, birth year, last three digits of the cell).
