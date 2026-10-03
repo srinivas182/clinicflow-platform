@@ -32,8 +32,8 @@ class ProcurementController extends Controller
                 'id' => $o->id, 'number' => $o->number, 'supplier' => $o->supplier->name, 'status' => $o->status, 'total' => $o->total_cents / 100, 'vat' => $o->vat_cents / 100,
                 'lines' => $o->lines->map(fn ($l) => $l->only(['id', 'description', 'quantity', 'received_quantity', 'unit_cost_cents']))->values(),
             ])->values(),
-            'reorder' => StockItem::query()->get()->filter(fn (StockItem $s) => $s->onHand() <= $s->reorder_level)->map(fn (StockItem $s) => ['id' => $s->id, 'medicine_id' => $s->medicine_id, 'name' => $s->name, 'onHand' => $s->onHand(), 'reorderLevel' => $s->reorder_level])->values(),
-            'stock' => StockItem::query()->orderBy('name')->get()->map(fn (StockItem $s) => ['id' => $s->id, 'name' => $s->name, 'onHand' => $s->onHand()])->values(),
+            'reorder' => StockItem::query()->get()->filter(fn (StockItem $s) => $s->onHand() <= $s->reorder_level)->map(fn (StockItem $s) => ['id' => $s->id, 'medicine_id' => $s->medicine_id, 'name' => $s->description, 'onHand' => $s->onHand(), 'reorderLevel' => $s->reorder_level])->values(),
+            'stock' => StockItem::query()->orderBy('name')->get()->map(fn (StockItem $s) => ['id' => $s->id, 'name' => $s->description, 'onHand' => $s->onHand()])->values(),
             'adjustments' => DB::table('stock_adjustments')->latest('id')->limit(30)->get(),
         ]);
     }

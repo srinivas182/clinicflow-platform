@@ -42,7 +42,7 @@ class Debtors
             });
         usort($patients, fn ($a, $b) => $b['balance'] <=> $a['balance']);
 
-        return ['buckets' => $buckets, 'patients' => array_values($patients)];
+        return ['buckets' => $buckets, 'patients' => $patients];
     }
 
     /**

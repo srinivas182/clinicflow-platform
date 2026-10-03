@@ -11,15 +11,15 @@ namespace App\Domains\Finance\Accounting;
 final class SimpleXlsx
 {
     /**
-     * @param  list<list<string|int|float|null>>  $rows
+     * @param  array<int, array<int, mixed>>  $rows
      */
     public static function build(array $rows): string
     {
-        $esc = fn ($v) => htmlspecialchars((string) $v, ENT_XML1 | ENT_QUOTES);
+        $esc = fn (mixed $v): string => htmlspecialchars(is_scalar($v) ? (string) $v : '', ENT_XML1 | ENT_QUOTES);
         $sheet = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>';
         foreach ($rows as $r => $row) {
             $sheet .= '<row r="'.($r + 1).'">';
-            foreach (array_values($row) as $c => $v) {
+            foreach ($row as $c => $v) {
                 $ref = self::column($c).($r + 1);
                 $sheet .= is_int($v) || is_float($v) ? "<c r=\"{$ref}\"><v>{$v}</v></c>" : "<c r=\"{$ref}\" t=\"inlineStr\"><is><t>{$esc($v)}</t></is></c>";
             }

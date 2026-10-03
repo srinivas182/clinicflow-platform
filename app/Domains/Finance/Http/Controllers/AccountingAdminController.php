@@ -72,6 +72,6 @@ class AccountingAdminController extends Controller
         $conn = PlatformAccountingConnection::query()->where('enabled', true)->firstOrFail();
         $days = $exporter->run(AccountingApp::query()->where('driver', $conn->driver->value)->firstOrFail(), $conn, fn (string $d) => JournalExporter::platformTotals($d));
 
-        return back()->with($conn->fresh()?->last_error ? 'error' : 'success', $conn->fresh()?->last_error ?? "{$days} day(s) exported.");
+        return back()->with($conn->refresh()->last_error ? 'error' : 'success', $conn->refresh()->last_error ?? "{$days} day(s) exported.");
     }
 }

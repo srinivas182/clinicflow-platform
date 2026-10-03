@@ -132,7 +132,7 @@ class FinanceOpsController extends Controller
         $app = AccountingApp::query()->where('driver', $connection->driver->value)->firstOrFail();
         $days = $exporter->run($app, $connection, fn (string $d) => JournalExporter::providerTotals($d));
 
-        return back()->with($connection->fresh()?->last_error ? 'error' : 'success', $connection->fresh()?->last_error ?? "{$days} day(s) exported.");
+        return back()->with($connection->refresh()->last_error ? 'error' : 'success', $connection->refresh()->last_error ?? "{$days} day(s) exported.");
     }
 
     /**
@@ -162,7 +162,7 @@ class FinanceOpsController extends Controller
         activity('finance')->withProperties(['type' => $type, 'format' => $request->string('format')->toString()])->log('Finance export downloaded');
 
         return match ($request->string('format')->toString()) {
-            'xlsx' => response(SimpleXlsx::build(array_values($rows)), 200, ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Content-Disposition' => "attachment; filename=\"{$name}.xlsx\""]),
+            'xlsx' => response(SimpleXlsx::build($rows), 200, ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Content-Disposition' => "attachment; filename=\"{$name}.xlsx\""]),
             'pdf' => response($this->pdf($type, $rows), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => "attachment; filename=\"{$name}.pdf\""]),
             default => response($this->csv($rows), 200, ['Content-Type' => 'text/csv', 'Content-Disposition' => "attachment; filename=\"{$name}.csv\""]),
         };

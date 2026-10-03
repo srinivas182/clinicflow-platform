@@ -23,9 +23,6 @@ class AccountingClient
         return $tokens + ['org_id' => $this->organisation($app, $tokens['access_token'])];
     }
 
-    /**
-     * @param  Model&object{access_token: ?string, refresh_token: ?string}  $connection
-     */
     public function ensureFreshToken(AccountingApp $app, Model $connection): string
     {
         $expires = $connection->getAttribute('token_expires_at');
