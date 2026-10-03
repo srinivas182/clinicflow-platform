@@ -106,7 +106,11 @@ class OnlineConsultController extends Controller
             'rows' => ['present', 'array', 'max:60'], 'rows.*.staff_id' => ['nullable', 'integer'], 'rows.*.mode' => ['required', Rule::in(['video', 'audio', 'chat'])],
             'rows.*.duration_minutes' => ['required', 'integer', Rule::in([15, 30, 45, 60])], 'rows.*.price' => ['required', 'numeric', 'min:0'],
         ]);
-        if (! collect($data['rows'])->contains(fn ($r) => $r['staff_id'] === null && (int) $r['duration_minutes'] === 15)) {
+        $hasMinimum = false;
+        foreach ((array) $data['rows'] as $row) {
+            $hasMinimum = $hasMinimum || (($row['staff_id'] ?? null) === null && (int) $row['duration_minutes'] === 15);
+        }
+        if (! $hasMinimum) {
             return back()->withErrors(['rows' => 'Set a practice price for 15 minutes (the minimum) for every mode you offer.']);
         }
         TelePrice::query()->delete();
@@ -157,7 +161,7 @@ class OnlineConsultController extends Controller
     {
         $this->authorize(Permission::APPOINTMENTS_BOOK);
         $data = $this->bookingData($request) + $request->validate(['patient_id' => ['required', 'string']]);
-        $appointment = $booking->book(Patient::query()->findOrFail($data['patient_id']), Staff::query()->findOrFail($data['staff_id']), ConsultType::from($data['mode']),
+        $appointment = $booking->book(Patient::query()->findOrFail((string) $data['patient_id']), Staff::query()->findOrFail((int) $data['staff_id']), ConsultType::from($data['mode']),
             (int) $data['duration'], CarbonImmutable::parse($data['date'].' '.$data['time']), $this->user($request));
         $invoiceId = Invoice::query()->where('visit_id', $appointment->getAttribute('visit_id'))->value('id');
 
@@ -195,7 +199,7 @@ class OnlineConsultController extends Controller
     {
         $data = $this->bookingData($request) + $request->validate(['patient_id' => ['required', 'string']]);
         abort_unless($signIn->profiles($this->cell($request))->contains('id', $data['patient_id']), 403);
-        $appointment = $booking->book(Patient::query()->findOrFail($data['patient_id']), Staff::query()->findOrFail($data['staff_id']), ConsultType::from($data['mode']),
+        $appointment = $booking->book(Patient::query()->findOrFail((string) $data['patient_id']), Staff::query()->findOrFail((int) $data['staff_id']), ConsultType::from($data['mode']),
             (int) $data['duration'], CarbonImmutable::parse($data['date'].' '.$data['time']));
         $payment = $booking->payLink($appointment);
 
