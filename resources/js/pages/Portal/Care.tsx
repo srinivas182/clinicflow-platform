@@ -27,6 +27,7 @@ interface Props {
     } | null;
     sharing: string[];
     categories: string[];
+    whatsapp: { available: boolean; optedIn: boolean };
 }
 
 export default function PortalCare({
@@ -38,6 +39,7 @@ export default function PortalCare({
     pregnancy,
     sharing,
     categories,
+    whatsapp,
 }: Props) {
     const [chosen, setChosen] = useState<string[]>(sharing);
 
@@ -46,6 +48,30 @@ export default function PortalCare({
             <Head title="My care" />
             <h1 className="mb-5 text-2xl font-semibold">My care</h1>
             <Flash />
+            {whatsapp.available && (
+                <Card title="Messages on WhatsApp" className="mb-4">
+                    <p className="mb-2 text-sm">
+                        {whatsapp.optedIn
+                            ? "You get reminders and notices on WhatsApp."
+                            : "Get reminders and notices on WhatsApp instead of SMS."}
+                    </p>
+                    <Button
+                        size="sm"
+                        variant={whatsapp.optedIn ? "secondary" : "primary"}
+                        onClick={() =>
+                            router.post(
+                                "/my/whatsapp",
+                                { opt_in: !whatsapp.optedIn },
+                                { preserveScroll: true },
+                            )
+                        }
+                    >
+                        {whatsapp.optedIn
+                            ? "Stop WhatsApp messages"
+                            : "Use WhatsApp"}
+                    </Button>
+                </Card>
+            )}
             <Card
                 title="What this practice may see from your network history"
                 className="mb-4"

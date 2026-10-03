@@ -46,7 +46,7 @@ class CareController extends Controller
         $this->authorize(Permission::CONSULTS_WRITE);
 
         return Inertia::render('Patients/Care', [
-            'patient' => ['id' => $patient->id, 'name' => $patient->fullName(), 'age' => $patient->ageInYears(), 'sex' => $patient->sex?->value, 'medicalAid' => $patient->medical_aid_scheme],
+            'patient' => ['id' => $patient->id, 'name' => $patient->fullName(), 'age' => $patient->ageInYears(), 'sex' => $patient->sex?->value, 'medicalAid' => $patient->medical_aid_scheme, 'whatsappOptIn' => $patient->getAttribute('whatsapp_opt_in_at') !== null],
             'problems' => Problem::query()->where('patient_id', $patient->id)->orderBy('status')->get(['id', 'icd10_code', 'description', 'status', 'chronic', 'onset_date']),
             'monitoring' => $chronic->monitoringDue($patient),
             'chronicScripts' => Prescription::query()->where('patient_id', $patient->id)->where('chronic', true)->where('status', Prescription::SIGNED)->latest('signed_at')->get(['id', 'signed_at']),

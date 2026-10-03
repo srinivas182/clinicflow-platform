@@ -11,6 +11,7 @@ interface Props {
         age: number;
         sex: string | null;
         medicalAid: string | null;
+        whatsappOptIn?: boolean;
     };
     problems: Row[];
     monitoring: {
@@ -71,6 +72,12 @@ export default function Care({
                 {shared.length ? shared.join(", ") : "none"}
             </p>
             <Flash />
+            <button
+                className="mb-3 text-xs text-teal-deep"
+                onClick={() => router.post(`/patients/${patient.id}/whatsapp`, { opt_in: !patient.whatsappOptIn }, { preserveScroll: true })}
+            >
+                {patient.whatsappOptIn ? 'WhatsApp: opted in (withdraw)' : 'Record WhatsApp opt-in'}
+            </button>
             <div className="grid grid-cols-2 gap-4">
                 <Card
                     title="Problem list"
@@ -149,7 +156,7 @@ export default function Care({
                             variant="secondary"
                             onClick={() =>
                                 router.post(
-                                    `/prescriptions/${chronicScripts[0]?.id ?? ''}/renew`,
+                                    `/prescriptions/${chronicScripts[0]?.id ?? ""}/renew`,
                                 )
                             }
                         >

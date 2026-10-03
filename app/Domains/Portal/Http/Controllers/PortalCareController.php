@@ -11,6 +11,7 @@ use App\Domains\Clinical\Models\Referral;
 use App\Domains\Clinical\Models\ThreadMessage;
 use App\Domains\Hub\Actions\ShareConsent;
 use App\Domains\Hub\Models\HubIdentity;
+use App\Domains\Messaging\WhatsApp\WhatsAppRouter;
 use App\Domains\Patients\Models\Patient;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Portal\Actions\PortalSignIn;
@@ -50,6 +51,7 @@ class PortalCareController extends Controller
             'pregnancy' => $pregnancy->summary($patient),
             'sharing' => $consent->categories($patient->getAttribute('hub_identity_id'), $provider->id),
             'categories' => ShareConsent::CATEGORIES,
+            'whatsapp' => ['available' => WhatsAppRouter::enabledFor($provider->id), 'optedIn' => $patient->getAttribute('whatsapp_opt_in_at') !== null],
         ]);
     }
 
