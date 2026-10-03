@@ -84,5 +84,29 @@ class ClinicalReferenceSeeder extends Seeder
                 'critical_low' => $critLow, 'critical_high' => $critHigh, 'price_cents' => $price,
             ]);
         }
+
+        // Master catalogue details and DEMO reference ranges by sex and age (months). To be confirmed by the lab reviewers.
+        $details = [
+            'HBA1C' => ['4548-4', 'EDTA whole blood', 1, 2, 20], 'GLU' => ['2345-7', 'Fluoride plasma', 1, 0.5, 60], 'K' => ['2823-3', 'Serum', 1, 1, 10],
+            'NA' => ['2951-2', 'Serum', 0, 90, 200], 'CREAT' => ['2160-0', 'Serum', 0, 10, 3000], 'HB' => ['718-7', 'EDTA whole blood', 1, 2, 25],
+            'CHOL' => ['2093-3', 'Serum', 1, 0.5, 30], 'CRP' => ['1988-5', 'Serum', 1, 0, 500],
+        ];
+        foreach ($details as $code => [$loinc, $sample, $decimals, $min, $max]) {
+            DB::table('lab_tests')->where('code', $code)->update(['loinc' => $loinc, 'sample_type' => $sample, 'decimals' => $decimals, 'plausible_min' => $min, 'plausible_max' => $max]);
+        }
+        DB::table('lab_tests')->updateOrInsert(['code' => 'URINE-MC'], ['name' => 'Urine microscopy and culture', 'unit' => '', 'price_cents' => 21000, 'loinc' => '630-4', 'sample_type' => 'Mid-stream urine', 'result_type' => 'choice', 'choices' => json_encode(['No growth', 'Mixed growth', 'Significant growth']), 'decimals' => 0, 'turnaround_hours' => 48]);
+        DB::table('lab_tests')->updateOrInsert(['code' => 'HIV-RAPID'], ['name' => 'HIV rapid test', 'unit' => '', 'price_cents' => 9000, 'loinc' => '75622-1', 'sample_type' => 'Capillary blood', 'result_type' => 'choice', 'choices' => json_encode(['Negative', 'Positive', 'Indeterminate']), 'decimals' => 0, 'turnaround_hours' => 1]);
+
+        DB::table('lab_test_ranges')->truncate();
+        $ranges = [
+            ['HB', 'female', 216, 1500, 12.0, 15.5, 7.0, 20.0], ['HB', 'male', 216, 1500, 13.0, 17.0, 7.0, 20.0], ['HB', null, 12, 215, 11.0, 14.5, 7.0, 20.0],
+            ['K', null, 216, 1500, 3.5, 5.1, 2.8, 6.0], ['K', null, 1, 215, 3.4, 4.7, 2.8, 6.0],
+            ['NA', null, 0, 1500, 135, 145, 120, 160], ['GLU', null, 0, 1500, 3.9, 7.8, 2.5, 25.0],
+            ['CREAT', 'female', 216, 1500, 45, 90, null, 500], ['CREAT', 'male', 216, 1500, 59, 104, null, 500],
+            ['HBA1C', null, 0, 1500, 4.0, 6.4, null, 15.0], ['CHOL', null, 216, 1500, null, 5.0, null, null], ['CRP', null, 0, 1500, null, 5.0, null, null],
+        ];
+        foreach ($ranges as [$code, $sex, $min, $max, $low, $high, $cLow, $cHigh]) {
+            DB::table('lab_test_ranges')->insert(['test_code' => $code, 'sex' => $sex, 'age_min_months' => $min, 'age_max_months' => $max, 'ref_low' => $low, 'ref_high' => $high, 'critical_low' => $cLow, 'critical_high' => $cHigh]);
+        }
     }
 }

@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         __DIR__.'/../app/Domains/Pharmacy/Console',
         __DIR__.'/../app/Domains/Wallet/Console',
         __DIR__.'/../app/Domains/Telemedicine/Console',
+        __DIR__.'/../app/Domains/Lab/Console',
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo(fn () => route('login'));

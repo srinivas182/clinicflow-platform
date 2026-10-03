@@ -17,6 +17,14 @@ class OpenInvoice
 {
     public function handle(Visit $visit, PayerType $payer): Invoice
     {
+        return $this->forPatient($visit->patient_id, $payer, $visit->id);
+    }
+
+    /**
+     * An invoice not tied to a visit (e.g. a lab's own invoice for network or walk-in tests).
+     */
+    public function forPatient(string $patientId, PayerType $payer, ?string $visitId = null): Invoice
+    {
         $year = now()->format('Y');
         $prefix = "INV-{$year}-";
 
@@ -25,8 +33,8 @@ class OpenInvoice
 
         return Invoice::create([
             'number' => $prefix.str_pad((string) $next, 6, '0', STR_PAD_LEFT),
-            'patient_id' => $visit->patient_id,
-            'visit_id' => $visit->id,
+            'patient_id' => $patientId,
+            'visit_id' => $visitId,
             'payer_type' => $payer,
             'status' => InvoiceStatus::Open,
         ]);
