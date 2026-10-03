@@ -13,6 +13,8 @@ use App\Domains\Billing\Models\PlatformGatewayConfig;
 use App\Domains\Billing\Models\SubscriptionInvoice;
 use App\Domains\Platform\Enums\ProviderStatus;
 use App\Domains\Platform\Enums\SubscriptionStatus;
+use App\Domains\Wallet\Actions\WalletLedger;
+use App\Domains\Wallet\Models\WalletTopup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -32,6 +34,16 @@ class SettleSubscriptionInvoice
         $result = GatewayFactory::fromConfig($config)->handleWebhook($request);
         if ($result === null || ! $result->paid) {
             return false;
+        }
+
+        $topup = WalletTopup::query()->where('checkout_token', $result->reference)->first();
+        if ($topup instanceof WalletTopup) {
+            if ($result->amountCents !== null && $result->amountCents !== $topup->amount_cents + $topup->vat_cents) {
+                return false;
+            }
+            app(WalletLedger::class)->creditTopup($topup, $gateway->value, $result->gatewayReference);
+
+            return true;
         }
 
         $invoice = SubscriptionInvoice::query()->where('checkout_token', $result->reference)->first();

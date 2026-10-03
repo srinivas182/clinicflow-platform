@@ -14,6 +14,7 @@ use App\Domains\Clinical\Http\Controllers\QuoteController;
 use App\Domains\Clinical\Http\Controllers\TriageController;
 use App\Domains\Documents\Http\Controllers\TemplateController;
 use App\Domains\Finance\Http\Controllers\FinanceController;
+use App\Domains\Hub\Http\Controllers\NetworkController;
 use App\Domains\Identity\Http\Controllers\HandoffController;
 use App\Domains\Lab\Http\Controllers\LabController;
 use App\Domains\Messaging\Http\Controllers\MessagingSettingsController;
@@ -30,6 +31,7 @@ use App\Domains\Scheduling\Http\Controllers\AppointmentController;
 use App\Domains\Scheduling\Http\Controllers\RosterController;
 use App\Domains\Visits\Http\Controllers\DeviceController;
 use App\Domains\Visits\Http\Controllers\FrontDeskController;
+use App\Domains\Wallet\Http\Controllers\WalletController;
 use App\Http\Controllers\Provider\ProviderHomeController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
@@ -172,6 +174,14 @@ Route::middleware([
         Route::put('/settings/messaging/sender', [MessagingSettingsController::class, 'saveSender'])->name('settings.messaging.sender');
         Route::put('/settings/messaging/wording', [MessagingSettingsController::class, 'saveWording'])->name('settings.messaging.wording');
         Route::get('/finance', [FinanceController::class, 'dashboard'])->name('finance.dashboard');
+
+        Route::get('/network', [NetworkController::class, 'index'])->name('network.index');
+        Route::post('/network/identities/{identity}/request', [NetworkController::class, 'request'])->middleware('throttle:10,1')->name('network.request');
+        Route::post('/network/confirm', [NetworkController::class, 'confirm'])->middleware('throttle:20,1')->name('network.confirm');
+
+        Route::get('/settings/wallet', [WalletController::class, 'show'])->name('wallet.show');
+        Route::post('/settings/wallet/topups', [WalletController::class, 'topup'])->name('wallet.topup');
+        Route::put('/settings/wallet/auto-topup', [WalletController::class, 'autoTopup'])->name('wallet.auto');
         Route::get('/cash-up', [FinanceController::class, 'cashUp'])->name('finance.cashup');
         Route::post('/cash-up', [FinanceController::class, 'closeCashUp'])->name('finance.cashup.close');
         Route::post('/doctor/call-next', [DoctorQueueController::class, 'callNext'])->name('doctor.call');
