@@ -61,7 +61,7 @@ final class MessagingUsage
     public static function overage(string $tenantId, string $period, Package $package): array
     {
         $row = MessageUsage::query()->where('tenant_id', $tenantId)->where('period', $period)->first();
-        $units = (int) ($row?->units ?? 0);
+        $units = (int) ($row->units ?? 0);
 
         if ($package->limit('sms') === null && $package->limit('email') === null) {
             $over = max(0, $units - ($package->limit('messages') ?? 0));

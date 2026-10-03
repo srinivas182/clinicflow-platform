@@ -30,12 +30,12 @@ class MessagingAdminController extends Controller
         $providers = [];
         foreach (MessagingDriver::cases() as $driver) {
             $row = MessagingProvider::query()->where('driver', $driver->value)->first();
-            $saved = $row?->credentials ?? [];
+            $saved = $row->credentials ?? [];
             $providers[] = [
                 'driver' => $driver->value, 'label' => $driver->label(), 'channel' => $driver->channel(),
                 'fields' => array_map(fn (array $f) => [...$f, 'saved' => isset($saved[$f['key']]) && $saved[$f['key']] !== '', 'value' => $f['secret'] ? '' : (string) ($saved[$f['key']] ?? '')], $driver->credentialFields()),
-                'senderLabel' => $driver->senderLabel(), 'sender' => $row?->sender, 'mode' => $row?->mode ?? 'test',
-                'enabled' => (bool) $row?->enabled, 'isDefault' => (bool) $row?->is_default, 'testRecipients' => implode(', ', $row?->test_recipients ?? []),
+                'senderLabel' => $driver->senderLabel(), 'sender' => $row?->sender, 'mode' => $row->mode ?? 'test',
+                'enabled' => (bool) $row?->enabled, 'isDefault' => (bool) $row?->is_default, 'testRecipients' => implode(', ', $row->test_recipients ?? []),
                 'lastTest' => $row?->last_tested_at?->format('j M H:i'), 'lastTestOk' => $row?->last_test_ok,
             ];
         }

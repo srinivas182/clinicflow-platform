@@ -7,7 +7,6 @@ namespace App\Domains\Messaging\Gateways;
 use App\Domains\Messaging\Enums\MessagingDriver;
 use App\Domains\Messaging\Mail\PlatformMessageMail;
 use App\Domains\Messaging\Models\MessagingProvider;
-use Illuminate\Mail\MailManager;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
 
@@ -27,9 +26,9 @@ final class EmailGateway
             : ['transport' => 'smtp', 'host' => $c['host'] ?? '', 'port' => (int) ($c['port'] ?? 587), 'username' => $c['username'] ?? '', 'password' => $c['password'] ?? '', 'encryption' => ($c['encryption'] ?? 'tls') ?: null];
 
         config(['mail.mailers.clinicflow_runtime' => $config]);
-        $manager = app('mail.manager');
-        if ($manager instanceof MailManager) {
-            $manager->purge('clinicflow_runtime');
+        $root = Mail::getFacadeRoot();
+        if (is_object($root) && method_exists($root, 'purge')) {
+            $root->purge('clinicflow_runtime');
         }
 
         try {
