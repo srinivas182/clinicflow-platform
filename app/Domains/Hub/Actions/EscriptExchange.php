@@ -12,6 +12,7 @@ use App\Domains\Platform\Enums\ProviderType;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Prescribing\Models\Prescription;
 use App\Domains\Prescribing\Models\PrescriptionItem;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -74,6 +75,10 @@ class EscriptExchange
      */
     public function supersede(string $issuerId, string $consultationId, int $newVersion): int
     {
+        if (! Schema::connection('hub')->hasTable('hub_escripts')) {
+            return 0;
+        }
+
         return HubEscript::query()->where('issuer_tenant_id', $issuerId)->where('consultation_id', $consultationId)
             ->where('version', '<', $newVersion)->whereIn('status', ['sent', 'accepted'])
             ->update(['status' => 'cancelled', 'status_note' => "Replaced by version {$newVersion}", 'updated_at' => now()]);

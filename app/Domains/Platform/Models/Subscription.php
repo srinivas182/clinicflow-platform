@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
 use Stancl\Tenancy\Database\Concerns\CentralConnection;
 
 /**
+ * @property array<int, string>|null $addons
  * @property int $id
  * @property string $tenant_id
  * @property int $package_id
@@ -32,7 +33,7 @@ class Subscription extends Model
      */
     protected function casts(): array
     {
-        return [
+        return ['addons' => 'array',
             'status' => SubscriptionStatus::class,
             'trial_ends_at' => 'datetime',
             'current_period_ends_at' => 'datetime',

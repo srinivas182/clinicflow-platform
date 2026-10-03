@@ -191,7 +191,7 @@ it('opens the call screen only for the booked doctor from 15 minutes before', fu
 });
 
 it('sends e-scripts only for linked patients and lets the chosen pharmacy dispense once', function (): void {
-    $this->doctor = Staff::query()->findOrFail($this->doctorUser->id);
+    $this->doctor = $this->clinic->run(fn () => Staff::query()->findOrFail($this->doctorUser->id));
     [$script, $patient] = $this->clinic->run(function (): array {
         $patient = registerTestPatient('Sipho', '850101', null, '0821112222');
         $consult = seenByDoctor($this, $patient, PayerType::Cash);
@@ -222,7 +222,7 @@ it('sends e-scripts only for linked patients and lets the chosen pharmacy dispen
 });
 
 it('cancels the earlier e-script when the doctor signs a new version', function (): void {
-    $this->doctor = Staff::query()->findOrFail($this->doctorUser->id);
+    $this->doctor = $this->clinic->run(fn () => Staff::query()->findOrFail($this->doctorUser->id));
     $v1 = $this->clinic->run(function () {
         $patient = registerTestPatient('Sipho', '850101', null, '0821112222');
         app(NetworkIdentity::class)->register($patient, $this->clinic);
