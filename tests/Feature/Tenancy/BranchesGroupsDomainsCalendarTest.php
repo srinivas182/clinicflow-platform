@@ -121,7 +121,7 @@ it('verifies a practice\'s own domain by TXT record and only then allows a certi
     expect(fn () => $domains->add($this->clinic, 'book.sunriseclinic.co.za'))->toThrow(ValidationException::class);
 
     $this->subscription->forceFill(['package_id' => Package::query()->where('code', 'clinic-pro')->value('id')])->save();
-    expect(fn () => $domains->add($this->clinic, 'evil.clinicflow.co.za'))->toThrow(ValidationException::class);
+    expect(fn () => $domains->add($this->clinic, 'evil.'.config('clinicflow.provider_domain')))->toThrow(ValidationException::class);
     $d = $domains->add($this->clinic, 'Book.SunriseClinic.co.za');
 
     $this->app->instance(DnsResolver::class, new class extends DnsResolver
