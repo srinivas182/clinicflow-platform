@@ -114,11 +114,9 @@ class PatientAdminController extends Controller
     public function exportPatient(Request $request, Patient $patient): JsonResponse
     {
         $this->authorize(Permission::AUDIT_VIEW);
-        activity('compliance')->causedBy($this->user($request))->performedOn($patient)->log('Patient data exported (POPIA request)');
-
         $visits = Visit::query()->where('patient_id', $patient->id)->get();
 
-        return response()->json([
+        $data = [
             'exported_at' => now()->toIso8601String(),
             'patient' => $patient->makeVisible('id_number')->toArray(),
             'consents' => $patient->consents()->get()->toArray(),
@@ -128,8 +126,17 @@ class PatientAdminController extends Controller
             'prescriptions' => Prescription::query()->with('items')->where('patient_id', $patient->id)->get()->toArray(),
             'lab_results' => LabOrder::query()->with('results')->where('patient_id', $patient->id)->get()->toArray(),
             'invoices' => Invoice::query()->with(['lines', 'payments'])->where('patient_id', $patient->id)->get()->toArray(),
+            'problems' => DB::table('problems')->where('patient_id', $patient->id)->get()->toArray(),
+            'immunisations' => DB::table('immunisations')->where('patient_id', $patient->id)->get()->toArray(),
+            'pregnancies' => DB::table('pregnancies')->where('patient_id', $patient->id)->get()->toArray(),
+            'referrals' => DB::table('referrals')->where('patient_id', $patient->id)->get()->toArray(),
+            'shared_and_discussed' => DB::table('patient_access_log')->where('patient_id', $patient->id)->orderByDesc('id')->get()->toArray(),
             'access_log' => $this->accessLog($patient),
-        ], 200, ['Content-Disposition' => 'attachment; filename="patient-'.$patient->id.'.json"']);
+        ];
+        // Recorded after the export is assembled, so the export shows the log as it stood when requested.
+        activity('compliance')->causedBy($this->user($request))->performedOn($patient)->log('Patient data exported (POPIA request)');
+
+        return response()->json($data, 200, ['Content-Disposition' => 'attachment; filename="patient-'.$patient->id.'.json"']);
     }
 
     /**
@@ -137,7 +144,7 @@ class PatientAdminController extends Controller
      */
     private function accessLog(Patient $patient): array
     {
-        return AuditEntry::query()->where('subject_type', $patient->getMorphClass())->where('subject_id', $patient->id)->latest()->get()
+        return AuditEntry::query()->where('subject_type', $patient->getMorphClass())->where('subject_id', $patient->id)->latest('id')->get()
             ->map(fn (AuditEntry $e) => ['at' => $e->created_at?->toIso8601String(), 'description' => $e->description, 'by' => $e->causer_id])->values()->all();
     }
 

@@ -163,7 +163,7 @@ it('connects a provider to Xero through the super admin\'s app and posts balance
         'api.xero.com/connections' => Http::response([['tenantId' => 'xero-org-9']]),
         'api.xero.com/api.xro/2.0/ManualJournals' => Http::response(['ManualJournals' => [['ManualJournalID' => 'MJ-1']]]),
     ]);
-    $this->get('/accounting/callback/xero?code=abc&state='.urlencode((string) $query['state']))->assertRedirect();
+    $this->get('http://localhost/accounting/callback/xero?code=abc&state='.urlencode((string) $query['state']))->assertRedirect();
 
     $this->clinic->run(function (): void {
         $c = AccountingConnection::query()->sole();
