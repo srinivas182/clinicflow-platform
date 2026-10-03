@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Domains\Patients\Http\Controllers;
 
+use App\Domains\Hub\Actions\NetworkIdentity;
 use App\Domains\Identity\Enums\Permission;
 use App\Domains\Patients\Actions\RegisterPatient;
 use App\Domains\Patients\Actions\SearchPatients;
 use App\Domains\Patients\Http\Requests\RegisterPatientRequest;
 use App\Domains\Patients\Models\Patient;
+use App\Domains\Platform\Models\Provider;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -53,9 +55,18 @@ class PatientController extends Controller
         $this->authorize(Permission::PATIENTS_REGISTER);
 
         $patient = $action->handle($request->toData(), $this->user($request));
+        $provider = tenant();
+        $message = "{$patient->fullName()} is registered.";
 
-        return redirect()->route('patients.index', ['search' => $patient->fullName()])
-            ->with('success', "{$patient->fullName()} is registered.");
+        if ($provider instanceof Provider) {
+            $network = app(NetworkIdentity::class);
+            $identity = $network->register($patient, $provider);
+            if ($identity !== null && ! $network->isLinked($identity, $provider->id)) {
+                $message .= ' This cell number is already on the Clinic Flow network — use Network search to send the patient an approval code and link their records.';
+            }
+        }
+
+        return redirect()->route('patients.index', ['search' => $patient->fullName()])->with('success', $message);
     }
 
     private function user(Request $request): User

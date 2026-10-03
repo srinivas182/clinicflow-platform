@@ -12,6 +12,7 @@ use App\Domains\Platform\Http\Controllers\PricingController;
 use App\Domains\Platform\Http\Controllers\PublicSiteController;
 use App\Domains\Platform\Http\Controllers\SignupController;
 use App\Domains\Platform\Http\Controllers\SubscriptionBillingController;
+use App\Domains\Wallet\Http\Controllers\WalletController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -32,6 +33,7 @@ foreach ($centralDomains as $index => $domain) {
         Route::get('/pricing', PricingController::class)->name('pricing');
         Route::get('/billing/pay/{token}', [SubscriptionBillingController::class, 'pay'])->middleware('throttle:30,1')->name('billing.pay');
         Route::get('/billing/done', [SubscriptionBillingController::class, 'done'])->name('billing.done');
+        Route::get('/billing/topup/{token}', [WalletController::class, 'pay'])->middleware('throttle:30,1')->name('wallet.pay');
 
         Route::get('/start', [SignupController::class, 'create'])->name('signup');
         Route::post('/start', [SignupController::class, 'store'])->middleware('throttle:10,1')->name('signup.store');
@@ -58,6 +60,8 @@ foreach ($centralDomains as $index => $domain) {
             Route::post('/verification-checks/{check}', [ProviderAdminController::class, 'review'])->name('checks.review');
             Route::get('/packages', [PackageAdminController::class, 'index'])->name('packages.index');
             Route::get('/auto-debits', [AutoDebitAdminController::class, 'index'])->name('autodebits.index');
+            Route::get('/wallet', [WalletController::class, 'adminSettings'])->name('wallet.settings');
+            Route::put('/wallet', [WalletController::class, 'saveAdminSettings'])->name('wallet.settings.save');
             Route::get('/messaging', [MessagingAdminController::class, 'index'])->name('messaging.index');
             Route::put('/messaging/providers/{driver}', [MessagingAdminController::class, 'saveProvider'])->whereIn('driver', ['clickatell', 'bulksms', 'smsportal', 'twilio', 'ses', 'smtp', 'sendgrid', 'brevo'])->name('messaging.providers.save');
             Route::post('/messaging/providers/{driver}/test', [MessagingAdminController::class, 'testProvider'])->whereIn('driver', ['clickatell', 'bulksms', 'smsportal', 'twilio', 'ses', 'smtp', 'sendgrid', 'brevo'])->name('messaging.providers.test');

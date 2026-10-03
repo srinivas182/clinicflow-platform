@@ -4,6 +4,17 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.11.0] — Sprint 10: Network Hub and telemedicine wallet
+
+### Added
+- Network Hub (separate `hub` database, identity only — no clinical data): one cell number = one identity across the network; a person new to the network gets an identity and link at registration; providers who find an existing identity see a masked match only (initials, birth year, last three digits of the cell).
+- Linking with patient approval: the practice sends a code to the patient's own phone; the patient reads it to reception; the practice's local record is created (consent to be captured at check-in) and the link and consent are recorded. Five attempts, 10-minute expiry.
+- Consent register and revocation: every link records its consent; revoking a practice withdraws its consent.
+- Telemedicine wallet per provider (Platform database): top-up packs with bonus credit (VAT added), pay link through the platform gateway or the saved subscription card, auto top-up below the minimum (Paystack/Peach saved cards), append-only statement.
+- Wallet rules: online consults can be booked only when the available balance is above the minimum; booking reserves the expected cost; calls are never cut — actual minutes are charged when they end (overdraft recovered from the next top-up); cancelled or failed consults release the reservation; the owner is emailed once when the wallet drops below the minimum.
+- Super admin wallet settings: per-minute video and audio prices, per-session chat price, default minimum balance and top-up packs; provider wallets lowest first.
+- CI creates the Network Hub database; Hub migrations run on the `hub` connection.
+
 ### Added
 - Email suppliers Twilio SendGrid and Brevo (HTTP APIs) alongside Amazon SES and SMTP; SMS suppliers unchanged (Clickatell, BulkSMS, SMSPortal, Twilio).
 
