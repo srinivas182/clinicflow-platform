@@ -86,13 +86,13 @@ it('serves the provider workspace on its own domain to signed-in staff only', fu
     $provider = Provider::create(['name' => 'Sunrise Medical Centre', 'type' => ProviderType::Clinic, 'status' => ProviderStatus::Trial]);
     $provider->domains()->create(['domain' => 'sunrise.clinicflow.test']);
 
-    $this->get('http://sunrise.clinicflow.test/')->assertRedirect('http://localhost/login');
+    $this->get('http://sunrise.clinicflow.test/workspace')->assertRedirect('http://localhost/login');
 
     $owner = User::factory()->create();
     app(AddStaffMember::class)->handle($provider, $owner, StaffRole::Owner);
 
     $this->actingAs($owner)
-        ->get('http://sunrise.clinicflow.test/')
+        ->get('http://sunrise.clinicflow.test/workspace')
         ->assertOk()
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->component('Provider/Home')

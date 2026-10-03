@@ -19,7 +19,9 @@ use App\Domains\Lab\Http\Controllers\LabController;
 use App\Domains\Patients\Http\Controllers\PatientAdminController;
 use App\Domains\Patients\Http\Controllers\PatientController;
 use App\Domains\Pharmacy\Http\Controllers\PharmacyController;
+use App\Domains\Platform\Http\Controllers\ProviderSiteController;
 use App\Domains\Platform\Http\Controllers\SubscriptionBillingController;
+use App\Domains\Platform\Http\Controllers\WebsiteSettingsController;
 use App\Domains\Portal\Http\Controllers\PortalController;
 use App\Domains\Portal\Http\Middleware\EnsurePortalPatient;
 use App\Domains\Prescribing\Http\Controllers\PrescriptionController;
@@ -70,12 +72,20 @@ Route::middleware([
         });
     });
 
+    // The provider's public website.
+    Route::get('/', [ProviderSiteController::class, 'show'])->name('site.home');
+    Route::get('/p/{slug}', [ProviderSiteController::class, 'show'])->where('slug', '[a-z0-9-]+')->name('site.page');
+
     Route::get('/kiosk/{token}', [DeviceController::class, 'kiosk'])->name('kiosk');
     Route::post('/kiosk/{token}', [DeviceController::class, 'kioskCheckIn'])->middleware('throttle:20,1')->name('kiosk.checkin');
     Route::get('/display/{token}', [DeviceController::class, 'display'])->name('display');
 
     Route::middleware(['auth', 'workspace', 'provider.writable'])->group(function (): void {
-        Route::get('/', ProviderHomeController::class)->name('provider.home');
+        Route::get('/workspace', ProviderHomeController::class)->name('provider.home');
+
+        Route::get('/settings/website', [WebsiteSettingsController::class, 'index'])->name('settings.website');
+        Route::put('/settings/website/pages/{page}', [WebsiteSettingsController::class, 'updatePage'])->name('settings.website.page');
+        Route::put('/settings/website/details', [WebsiteSettingsController::class, 'updateDetails'])->name('settings.website.details');
         Route::get('/patients', [PatientController::class, 'index'])->name('patients.index');
         Route::get('/patients/register', [PatientController::class, 'create'])->name('patients.create');
         Route::post('/patients', [PatientController::class, 'store'])->name('patients.store');

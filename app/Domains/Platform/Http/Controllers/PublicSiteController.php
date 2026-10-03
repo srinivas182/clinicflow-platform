@@ -8,6 +8,7 @@ use App\Domains\Documents\Support\TemplateRenderer;
 use App\Domains\Platform\Enums\ProviderStatus;
 use App\Domains\Platform\Models\CmsPage;
 use App\Domains\Platform\Models\Provider;
+use App\Domains\Platform\Support\Website\SiteData;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -54,6 +55,10 @@ class PublicSiteController extends Controller
 
     private function render(CmsPage $page): Response
     {
+        if ($page->sections !== null && $page->sections !== []) {
+            return Inertia::render('Public/Site', SiteData::platform($page));
+        }
+
         return Inertia::render('Public/Page', [
             'title' => $page->title,
             'description' => $page->meta_description,

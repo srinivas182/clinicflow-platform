@@ -66,7 +66,7 @@ it('carries the user to the provider domain with a single-use link', function ()
     Auth::guard('web')->logout();
 
     $response = $this->get($url)->assertRedirect();
-    expect(rtrim((string) $response->headers->get('Location'), '/'))->toBe('http://sunrise.clinicflow.test');
+    expect((string) $response->headers->get('Location'))->toBe('http://sunrise.clinicflow.test/workspace');
     $this->assertAuthenticatedAs($this->receptionist);
 
     $this->get('http://sunrise.clinicflow.test/patients')

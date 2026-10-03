@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(PackageSeeder::class);
+        $this->call(PlatformWebsiteSeeder::class);
 
         if (! app()->isProduction()) {
             $this->call(ClinicalReferenceSeeder::class);

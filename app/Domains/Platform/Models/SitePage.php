@@ -5,23 +5,21 @@ declare(strict_types=1);
 namespace App\Domains\Platform\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Stancl\Tenancy\Database\Concerns\CentralConnection;
 
 /**
+ * A page of the provider's own website (provider database).
+ *
  * @property int $id
  * @property string $slug
  * @property string $title
  * @property string|null $meta_description
- * @property string $body
- * @property list<array<string, mixed>>|null $sections
+ * @property list<array<string, mixed>> $sections
+ * @property bool $published
  * @property string|null $menu_label
  * @property int|null $menu_order
- * @property bool $published
  */
-class CmsPage extends Model
+class SitePage extends Model
 {
-    use CentralConnection;
-
     protected $guarded = ['id'];
 
     /**
@@ -29,6 +27,6 @@ class CmsPage extends Model
      */
     protected function casts(): array
     {
-        return ['published' => 'boolean', 'sections' => 'array'];
+        return ['sections' => 'array', 'published' => 'boolean'];
     }
 }
