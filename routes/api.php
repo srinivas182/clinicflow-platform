@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\Billing\Http\Controllers\GatewayWebhookController;
+use App\Domains\Telemedicine\Http\Controllers\LiveKitWebhookController;
 use App\Http\Controllers\Api\V1\HealthController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,3 +19,8 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
 Route::post('webhooks/platform/{gateway}', [GatewayWebhookController::class, 'platform'])
     ->whereIn('gateway', ['payfast', 'paystack', 'peach', 'yoco'])
     ->name('webhooks.platform');
+
+/*
+ * LiveKit room events (joins, leaves, room finished) for online consults.
+ */
+Route::post('webhooks/livekit', LiveKitWebhookController::class)->middleware('throttle:600,1')->name('webhooks.livekit');

@@ -10,10 +10,11 @@ interface Props {
     packs: { amount: number; bonus: number }[];
     prices: { video: number; audio: number; chat: number };
     savedCard: string | null;
+    telemedicine: { offered: boolean; enabled: boolean; fee: number };
     statement: { at: string; type: string; amount: number; balance: number; description: string }[];
 }
 
-export default function WalletPage({ wallet, packs, prices, savedCard, statement }: Props) {
+export default function WalletPage({ wallet, packs, prices, savedCard, statement, telemedicine }: Props) {
     const [autoPack, setAutoPack] = useState<number>(wallet.autoTopupPack ?? packs[0]?.amount ?? 0);
 
     return (
@@ -24,6 +25,14 @@ export default function WalletPage({ wallet, packs, prices, savedCard, statement
                 Video {rand(prices.video, 2)}/min · audio {rand(prices.audio, 2)}/min · chat {rand(prices.chat, 2)}/session (excl. VAT). Booking reserves the expected cost; calls are never cut off.
             </p>
             <Flash />
+            {telemedicine.offered && (
+                <Card title="Telemedicine add-on" className="mb-4">
+                    <label className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" className="accent-teal" checked={telemedicine.enabled} onChange={(e) => router.put('/settings/wallet/telemedicine', { enabled: e.target.checked }, { preserveScroll: true })} />
+                        Offer video and audio consults — {rand(telemedicine.fee)} per month on your subscription, usage from this wallet
+                    </label>
+                </Card>
+            )}
             <div className="mb-4 flex gap-4">
                 <Kpi label="Available" value={rand(wallet.available, 2)} hint={wallet.acceptsOnline ? 'Online slots are open' : `Below ${rand(wallet.threshold)} — online slots hidden`} trend={wallet.acceptsOnline ? 'up' : 'down'} />
                 <Kpi label="Balance" value={rand(wallet.balance, 2)} />

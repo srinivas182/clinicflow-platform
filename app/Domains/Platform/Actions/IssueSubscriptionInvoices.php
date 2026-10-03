@@ -42,6 +42,9 @@ class IssueSubscriptionInvoices
                 // Messaging above the package allowance in the month before this period.
                 $usage = MessagingUsage::overage($subscription->tenant_id, $periodStart->copy()->subMonthNoOverflow()->format('Y-m'), $subscription->package);
                 $amount += $usage['overage_cents'];
+                if (in_array('telemedicine', (array) ($subscription->getAttribute('addons') ?? []), true)) {
+                    $amount += (int) config('clinicflow.telemedicine.addon_monthly_cents', 29900) * ($annual ? 12 : 1);
+                }
                 $vat = (int) round($amount * (float) config('clinicflow.payments.vat_rate', 0.15));
                 $year = now()->format('Y');
                 $next = SubscriptionInvoice::query()->where('number', 'like', "CF-{$year}-%")->count() + 1;

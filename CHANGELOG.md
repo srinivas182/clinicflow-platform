@@ -4,6 +4,17 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.15.0] — Sprint 11: telemedicine and e-scripts
+
+### Added
+- Video and audio consults inside Clinic Flow (no redirect): LiveKit Cloud or self-hosted LiveKit, each in test or live mode, configured by the super admin (one active; the other kept as standby; test-connection button). Join passes are signed per room and participant; LiveKit webhooks are signature-checked.
+- Telemedicine add-on: offered by the package, switched on by the owner (monthly fee on the subscription invoice); online slots come from telemedicine roster sessions.
+- Booking an online consult reserves the expected cost in the wallet (refused below the minimum, rolled back cleanly); cancelling releases it.
+- Charging: minutes count only while doctor and patient are both connected; charged once when the call ends (rounded up to whole minutes); calls that never connect release the reservation; the appointment is completed.
+- Doctor's online consult list and call screen (join from 15 minutes before); patient call screen in the portal with a data-use notice; audio-only consults; adaptive quality.
+- E-scripts through the Network Hub: the doctor sends the current signed version to the network pharmacy the patient chose (patient must be linked); the pharmacy sees the signed content and signature fingerprint, accepts or rejects with a reason, and dispenses once; a newly signed version cancels earlier e-scripts.
+- Patient portal "Practices linked to you" with remove (withdraws consent; the practice can no longer send e-scripts).
+
 ## [0.14.0] — Sprint 10: Network Hub and telemedicine wallet
 
 ### Added

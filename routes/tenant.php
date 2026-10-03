@@ -14,6 +14,7 @@ use App\Domains\Clinical\Http\Controllers\QuoteController;
 use App\Domains\Clinical\Http\Controllers\TriageController;
 use App\Domains\Documents\Http\Controllers\TemplateController;
 use App\Domains\Finance\Http\Controllers\FinanceController;
+use App\Domains\Hub\Http\Controllers\EscriptController;
 use App\Domains\Hub\Http\Controllers\NetworkController;
 use App\Domains\Identity\Http\Controllers\HandoffController;
 use App\Domains\Lab\Http\Controllers\LabController;
@@ -29,6 +30,7 @@ use App\Domains\Portal\Http\Middleware\EnsurePortalPatient;
 use App\Domains\Prescribing\Http\Controllers\PrescriptionController;
 use App\Domains\Scheduling\Http\Controllers\AppointmentController;
 use App\Domains\Scheduling\Http\Controllers\RosterController;
+use App\Domains\Telemedicine\Http\Controllers\TeleConsultController;
 use App\Domains\Visits\Http\Controllers\DeviceController;
 use App\Domains\Visits\Http\Controllers\FrontDeskController;
 use App\Domains\Wallet\Http\Controllers\WalletController;
@@ -72,6 +74,9 @@ Route::middleware([
             Route::post('/appointments', [PortalController::class, 'book'])->middleware('throttle:10,1')->name('book');
             Route::post('/appointments/{appointment}/cancel', [PortalController::class, 'cancel'])->name('cancel');
             Route::post('/invoices/{invoice}/pay', [PortalController::class, 'pay'])->name('pay');
+            Route::get('/consults/{appointment}', [TeleConsultController::class, 'patientCall'])->name('consult');
+            Route::get('/practices', [EscriptController::class, 'patientPractices'])->name('practices');
+            Route::post('/practices/{provider}/revoke', [EscriptController::class, 'patientRevoke'])->name('practices.revoke');
         });
     });
 
@@ -176,10 +181,17 @@ Route::middleware([
         Route::get('/finance', [FinanceController::class, 'dashboard'])->name('finance.dashboard');
 
         Route::get('/network', [NetworkController::class, 'index'])->name('network.index');
+        Route::get('/reference/pharmacies', [EscriptController::class, 'pharmacies'])->name('reference.pharmacies');
+        Route::post('/prescriptions/{prescription}/escript', [EscriptController::class, 'send'])->name('escripts.send');
+        Route::get('/escripts', [EscriptController::class, 'inbox'])->name('escripts.inbox');
+        Route::post('/escripts/{escript}/{action}', [EscriptController::class, 'act'])->whereIn('action', ['accept', 'reject', 'dispense'])->name('escripts.act');
         Route::post('/network/identities/{identity}/request', [NetworkController::class, 'request'])->middleware('throttle:10,1')->name('network.request');
         Route::post('/network/confirm', [NetworkController::class, 'confirm'])->middleware('throttle:20,1')->name('network.confirm');
 
         Route::get('/settings/wallet', [WalletController::class, 'show'])->name('wallet.show');
+        Route::put('/settings/wallet/telemedicine', [TeleConsultController::class, 'addon'])->name('telemedicine.addon');
+        Route::get('/telemedicine', [TeleConsultController::class, 'index'])->name('telemedicine.index');
+        Route::get('/telemedicine/{appointment}/call', [TeleConsultController::class, 'doctorCall'])->name('telemedicine.call');
         Route::post('/settings/wallet/topups', [WalletController::class, 'topup'])->name('wallet.topup');
         Route::put('/settings/wallet/auto-topup', [WalletController::class, 'autoTopup'])->name('wallet.auto');
         Route::get('/cash-up', [FinanceController::class, 'cashUp'])->name('finance.cashup');

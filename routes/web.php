@@ -12,6 +12,7 @@ use App\Domains\Platform\Http\Controllers\PricingController;
 use App\Domains\Platform\Http\Controllers\PublicSiteController;
 use App\Domains\Platform\Http\Controllers\SignupController;
 use App\Domains\Platform\Http\Controllers\SubscriptionBillingController;
+use App\Domains\Telemedicine\Http\Controllers\TelemedicineAdminController;
 use App\Domains\Wallet\Http\Controllers\WalletController;
 use Illuminate\Support\Facades\Route;
 
@@ -61,6 +62,9 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/packages', [PackageAdminController::class, 'index'])->name('packages.index');
             Route::get('/auto-debits', [AutoDebitAdminController::class, 'index'])->name('autodebits.index');
             Route::get('/wallet', [WalletController::class, 'adminSettings'])->name('wallet.settings');
+            Route::get('/telemedicine', [TelemedicineAdminController::class, 'index'])->name('telemedicine.index');
+            Route::put('/telemedicine/{driver}', [TelemedicineAdminController::class, 'save'])->whereIn('driver', ['cloud', 'self_hosted'])->name('telemedicine.save');
+            Route::post('/telemedicine/{driver}/test', [TelemedicineAdminController::class, 'test'])->whereIn('driver', ['cloud', 'self_hosted'])->name('telemedicine.test');
             Route::put('/wallet', [WalletController::class, 'saveAdminSettings'])->name('wallet.settings.save');
             Route::get('/messaging', [MessagingAdminController::class, 'index'])->name('messaging.index');
             Route::put('/messaging/providers/{driver}', [MessagingAdminController::class, 'saveProvider'])->whereIn('driver', ['clickatell', 'bulksms', 'smsportal', 'twilio', 'ses', 'smtp', 'sendgrid', 'brevo'])->name('messaging.providers.save');
