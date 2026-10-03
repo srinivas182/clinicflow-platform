@@ -26,6 +26,7 @@ use LogicException;
  * @property Sex|null $sex
  * @property string|null $cell
  * @property bool $no_cell
+ * @property bool $needs_consent
  * @property Channel $preferred_channel
  * @property string|null $guardian_name
  * @property string|null $medical_aid_scheme
@@ -52,6 +53,7 @@ class Patient extends Model
             'date_of_birth' => 'date',
             'sex' => Sex::class,
             'no_cell' => 'boolean',
+            'needs_consent' => 'boolean',
             'preferred_channel' => Channel::class,
         ];
     }

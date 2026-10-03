@@ -4,6 +4,14 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.11.0] — Sprint 8: patient portal, legacy import, compliance centre and public website
+
+### Added
+- Patient web portal on each provider's address (`/my`): sign in with cell number and SMS code (no hint whether a number is registered); one cell manages its own profile and those it is guardian for; today's ticket, place in the queue and collection code; book and cancel appointments (once the practice is verified); released lab results with the doctor's comment; invoices with online payment; signed scripts.
+- Legacy patient import from CSV: row-by-row validation (SA ID check digit, date of birth, SA cell numbers including +27), duplicates skipped with reasons, import history; imported patients must give POPIA and treatment consent at their next check-in (enforced).
+- Audit and compliance centre (owner, manager, practice admin): search and filter the audit log, CSV export (itself audited), and a POPIA patient-data export with the patient's access log.
+- Public website: CMS pages managed by the super admin (HTML sanitised on save and display; a published "home" page replaces the default home page) and a "Find care" directory listing verified providers only.
+
 ## [0.10.0] — Sprint 7: in-house lab, results inbox, finance and messaging
 
 ### Added

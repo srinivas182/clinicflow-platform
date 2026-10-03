@@ -33,6 +33,10 @@ class CheckInPatient
 
     public function handle(Patient $patient, ?PayerType $payer = null, ?Appointment $appointment = null, ?int $preferredStaffId = null, string $channel = 'reception', ?User $by = null): Visit
     {
+        if ($patient->getAttribute('needs_consent') === true) {
+            throw ValidationException::withMessages(['patient_id' => "Capture {$patient->fullName()}'s POPIA and treatment consent before check-in."]);
+        }
+
         $payer ??= $patient->medical_aid_scheme !== null ? PayerType::MedicalAid : PayerType::Cash;
         $today = now()->startOfDay();
 
