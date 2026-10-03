@@ -160,10 +160,7 @@ class PortalController extends Controller
             }
         }
 
-        $first = reset($profiles);
-        abort_unless($first instanceof Patient, 403);
-
-        return $first;
+        return reset($profiles);
     }
 
     private function cell(Request $request): string
