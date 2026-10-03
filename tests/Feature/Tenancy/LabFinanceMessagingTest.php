@@ -149,7 +149,7 @@ it('charges messaging above the package allowance on the next subscription invoi
     $this->seed(PackageSeeder::class);
     $package = Package::query()->where('code', 'clinic-starter')->sole();
     Subscription::create(['tenant_id' => $this->clinic->id, 'package_id' => $package->id, 'status' => SubscriptionStatus::Trialing, 'trial_ends_at' => now()->addDays(2)]);
-    MessageUsage::create(['tenant_id' => $this->clinic->id, 'period' => now()->addDays(2)->subMonthNoOverflow()->format('Y-m'), 'units' => 250]);
+    MessageUsage::create(['tenant_id' => $this->clinic->id, 'period' => now()->addDays(2)->subMonthNoOverflow()->format('Y-m'), 'units' => 250, 'sms_units' => 250]);
 
     app(IssueSubscriptionInvoices::class)->handle();
     $invoice = SubscriptionInvoice::query()->sole();

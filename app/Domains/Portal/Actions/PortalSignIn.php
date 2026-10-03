@@ -38,7 +38,7 @@ class PortalSignIn
         DB::table('portal_login_challenges')->insert([
             'id' => $id, 'cell' => $cell, 'code_hash' => Hash::make($code), 'expires_at' => now()->addMinutes(5), 'created_at' => now(), 'updated_at' => now(),
         ]);
-        $this->messages->handle('sms', $cell, "Your Clinic Flow sign-in code is {$code}. It expires in 5 minutes. Never share it.", null, 'portal_login', $id);
+        $this->messages->template('portal.sign_in_code', 'sms', $cell, ['code' => $code], 'en', 'portal_login', $id);
 
         return $id;
     }

@@ -2,6 +2,7 @@
 
 use App\Domains\Identity\Http\Controllers\LoginController;
 use App\Domains\Identity\Http\Controllers\WorkspaceController;
+use App\Domains\Messaging\Http\Controllers\MessagingAdminController;
 use App\Domains\Platform\Http\Controllers\Admin\AutoDebitAdminController;
 use App\Domains\Platform\Http\Controllers\Admin\CmsAdminController;
 use App\Domains\Platform\Http\Controllers\Admin\PackageAdminController;
@@ -57,6 +58,11 @@ foreach ($centralDomains as $index => $domain) {
             Route::post('/verification-checks/{check}', [ProviderAdminController::class, 'review'])->name('checks.review');
             Route::get('/packages', [PackageAdminController::class, 'index'])->name('packages.index');
             Route::get('/auto-debits', [AutoDebitAdminController::class, 'index'])->name('autodebits.index');
+            Route::get('/messaging', [MessagingAdminController::class, 'index'])->name('messaging.index');
+            Route::put('/messaging/providers/{driver}', [MessagingAdminController::class, 'saveProvider'])->whereIn('driver', ['clickatell', 'bulksms', 'smsportal', 'twilio', 'ses', 'smtp'])->name('messaging.providers.save');
+            Route::post('/messaging/providers/{driver}/test', [MessagingAdminController::class, 'testProvider'])->whereIn('driver', ['clickatell', 'bulksms', 'smsportal', 'twilio', 'ses', 'smtp'])->name('messaging.providers.test');
+            Route::put('/messaging/templates', [MessagingAdminController::class, 'saveTemplate'])->name('messaging.templates.save');
+            Route::put('/messaging/packages/{package}', [MessagingAdminController::class, 'savePackage'])->name('messaging.packages.save');
             Route::get('/pages', [CmsAdminController::class, 'index'])->name('pages.index');
             Route::post('/pages', [CmsAdminController::class, 'save'])->name('pages.save');
             Route::put('/packages/{package}', [PackageAdminController::class, 'update'])->name('packages.update');

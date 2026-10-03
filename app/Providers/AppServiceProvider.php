@@ -11,9 +11,9 @@ use App\Domains\Finance\Support\LedgerPoster;
 use App\Domains\Identity\Contracts\OtpSender;
 use App\Domains\Identity\Enums\Permission;
 use App\Domains\Identity\Models\Staff;
-use App\Domains\Identity\Support\LogOtpSender;
+use App\Domains\Identity\Support\GatewayOtpSender;
 use App\Domains\Messaging\Contracts\MessageSender;
-use App\Domains\Messaging\Support\LogMessageSender;
+use App\Domains\Messaging\Support\GatewayMessageSender;
 use App\Domains\Prescribing\Contracts\DrugDatabase;
 use App\Domains\Prescribing\Support\DemoDrugDatabase;
 use App\Models\User;
@@ -30,8 +30,8 @@ class AppServiceProvider extends ServiceProvider
         // Demo implementations until the client licenses a drug database and chooses a switch.
         $this->app->singleton(DrugDatabase::class, DemoDrugDatabase::class);
         $this->app->singleton(ClaimsSwitch::class, DemoClaimsSwitch::class);
-        $this->app->singleton(MessageSender::class, LogMessageSender::class);
-        $this->app->singleton(OtpSender::class, LogOtpSender::class);
+        $this->app->singleton(MessageSender::class, GatewayMessageSender::class);
+        $this->app->singleton(OtpSender::class, GatewayOtpSender::class);
         // Provider gateway adapters (Paystack, PayFast, Peach, Yoco) bind per provider in production.
         $this->app->singleton(FakePaymentGateway::class);
         $this->app->bind(PaymentGateway::class, fn () => GatewayFactory::forProvider());

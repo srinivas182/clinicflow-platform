@@ -4,6 +4,17 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.13.0] — Sprint 8C: SMS and email suppliers, templates and allowances
+
+### Added
+- Platform-owned SMS and email suppliers, configured by the super admin only (like payment gateways): Clickatell, BulkSMS, SMSPortal, Twilio, Amazon SES (SMTP) and any SMTP server. Test or live mode, one default per channel, encrypted credentials, "Send test".
+- Test mode delivers only to the super admin's test recipients; other messages are recorded as suppressed, so no real patient receives test traffic.
+- Message catalogue: staff and patient sign-in codes, signing PIN, lab results ready, booking confirmation and reminder, "you're next", payment link, medicine ready, recalls, and the owner's allowance alert — each with fixed channels and allowed placeholders.
+- Default wording by the super admin in English, isiZulu, isiXhosa and Afrikaans; patients get their preferred language, falling back to English.
+- Providers set their email from-name and reply-to and may reword messages their package includes; security messages (codes, PINs) can never be changed; unknown placeholders are refused.
+- Packages now have separate SMS and email allowances, per-channel overage prices and the message types they include, all editable by the super admin. Usage is counted per channel and billed on the next subscription invoice; owners are emailed at 80% and 100%.
+- Marketing messages (recalls) respect opt-outs. Every message is logged with its status.
+
 ## [0.12.0] — Sprint 8B: default websites
 
 ### Added

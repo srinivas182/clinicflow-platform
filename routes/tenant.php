@@ -16,6 +16,7 @@ use App\Domains\Documents\Http\Controllers\TemplateController;
 use App\Domains\Finance\Http\Controllers\FinanceController;
 use App\Domains\Identity\Http\Controllers\HandoffController;
 use App\Domains\Lab\Http\Controllers\LabController;
+use App\Domains\Messaging\Http\Controllers\MessagingSettingsController;
 use App\Domains\Patients\Http\Controllers\PatientAdminController;
 use App\Domains\Patients\Http\Controllers\PatientController;
 use App\Domains\Pharmacy\Http\Controllers\PharmacyController;
@@ -167,6 +168,9 @@ Route::middleware([
         Route::get('/compliance/audit/export', [PatientAdminController::class, 'auditExport'])->name('compliance.audit.export');
         Route::get('/compliance/patients/{patient}/export', [PatientAdminController::class, 'exportPatient'])->name('compliance.patient.export');
 
+        Route::get('/settings/messaging', [MessagingSettingsController::class, 'index'])->name('settings.messaging');
+        Route::put('/settings/messaging/sender', [MessagingSettingsController::class, 'saveSender'])->name('settings.messaging.sender');
+        Route::put('/settings/messaging/wording', [MessagingSettingsController::class, 'saveWording'])->name('settings.messaging.wording');
         Route::get('/finance', [FinanceController::class, 'dashboard'])->name('finance.dashboard');
         Route::get('/cash-up', [FinanceController::class, 'cashUp'])->name('finance.cashup');
         Route::post('/cash-up', [FinanceController::class, 'closeCashUp'])->name('finance.cashup.close');
