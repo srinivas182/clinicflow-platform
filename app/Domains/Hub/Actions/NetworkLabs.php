@@ -78,7 +78,8 @@ class NetworkLabs
             'source' => 'network_out', 'lab_tenant_id' => $lab->id, 'home_collection' => $home,
         ]);
         foreach ($chosen as $code) {
-            $order->results()->create(['test_code' => $code, 'name' => (string) $menu[$code]['name'], 'unit' => '', 'reference' => '']);
+            $item = $menu->get($code);
+            $order->results()->create(['test_code' => $code, 'name' => is_array($item) ? $item['name'] : $code, 'unit' => '', 'reference' => '']);
         }
 
         $codesIcd = ConsultationDiagnosis::query()->whereIn('consultation_id', Consultation::query()->where('visit_id', $visit->id)->select('id'))
@@ -159,7 +160,7 @@ class NetworkLabs
      */
     public function deliverResults(LabOrder $labOrder): LabOrder
     {
-        $hub = HubLabOrder::query()->findOrFail($labOrder->getAttribute('hub_order_id'));
+        $hub = HubLabOrder::query()->where('id', (string) $labOrder->getAttribute('hub_order_id'))->firstOrFail();
         $pdf = $labOrder->getAttribute('report_path') !== null ? Storage::disk('local')->get((string) $labOrder->getAttribute('report_path')) : null;
         $payload = [
             'classification' => $labOrder->getAttribute('classification'), 'has_critical' => $labOrder->has_critical, 'verified_at' => now()->toIso8601String(),
@@ -174,7 +175,10 @@ class NetworkLabs
             $data = json_decode(Crypt::decryptString((string) $hub->fresh()?->result_payload), true);
             $order = LabOrder::query()->findOrFail($hub->issuer_order_id);
             foreach ((array) $data['results'] as $r) {
-                LabResult::query()->where('lab_order_id', $order->id)->where('test_code', $r['test_code'])->update(collect($r)->except('test_code')->all());
+                /** @var array<string, mixed> $r */
+                $changes = $r;
+                unset($changes['test_code']);
+                LabResult::query()->where('lab_order_id', $order->id)->where('test_code', (string) $r['test_code'])->update($changes);
             }
             $path = null;
             if (is_string($data['pdf'] ?? null)) {

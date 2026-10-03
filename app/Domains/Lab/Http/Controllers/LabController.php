@@ -200,7 +200,7 @@ class LabController extends Controller
                     $test = $catalog->resolve($r->test_code);
                     $range = $test instanceof CatalogTest ? Classifier::rangeFor($test, $patient) : null;
                     $base += [
-                        'type' => $test?->result_type ?? 'numeric', 'choices' => $test?->choices ?? [], 'templateUnit' => $test?->unit,
+                        'type' => $test instanceof CatalogTest ? $test->result_type : 'numeric', 'choices' => $test instanceof CatalogTest ? ($test->choices ?? []) : [], 'templateUnit' => $test?->unit,
                         'range' => $range?->only(['ref_low', 'ref_high', 'critical_low', 'critical_high']), 'rangeLabel' => Classifier::label($range),
                     ];
                 }

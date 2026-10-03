@@ -70,7 +70,9 @@ class LabCatalogController extends Controller
             'decimals' => ['required', 'integer', 'between:0,3'], 'plausible_min' => ['nullable', 'numeric'], 'plausible_max' => ['nullable', 'numeric'],
             'price' => ['required', 'numeric', 'min:0'], 'turnaround_hours' => ['required', 'integer', 'between:1,720'], 'home_collection' => ['required', 'boolean'], 'active' => ['required', 'boolean'],
         ]);
-        $test->fill(collect($data)->except('price')->all() + ['price_cents' => (int) round(((float) $data['price']) * 100)])->save();
+        $fields = $data;
+        unset($fields['price']);
+        $test->fill($fields + ['price_cents' => (int) round(((float) $data['price']) * 100)])->save();
 
         return back()->with('success', "{$test->name} saved.");
     }

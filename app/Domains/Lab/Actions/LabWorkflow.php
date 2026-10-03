@@ -116,7 +116,7 @@ class LabWorkflow
                 /** @var LabResult $result */
                 $code = $result->test_code;
                 $test = $this->catalog->resolve($code);
-                $has = array_key_exists($code, $values) && $values[$code] !== '' && $values[$code] !== null;
+                $has = array_key_exists($code, $values) && $values[$code] !== '';
 
                 if (! $has) {
                     if ($reportPath === null) {
