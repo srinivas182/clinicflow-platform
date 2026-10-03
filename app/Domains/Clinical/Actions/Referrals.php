@@ -51,7 +51,7 @@ class Referrals
 
         $referral = Referral::create([
             'direction' => 'out', 'patient_id' => $patient->id, 'consultation_id' => $consultationId, 'staff_id' => $doctor->id,
-            'other_tenant_id' => $target?->id, 'other_name' => $target?->name ?? trim($toName), 'specialty' => $specialty, 'urgency' => $urgency,
+            'other_tenant_id' => $target?->id, 'other_name' => $target instanceof Provider ? $target->name : trim($toName), 'specialty' => $specialty, 'urgency' => $urgency,
             'reason' => trim($reason), 'shared_categories' => $categories, 'summary' => ClinicalSummary::build($patient->id, $categories),
             'status' => 'sent',
         ]);
@@ -110,7 +110,7 @@ class Referrals
             Provider::query()->findOrFail($hub->from_tenant_id)->run(function () use ($hub, $changes): void {
                 $out = Referral::query()->findOrFail($hub->from_referral_id);
                 $out->forceFill($changes)->save();
-                if (($changes['status'] ?? null) === 'feedback') {
+                if ($changes['status'] === 'feedback') {
                     AccessLog::record($out->patient_id, 'discussed', "{$out->other_name} sent feedback on your referral");
                 }
             });

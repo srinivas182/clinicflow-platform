@@ -47,7 +47,7 @@ class ClinicianMessaging
             'urgent' => $urgent, 'urgent_due_at' => $urgent ? now()->addHours(4) : null,
         ]);
 
-        if ($otherTenantId !== null && $patient !== null) {
+        if ($otherTenantId !== null) {
             $identityId = (string) $patient->getAttribute('hub_identity_id');
             $remoteId = Provider::query()->findOrFail($otherTenantId)->run(function () use ($thread, $here, $identityId, $subject, $contextType, $contextId, $urgent): string {
                 $local = Patient::query()->where('hub_identity_id', $identityId)->firstOrFail();
@@ -165,7 +165,7 @@ class ClinicianMessaging
      */
     private function clinicians(): array
     {
-        return Staff::query()->get()->filter(fn (Staff $s) => $s->hasAnyRole(['doctor', 'locum_doctor', 'pharmacist', 'lab_technician', 'owner']))->pluck('id')->map(fn ($id) => (int) $id)->values()->all();
+        return array_values(Staff::query()->get()->filter(fn (Staff $s) => $s->hasAnyRole(['doctor', 'locum_doctor', 'pharmacist', 'lab_technician', 'owner']))->pluck('id')->map(fn ($id) => (int) $id)->all());
     }
 
     private function assertCrossPracticeAllowed(Patient $patient, Provider $here, string $otherTenantId): void

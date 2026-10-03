@@ -152,7 +152,7 @@ class CareController extends Controller
         ]);
         $me = $this->staff($request);
         $patient = isset($data['patient_id']) ? Patient::query()->findOrFail((string) $data['patient_id']) : null;
-        $thread = $messaging->start($me, $data['subject'], $patient, array_map('intval', $data['staff_ids'] ?? []), $data['other_tenant_id'] ?? null, $data['context_type'] ?? null, $data['context_id'] ?? null, (bool) ($data['urgent'] ?? false));
+        $thread = $messaging->start($me, $data['subject'], $patient, array_values(array_map('intval', $data['staff_ids'] ?? [])), $data['other_tenant_id'] ?? null, $data['context_type'] ?? null, $data['context_id'] ?? null, (bool) ($data['urgent'] ?? false));
         $messaging->post($thread, $me, $data['body']);
 
         return redirect("/messages/{$thread->id}");
@@ -240,7 +240,7 @@ class CareController extends Controller
         return Inertia::render('Compliance/BreakGlass', [
             'reasons' => BreakGlass::REASONS,
             'reviews' => DB::table('break_glass_reviews')->latest('id')->limit(50)->get()->map(fn ($r) => [
-                'id' => $r->id, 'patient' => Patient::query()->find($r->patient_id)?->fullName(), 'patientId' => $r->patient_id, 'reason' => BreakGlass::REASONS[$r->reason] ?? $r->reason,
+                'id' => $r->id, 'patient' => Patient::query()->whereKey((string) $r->patient_id)->first()?->fullName(), 'patientId' => $r->patient_id, 'reason' => BreakGlass::REASONS[$r->reason] ?? $r->reason,
                 'details' => $r->details, 'mine' => (int) $r->requested_by === $me, 'approved' => $r->approved_at !== null,
                 'open' => $breakGlass->canRead((string) $r->patient_id, $me) && (int) $r->requested_by === $me, 'expires' => $r->expires_at,
             ])->values(),
@@ -279,7 +279,7 @@ class CareController extends Controller
     {
         return Inertia::render('Messages/Show', [
             'thread' => ['id' => $thread->id, 'subject' => $thread->subject, 'urgent' => $thread->urgent, 'external' => $thread->other_tenant_id !== null,
-                'patient' => $thread->patient_id === null ? null : Patient::query()->find($thread->patient_id)?->fullName()],
+                'patient' => $thread->patient_id === null ? null : Patient::query()->whereKey($thread->patient_id)->first()?->fullName()],
             'messages' => $thread->messages()->orderBy('id')->get()->map(fn (ThreadMessage $m) => [
                 'id' => $m->id, 'from' => $m->sender_label, 'at' => $m->created_at->format('j M H:i'), 'body' => $m->plainBody(), 'corrects' => $m->corrects_id,
                 'visible' => $m->visible_to_patient, 'filed' => $m->filed_at !== null, 'attachment' => $m->attachment_path !== null,
