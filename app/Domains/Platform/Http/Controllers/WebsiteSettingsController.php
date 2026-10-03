@@ -22,7 +22,7 @@ class WebsiteSettingsController extends Controller
 {
     public function index(): Response
     {
-        $this->authorize(Permission::TEMPLATES_MANAGE);
+        $this->authorize(Permission::SETTINGS_MANAGE);
 
         return Inertia::render('Settings/Website', [
             'pages' => SitePage::query()->orderByRaw('menu_order is null')->orderBy('menu_order')->get()
@@ -34,7 +34,7 @@ class WebsiteSettingsController extends Controller
 
     public function updatePage(Request $request, SitePage $page): RedirectResponse
     {
-        $this->authorize(Permission::TEMPLATES_MANAGE);
+        $this->authorize(Permission::SETTINGS_MANAGE);
         $data = $request->validate([
             'title' => ['required', 'string', 'max:160'],
             'meta_description' => ['nullable', 'string', 'max:300'],
@@ -55,7 +55,7 @@ class WebsiteSettingsController extends Controller
 
     public function updateDetails(Request $request): RedirectResponse
     {
-        $this->authorize(Permission::TEMPLATES_MANAGE);
+        $this->authorize(Permission::SETTINGS_MANAGE);
         $data = $request->validate([
             'phone' => ['nullable', 'string', 'max:20'], 'email' => ['nullable', 'email', 'max:120'],
             'address' => ['nullable', 'string', 'max:255'], 'hours' => ['nullable', 'string', 'max:160'],
