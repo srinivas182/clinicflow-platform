@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Billing\Models;
 
 use App\Domains\Billing\Enums\InvoiceStatus;
+use App\Domains\Billing\Support\Vat;
 use App\Domains\Patients\Models\Patient;
 use App\Domains\Visits\Enums\PayerType;
 use App\Domains\Visits\Models\Visit;
@@ -22,6 +23,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property InvoiceStatus $status
  * @property int $total_cents
  * @property int $credited_cents
+ * @property int $vat_cents
+ * @property float|string $vat_rate
+ * @property bool $tax_invoice
  * @property int $paid_cents
  * @property bool $needs_review
  * @property string|null $review_note
@@ -41,6 +45,7 @@ class Invoice extends Model
     {
         return [
             'status' => InvoiceStatus::class,
+            'tax_invoice' => 'boolean',
             'payer_type' => PayerType::class,
             'total_cents' => 'integer',
             'paid_cents' => 'integer',
@@ -91,6 +96,9 @@ class Invoice extends Model
     public function recalculate(): void
     {
         $this->credited_cents = (int) CreditNote::query()->where('invoice_id', $this->id)->sum('amount_cents');
+        $this->vat_cents = max(0, (int) $this->lines()->sum('vat_cents') - (int) CreditNote::query()->where('invoice_id', $this->id)->sum('vat_cents'));
+        $this->tax_invoice = $this->vat_cents > 0 || Vat::registered();
+        $this->vat_rate = $this->tax_invoice ? Vat::rate() : 0;
         $this->total_cents = max(0, (int) $this->lines()->sum('total_cents') - $this->credited_cents);
         $this->paid_cents = (int) $this->payments()->where('status', 'succeeded')->sum('amount_cents')
             - (int) $this->payments()->where('status', 'succeeded')->sum('refunded_cents');

@@ -34,6 +34,7 @@ class IssueCreditNote
                 'number' => $prefix.str_pad((string) $next, 6, '0', STR_PAD_LEFT),
                 'invoice_id' => $invoice->id,
                 'amount_cents' => $amountCents,
+                'vat_cents' => $invoice->tax_invoice ? (int) round($amountCents * (float) $invoice->vat_rate / (100 + (float) $invoice->vat_rate)) : 0,
                 'reason' => trim($reason),
                 'issued_by' => $by?->id,
             ]);

@@ -1,5 +1,7 @@
 <?php
 
+use App\Domains\Finance\Http\Controllers\AccountingAdminController;
+use App\Domains\Finance\Http\Controllers\AccountingCallbackController;
 use App\Domains\Identity\Http\Controllers\LoginController;
 use App\Domains\Identity\Http\Controllers\WorkspaceController;
 use App\Domains\Messaging\Http\Controllers\MessagingAdminController;
@@ -48,6 +50,7 @@ foreach ($centralDomains as $index => $domain) {
             Route::post('/login/verify', [LoginController::class, 'verify'])->middleware('throttle:login-code')->name('login.verify.store');
         });
 
+        Route::get('/accounting/callback/{driver}', AccountingCallbackController::class)->whereIn('driver', ['xero', 'sage', 'zoho'])->middleware('throttle:20,1')->name('accounting.callback');
         Route::middleware('auth')->group(function (): void {
             Route::get('/workspaces', [WorkspaceController::class, 'index'])->name('workspaces');
             Route::post('/workspaces/{provider}/open', [WorkspaceController::class, 'open'])->name('workspaces.open');
@@ -63,6 +66,11 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/auto-debits', [AutoDebitAdminController::class, 'index'])->name('autodebits.index');
             Route::get('/wallet', [WalletController::class, 'adminSettings'])->name('wallet.settings');
             Route::get('/telemedicine', [TelemedicineAdminController::class, 'index'])->name('telemedicine.index');
+            Route::get('/accounting', [AccountingAdminController::class, 'index'])->name('accounting.index');
+            Route::put('/accounting/{driver}', [AccountingAdminController::class, 'save'])->whereIn('driver', ['xero', 'sage', 'zoho'])->name('accounting.save');
+            Route::get('/accounting/{driver}/connect', [AccountingAdminController::class, 'connect'])->whereIn('driver', ['xero', 'sage', 'zoho'])->name('accounting.connect');
+            Route::put('/accounting/{driver}/platform', [AccountingAdminController::class, 'updatePlatform'])->whereIn('driver', ['xero', 'sage', 'zoho'])->name('accounting.platform');
+            Route::post('/accounting/export', [AccountingAdminController::class, 'exportPlatform'])->name('accounting.export');
             Route::put('/telemedicine/{driver}', [TelemedicineAdminController::class, 'save'])->whereIn('driver', ['cloud', 'self_hosted'])->name('telemedicine.save');
             Route::post('/telemedicine/{driver}/test', [TelemedicineAdminController::class, 'test'])->whereIn('driver', ['cloud', 'self_hosted'])->name('telemedicine.test');
             Route::put('/wallet', [WalletController::class, 'saveAdminSettings'])->name('wallet.settings.save');

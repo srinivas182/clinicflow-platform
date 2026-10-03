@@ -8,6 +8,7 @@ use App\Domains\Billing\Enums\InvoiceStatus;
 use App\Domains\Billing\Enums\LineKind;
 use App\Domains\Billing\Models\Invoice;
 use App\Domains\Billing\Models\InvoiceLine;
+use App\Domains\Billing\Support\Vat;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -33,6 +34,7 @@ class AddInvoiceLine
             'quantity' => $quantity,
             'unit_cents' => $unitCents,
             'total_cents' => $unitCents * $quantity,
+            'vat_cents' => Vat::inclusive($unitCents * $quantity, $kind),
         ]);
 
         $invoice->recalculate();
