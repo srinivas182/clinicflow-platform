@@ -16,9 +16,12 @@ use App\Domains\Documents\Http\Controllers\TemplateController;
 use App\Domains\Finance\Http\Controllers\FinanceController;
 use App\Domains\Identity\Http\Controllers\HandoffController;
 use App\Domains\Lab\Http\Controllers\LabController;
+use App\Domains\Patients\Http\Controllers\PatientAdminController;
 use App\Domains\Patients\Http\Controllers\PatientController;
 use App\Domains\Pharmacy\Http\Controllers\PharmacyController;
 use App\Domains\Platform\Http\Controllers\SubscriptionBillingController;
+use App\Domains\Portal\Http\Controllers\PortalController;
+use App\Domains\Portal\Http\Middleware\EnsurePortalPatient;
 use App\Domains\Prescribing\Http\Controllers\PrescriptionController;
 use App\Domains\Scheduling\Http\Controllers\AppointmentController;
 use App\Domains\Scheduling\Http\Controllers\RosterController;
@@ -50,6 +53,22 @@ Route::middleware([
 
     Route::get('/pay/{token}', [PayLinkController::class, 'show'])->middleware('throttle:30,1')->name('paylink.show');
     Route::get('/pay/{token}/done', [PayLinkController::class, 'done'])->name('paylink.done');
+
+    // Patient portal (patients sign in with their cell number and an SMS code).
+    Route::prefix('my')->name('portal.')->group(function (): void {
+        Route::get('/login', [PortalController::class, 'login'])->name('login');
+        Route::post('/login', [PortalController::class, 'start'])->middleware('throttle:5,1')->name('start');
+        Route::get('/verify', [PortalController::class, 'verifyForm'])->name('verify');
+        Route::post('/verify', [PortalController::class, 'verify'])->middleware('throttle:10,1')->name('verify.store');
+        Route::middleware(EnsurePortalPatient::class)->group(function (): void {
+            Route::get('/', [PortalController::class, 'home'])->name('home');
+            Route::post('/logout', [PortalController::class, 'logout'])->name('logout');
+            Route::post('/profiles/{patient}', [PortalController::class, 'switchProfile'])->name('profile');
+            Route::post('/appointments', [PortalController::class, 'book'])->middleware('throttle:10,1')->name('book');
+            Route::post('/appointments/{appointment}/cancel', [PortalController::class, 'cancel'])->name('cancel');
+            Route::post('/invoices/{invoice}/pay', [PortalController::class, 'pay'])->name('pay');
+        });
+    });
 
     Route::get('/kiosk/{token}', [DeviceController::class, 'kiosk'])->name('kiosk');
     Route::post('/kiosk/{token}', [DeviceController::class, 'kioskCheckIn'])->middleware('throttle:20,1')->name('kiosk.checkin');
@@ -130,6 +149,13 @@ Route::middleware([
         Route::get('/lab', [LabController::class, 'worklist'])->name('lab.worklist');
         Route::get('/results', [LabController::class, 'inbox'])->name('lab.inbox');
         Route::post('/lab-orders/{order}/{step}', [LabController::class, 'step'])->whereIn('step', ['collect', 'results', 'verify', 'acknowledge', 'review', 'release'])->name('lab.step');
+
+        Route::get('/patients/import', [PatientAdminController::class, 'imports'])->name('patients.imports');
+        Route::post('/patients/import', [PatientAdminController::class, 'import'])->name('patients.import');
+        Route::post('/patients/{patient}/consent', [PatientAdminController::class, 'consent'])->name('patients.consent');
+        Route::get('/compliance/audit', [PatientAdminController::class, 'audit'])->name('compliance.audit');
+        Route::get('/compliance/audit/export', [PatientAdminController::class, 'auditExport'])->name('compliance.audit.export');
+        Route::get('/compliance/patients/{patient}/export', [PatientAdminController::class, 'exportPatient'])->name('compliance.patient.export');
 
         Route::get('/finance', [FinanceController::class, 'dashboard'])->name('finance.dashboard');
         Route::get('/cash-up', [FinanceController::class, 'cashUp'])->name('finance.cashup');

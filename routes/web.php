@@ -3,13 +3,14 @@
 use App\Domains\Identity\Http\Controllers\LoginController;
 use App\Domains\Identity\Http\Controllers\WorkspaceController;
 use App\Domains\Platform\Http\Controllers\Admin\AutoDebitAdminController;
+use App\Domains\Platform\Http\Controllers\Admin\CmsAdminController;
 use App\Domains\Platform\Http\Controllers\Admin\PackageAdminController;
 use App\Domains\Platform\Http\Controllers\Admin\PaymentAdminController;
 use App\Domains\Platform\Http\Controllers\Admin\ProviderAdminController;
 use App\Domains\Platform\Http\Controllers\PricingController;
+use App\Domains\Platform\Http\Controllers\PublicSiteController;
 use App\Domains\Platform\Http\Controllers\SignupController;
 use App\Domains\Platform\Http\Controllers\SubscriptionBillingController;
-use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,7 +25,9 @@ $centralDomains = config('tenancy.central_domains', []);
 
 foreach ($centralDomains as $index => $domain) {
     Route::domain($domain)->name($index === 0 ? '' : "central{$index}.")->group(function (): void {
-        Route::get('/', HomeController::class)->name('home');
+        Route::get('/', [PublicSiteController::class, 'home'])->name('home');
+        Route::get('/find-care', [PublicSiteController::class, 'directory'])->name('directory');
+        Route::get('/pages/{slug}', [PublicSiteController::class, 'page'])->where('slug', '[a-z0-9-]+')->name('cms.page');
         Route::get('/pricing', PricingController::class)->name('pricing');
         Route::get('/billing/pay/{token}', [SubscriptionBillingController::class, 'pay'])->middleware('throttle:30,1')->name('billing.pay');
         Route::get('/billing/done', [SubscriptionBillingController::class, 'done'])->name('billing.done');
@@ -54,6 +57,8 @@ foreach ($centralDomains as $index => $domain) {
             Route::post('/verification-checks/{check}', [ProviderAdminController::class, 'review'])->name('checks.review');
             Route::get('/packages', [PackageAdminController::class, 'index'])->name('packages.index');
             Route::get('/auto-debits', [AutoDebitAdminController::class, 'index'])->name('autodebits.index');
+            Route::get('/pages', [CmsAdminController::class, 'index'])->name('pages.index');
+            Route::post('/pages', [CmsAdminController::class, 'save'])->name('pages.save');
             Route::put('/packages/{package}', [PackageAdminController::class, 'update'])->name('packages.update');
             Route::get('/payments', [PaymentAdminController::class, 'index'])->name('payments.index');
             Route::put('/payments/{gateway}', [PaymentAdminController::class, 'update'])->name('payments.update');

@@ -1,6 +1,9 @@
 <?php
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia;
+
+uses(RefreshDatabase::class);
 
 it('renders the platform home on a central domain', function (): void {
     $this->withoutVite()
