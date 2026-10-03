@@ -83,7 +83,7 @@ class ImportPatients
     }
 
     /**
-     * @param  array<string, string>  $d
+     * @param  array<string, string|null>  $d
      */
     private function importRow(array $d, int $importId, ?User $by): ?string
     {

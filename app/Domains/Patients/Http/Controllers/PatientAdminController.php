@@ -133,7 +133,7 @@ class PatientAdminController extends Controller
     }
 
     /**
-     * @return list<array{at: string|null, description: string, by: int|string|null}>
+     * @return array<int, array{at: string|null, description: string, by: int|null}>
      */
     private function accessLog(Patient $patient): array
     {

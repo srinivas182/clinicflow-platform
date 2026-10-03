@@ -148,7 +148,7 @@ class PortalController extends Controller
     }
 
     /**
-     * @param  list<Patient>  $profiles
+     * @param  array<int, Patient>  $profiles
      */
     private function current(Request $request, array $profiles): Patient
     {
@@ -160,7 +160,10 @@ class PortalController extends Controller
             }
         }
 
-        return $profiles[0];
+        $first = reset($profiles);
+        abort_unless($first instanceof Patient, 403);
+
+        return $first;
     }
 
     private function cell(Request $request): string
