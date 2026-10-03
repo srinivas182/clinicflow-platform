@@ -55,6 +55,8 @@ final class Permission
 
     public const FINANCE_VIEW = 'finance.view';
 
+    public const LAB_MANAGE = 'lab.manage';
+
     /**
      * Only prescribers (doctor, locum doctor) may ever hold these.
      */
@@ -71,7 +73,7 @@ final class Permission
             self::APPOINTMENTS_VIEW, self::APPOINTMENTS_BOOK, self::ROSTERS_MANAGE,
             self::VISITS_MANAGE, self::BILLING_COLLECT, self::BILLING_REFUND, self::TRIAGE_RECORD,
             self::PAYMENTS_CONFIGURE, self::CONSULTS_WRITE, self::CLAIMS_MANAGE,
-            self::PHARMACY_DISPENSE, self::DISCHARGE_OVERRIDE, self::LAB_PROCESS, self::FINANCE_VIEW,
+            self::PHARMACY_DISPENSE, self::DISCHARGE_OVERRIDE, self::LAB_PROCESS, self::FINANCE_VIEW, self::LAB_MANAGE,
         ];
     }
 }

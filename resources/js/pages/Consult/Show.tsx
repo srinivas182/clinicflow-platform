@@ -311,9 +311,30 @@ export default function ConsultShow({ visit, patient, triage, consultation, pres
                             </label>
                         ))}
                     </div>
-                    <Button className="mt-3" size="sm" variant="secondary" disabled={tests.length === 0} onClick={() => router.post(`/visits/${visit.id}/lab-orders`, { tests }, { preserveScroll: true, onSuccess: () => setTests([]) })}>
-                        Order {tests.length || ''} test{tests.length === 1 ? '' : 's'}
-                    </Button>
+                    <div className="mt-3 flex gap-2">
+                        <Button size="sm" variant="secondary" disabled={tests.length === 0} onClick={() => router.post(`/visits/${visit.id}/lab-orders`, { tests }, { preserveScroll: true, onSuccess: () => setTests([]) })}>
+                            In-house lab: order {tests.length || ''}
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={async () => {
+                                const q = window.prompt('Network lab (name)?');
+                                if (!q) return;
+                                const labs: { id: string; name: string }[] = await fetch(`/reference/labs?q=${encodeURIComponent(q)}`, { headers: { Accept: 'application/json' } }).then((r) => r.json());
+                                const lab = labs[0];
+                                if (!lab) return window.alert('No network lab matches that name.');
+                                const menu: { code: string; name: string; price: number }[] = await fetch(`/reference/labs/${lab.id}/menu`, { headers: { Accept: 'application/json' } }).then((r) => r.json());
+                                const codes = window.prompt(`${lab.name} tests:\n${menu.map((m) => `${m.code} — ${m.name} (R${m.price})`).join('\n')}\n\nCodes, comma separated:`);
+                                if (!codes) return;
+                                const address = window.prompt('Home collection address (leave empty for walk-in)') ?? '';
+                                const home = address ? { address, date: window.prompt('Collection date (YYYY-MM-DD)') ?? '', window: window.prompt('Time window (e.g. 08:00–10:00)') ?? '' } : null;
+                                router.post(`/visits/${visit.id}/network-lab-orders`, { lab_id: lab.id, tests: codes.split(',').map((c) => c.trim().toUpperCase()), home }, { preserveScroll: true });
+                            }}
+                        >
+                            Send to a network lab
+                        </Button>
+                    </div>
                 </Card>
             )}
         </AppShell>

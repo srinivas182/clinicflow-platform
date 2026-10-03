@@ -45,6 +45,7 @@ class LabOrder extends Model
         return [
             'collected_at' => 'datetime', 'verified_at' => 'datetime', 'critical_acknowledged_at' => 'datetime',
             'reviewed_at' => 'datetime', 'released_at' => 'datetime', 'has_critical' => 'boolean',
+            'home_collection' => 'array', 'patient_requested_at' => 'datetime', 'escalated_at' => 'datetime', 'auto_released_at' => 'datetime',
         ];
     }
 

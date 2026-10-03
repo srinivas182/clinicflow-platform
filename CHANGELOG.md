@@ -4,6 +4,18 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.17.0] — Sprint 12B: lab templates, network labs and the results release flow
+
+### Added
+- Lab test templates per lab: copy tests from the master catalogue (LOINC codes, sample type, result type, plausibility limits, reference ranges by sex and age), edit them, build panels. Reference-range changes need a second person's approval, apply to new results only, and every result keeps the range it was checked against.
+- Results entry from templates: technicians type values only; flags (normal/low/high/critical) are computed live from the range for the patient's sex and age; impossible values are refused; choice/text tests need the lab's classification; the lab can raise a flag but never lower it; a PDF without values is "unclassified".
+- Network lab requests: the doctor orders from any network lab's own menu (linked patients only), optionally with home collection; the lab accepts or rejects, creates its own record and invoice (tests plus home-collection fee — the lab bills the patient), assigns a collector, collects, enters and verifies; results are delivered into the requesting practice's record and erased from the Hub.
+- Patient-requested tests at a lab (no doctor): released straight to the patient after verification.
+- Results release flow: doctor releases, releases with a note, or holds values back to discuss in person; patients see status only until release; "Request my results" after 24 hours moves results to the top of the inbox; normal results auto-release after 48 hours with a standard note; abnormal and unclassified results are escalated (never auto-released unless the practice allows abnormal — never critical); critical results not acknowledged within 2 hours are escalated urgently (fixed).
+- Covering doctor: a doctor away can name a cover, who sees and acts on their results.
+- Patient portal results page: status, notes, values after release, branded results PDF and the lab's own PDF; every view and download is audited.
+- `lab:release-tick` every 10 minutes.
+
 ## [0.16.0] — Sprint 12A: online consults done properly
 
 ### Added
