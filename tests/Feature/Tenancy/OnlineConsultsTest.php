@@ -39,6 +39,7 @@ use Carbon\CarbonImmutable;
 use Database\Seeders\ClinicalReferenceSeeder;
 use Database\Seeders\PackageSeeder;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 uses(DatabaseMigrations::class);
@@ -118,7 +119,7 @@ it('holds the slot while the patient pays, confirms on payment and releases an u
     $payment = $this->booking->payLink($a);
     app(RecordPayment::class)->confirm($payment);
     expect($a->fresh()?->getAttribute('payment_status'))->toBe('paid')
-        ->and(Illuminate\Support\Facades\DB::table('message_log')->where('related_id', $a->id)->where('recipient', '0825550147')->exists())->toBeTrue();
+        ->and(DB::table('message_log')->where('related_id', $a->id)->where('recipient', '0825550147')->exists())->toBeTrue();
 
     $b = $this->booking->book($this->patient, $this->doctor, ConsultType::Video, 15, at($this, '09:30'));
     $this->travel(11)->minutes();
