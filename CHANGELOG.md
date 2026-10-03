@@ -4,6 +4,15 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.21.0] — Sprint 14B: WhatsApp, couriers, pharmacy comparison
+
+### Added
+- WhatsApp: super admin chooses the supplier (Meta WhatsApp Cloud API, Twilio or Clickatell — one active), tracks template approvals (synced from Meta) and sets per-message prices (utility, marketing, authentication). Practices switch on the WhatsApp add-on (monthly fee on the subscription). Messages go by WhatsApp only when the patient prefers it and opted in, the template is approved and the practice wallet covers it; otherwise, and whenever WhatsApp fails, by SMS as before. Each WhatsApp message is charged to the practice wallet and logged. Reception records opt-in on the patient's care page.
+- Couriers: super admin enables Pargo, The Courier Guy and Skynet; each practice links its own courier account or uses manual courier. Bookings are entered with the courier's tracking number until a courier's API is connected (marked by the super admin after sandbox testing).
+- Deliveries: practice rule for who pays (patient, practice, or by order-value threshold, with the payer below and above it); the fee is added to the patient's invoice when they pay; Schedule 5+ medicine must be collected unless the pharmacy confirms it is approved to deliver it; status tracking; delivery confirmed only with the code sent to the patient.
+- Pharmacy comparison: pharmacies opt in to publishing stock and prices to the Network Hub (hourly); doctors and patients see which network pharmacies have every item on a script and an estimated total (clearly marked as an estimate).
+- `pharmacy:publish-stock` hourly.
+
 ## [0.20.0] — Sprint 14A: branches, groups, custom domains, calendars
 
 ### Added

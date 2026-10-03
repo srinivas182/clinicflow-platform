@@ -45,6 +45,9 @@ class IssueSubscriptionInvoices
                 if (in_array('telemedicine', (array) ($subscription->getAttribute('addons') ?? []), true)) {
                     $amount += (int) config('clinicflow.telemedicine.addon_monthly_cents', 29900) * ($annual ? 12 : 1);
                 }
+                if (in_array('whatsapp', (array) ($subscription->getAttribute('addons') ?? []), true)) {
+                    $amount += (int) config('clinicflow.whatsapp.addon_monthly_cents', 19900) * ($annual ? 12 : 1);
+                }
                 $amount += (int) ($subscription->getAttribute('extra_branches') ?? 0) * (int) config('clinicflow.branches.extra_monthly_cents', 49900) * ($annual ? 12 : 1);
                 $vat = (int) round($amount * (float) config('clinicflow.payments.vat_rate', 0.15));
                 $year = now()->format('Y');

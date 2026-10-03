@@ -7,9 +7,11 @@ import {
     CreditCard,
     Globe,
     Layers,
+    MessageCircle,
     MessageSquare,
     Network,
     RefreshCw,
+    Truck,
     Video,
     Wallet,
 } from "lucide-react";
@@ -27,6 +29,8 @@ const nav = [
     { label: "Accounting", icon: BookText, href: "/admin/accounting" },
     { label: "Groups", icon: Network, href: "/admin/groups" },
     { label: "Calendars", icon: CalendarDays, href: "/admin/calendars" },
+    { label: "WhatsApp", icon: MessageCircle, href: "/admin/whatsapp" },
+    { label: "Couriers", icon: Truck, href: "/admin/couriers" },
     { label: "Messaging", icon: MessageSquare, href: "/admin/messaging" },
     { label: "Website", icon: Globe, href: "/admin/pages" },
 ];

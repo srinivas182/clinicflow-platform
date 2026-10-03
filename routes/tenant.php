@@ -23,8 +23,10 @@ use App\Domains\Identity\Http\Controllers\HandoffController;
 use App\Domains\Lab\Http\Controllers\LabCatalogController;
 use App\Domains\Lab\Http\Controllers\LabController;
 use App\Domains\Messaging\Http\Controllers\MessagingSettingsController;
+use App\Domains\Messaging\Http\Controllers\WhatsAppController;
 use App\Domains\Patients\Http\Controllers\PatientAdminController;
 use App\Domains\Patients\Http\Controllers\PatientController;
+use App\Domains\Pharmacy\Http\Controllers\DeliveryController;
 use App\Domains\Pharmacy\Http\Controllers\PharmacyController;
 use App\Domains\Pharmacy\Http\Controllers\ProcurementController;
 use App\Domains\Platform\Http\Controllers\CustomDomainController;
@@ -97,6 +99,7 @@ Route::middleware([
             Route::get('/practices', [EscriptController::class, 'patientPractices'])->name('practices');
             Route::get('/results', [PortalResultsController::class, 'index'])->name('results');
             Route::get('/care', [PortalCareController::class, 'index'])->name('care');
+            Route::get('/pharmacies', [DeliveryController::class, 'portalCompare'])->name('pharmacies');
             Route::post('/care/sharing', [PortalCareController::class, 'sharing'])->name('care.sharing');
             Route::post('/results/{order}/request', [PortalResultsController::class, 'request'])->middleware('throttle:10,1')->name('results.request');
             Route::get('/results/{order}/download/{kind}', [PortalResultsController::class, 'download'])->whereIn('kind', ['report', 'lab'])->name('results.download');
@@ -218,6 +221,15 @@ Route::middleware([
         Route::get('/finance', [FinanceController::class, 'dashboard'])->name('finance.dashboard');
 
         Route::get('/network', [NetworkController::class, 'index'])->name('network.index');
+        Route::get('/settings/whatsapp', [WhatsAppController::class, 'settings'])->name('whatsapp.settings');
+        Route::put('/settings/whatsapp', [WhatsAppController::class, 'toggle'])->name('whatsapp.toggle');
+        Route::post('/patients/{patient}/whatsapp', [WhatsAppController::class, 'optIn'])->name('patients.whatsapp');
+        Route::get('/deliveries', [DeliveryController::class, 'index'])->name('deliveries.index');
+        Route::put('/settings/delivery', [DeliveryController::class, 'settings'])->name('deliveries.settings');
+        Route::put('/settings/couriers/{driver}', [DeliveryController::class, 'link'])->whereIn('driver', ['pargo', 'tcg', 'skynet'])->name('deliveries.link');
+        Route::post('/visits/{visit}/delivery', [DeliveryController::class, 'request'])->name('deliveries.request');
+        Route::post('/deliveries/{delivery}/{action}', [DeliveryController::class, 'act'])->whereIn('action', ['book', 'status', 'confirm'])->name('deliveries.act');
+        Route::get('/prescriptions/{prescription}/pharmacies', [DeliveryController::class, 'compare'])->name('prescriptions.pharmacies');
         Route::get('/settings/branches', [BranchController::class, 'index'])->name('branches.index');
         Route::post('/settings/branches', [BranchController::class, 'store'])->name('branches.store');
         Route::put('/settings/branches/{branch}/staff', [BranchController::class, 'staff'])->name('branches.staff');

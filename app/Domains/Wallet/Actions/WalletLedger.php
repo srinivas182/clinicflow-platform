@@ -93,6 +93,24 @@ class WalletLedger
         });
     }
 
+    /**
+     * Charges a usage fee (e.g. a WhatsApp message) straight from the available balance.
+     */
+    public function chargeUsage(Wallet $wallet, int $cents, string $reference, string $description): bool
+    {
+        return DB::connection($wallet->getConnectionName())->transaction(function () use ($wallet, $cents, $reference, $description): bool {
+            $locked = Wallet::query()->lockForUpdate()->findOrFail($wallet->id);
+            if ($locked->availableCents() < $cents) {
+                return false;
+            }
+            $locked->decrement('balance_cents', $cents);
+            $this->record($locked->refresh(), 'charge', -$cents, $reference, $description);
+            $this->checkLowBalance($locked);
+
+            return true;
+        });
+    }
+
     private function record(Wallet $wallet, string $type, int $amount, ?string $reference, string $description): void
     {
         WalletTransaction::create([

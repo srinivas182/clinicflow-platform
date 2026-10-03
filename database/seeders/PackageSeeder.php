@@ -35,7 +35,7 @@ class PackageSeeder extends Seeder
                 'trial_days' => 30,
                 'limits' => $limits,
                 'features' => $features,
-                'addons' => $type->canOfferTelemedicine() ? ['telemedicine', 'extra_messaging', 'custom_domain'] : ['extra_messaging', 'custom_domain'],
+                'addons' => $type->canOfferTelemedicine() ? ['telemedicine', 'whatsapp', 'extra_messaging', 'custom_domain'] : ['whatsapp', 'extra_messaging', 'custom_domain'],
                 'is_active' => true,
                 'sort_order' => $i,
             ]);

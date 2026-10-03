@@ -9,6 +9,7 @@ use App\Domains\Messaging\Support\GatewayMessageSender;
 use App\Domains\Messaging\Support\MessageCatalogue;
 use App\Domains\Messaging\Support\MessagingUsage;
 use App\Domains\Messaging\Support\TemplateResolver;
+use App\Domains\Messaging\WhatsApp\WhatsAppRouter;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\Setting;
 use Illuminate\Support\Facades\DB;
@@ -53,6 +54,12 @@ class SendMessage
         }
 
         $vars['practice'] ??= $provider instanceof Provider ? (string) Setting::get('messaging', 'from_name', $provider->name) : 'Clinic Flow';
+
+        // Patients who chose WhatsApp (and opted in) get it there when the practice has the add-on; otherwise SMS as before.
+        if ($channel === 'sms' && app(WhatsAppRouter::class)->trySend($key, $recipient, $vars, $entry, $relatedType, $relatedId)) {
+            return true;
+        }
+
         $template = TemplateResolver::resolve($key, $channel, $language);
         $subject = $template['subject'] === null ? null : MessageCatalogue::render($template['subject'], $vars);
 
