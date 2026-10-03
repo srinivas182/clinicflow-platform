@@ -4,6 +4,22 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.18.0] — Sprint 13A: referrals, clinician messaging, chronic and preventive care
+
+### Added
+- Share-history consent by category (allergies, medicines, problems, results, notes) with optional expiry, given with a code to the patient's phone or in the portal, revocable at any time.
+- Referrals to network practices with a clinical summary built only from consented categories; status and feedback flow back; printable referral letters for practices not on the network.
+- Clinician messaging about a patient within a practice or, with consent or an active referral, e-script or lab order, across practices; each practice keeps its own copy encrypted with its own key; messages cannot be edited or deleted (corrections are new messages); attachments; filing to the record; "visible to patient"; urgent messages notify by email and escalate to the covering doctor after 4 hours.
+- Patient transparency in the portal: who discussed their care and what was shared, referral outcomes, messages marked visible, and their sharing choices.
+- Break-glass review: reason, second approval, read-only for 7 days, logged and shown in the patient's log.
+- Problem list; chronic scripts renewed as new drafts for PIN signing; chronic monitoring due dates.
+- Preventive recalls with opt-out, childhood immunisation schedule and records, pregnancy tracker with risk flags.
+- Chronic medicine registration workflow, with a guide to connect it to the switch later.
+- `care:tick` for urgent escalation (every 10 minutes) and recalls (daily).
+
+### Notes
+- Recall rules, immunisation schedule, antenatal contacts and monitoring rules are DEMO defaults for clinical review.
+
 ## [0.17.0] — Sprint 12B: lab templates, network labs and the results release flow
 
 ### Added

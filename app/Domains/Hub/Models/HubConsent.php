@@ -35,6 +35,6 @@ class HubConsent extends Model
      */
     protected function casts(): array
     {
-        return ['granted_at' => 'datetime', 'withdrawn_at' => 'datetime'];
+        return ['granted_at' => 'datetime', 'withdrawn_at' => 'datetime', 'expires_at' => 'datetime', 'categories' => 'array'];
     }
 }

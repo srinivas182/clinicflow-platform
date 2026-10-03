@@ -14,3 +14,5 @@ Schedule::command('pharmacy:return-uncollected')->dailyAt('23:30')->onOneServer(
 Schedule::command('wallet:auto-topup')->everyFifteenMinutes()->onOneServer();
 Schedule::command('telemedicine:tick')->everyMinute()->withoutOverlapping()->onOneServer();
 Schedule::command('lab:release-tick')->everyTenMinutes()->withoutOverlapping()->onOneServer();
+Schedule::command('care:tick')->everyTenMinutes()->withoutOverlapping()->onOneServer();
+Schedule::command('care:tick --recalls')->dailyAt('09:00')->onOneServer();
