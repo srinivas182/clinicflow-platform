@@ -43,14 +43,14 @@ class ProviderGroups
     {
         $range = [$from.' 00:00:00', $to.' 23:59:59'];
 
-        return $group->members()->map(fn (Provider $p) => $p->run(fn () => [
+        return array_values($group->members()->map(fn (Provider $p) => $p->run(fn () => [
             'id' => $p->id, 'name' => $p->name,
             'visits' => DB::table('visits')->whereBetween('visit_date', [$from, $to])->count(),
             'appointments' => DB::table('appointments')->whereBetween('starts_at', $range)->count(),
             'new_patients' => DB::table('patients')->whereBetween('created_at', $range)->count(),
             'takings' => (int) DB::table('payments')->where('status', 'succeeded')->whereBetween('created_at', $range)->sum(DB::raw('amount_cents - refunded_cents')),
             'owed' => (int) DB::table('invoices')->where('status', '!=', 'void')->sum(DB::raw('GREATEST(total_cents - paid_cents - credited_cents, 0)')),
-        ]))->values()->all();
+        ]))->all());
     }
 
     /**

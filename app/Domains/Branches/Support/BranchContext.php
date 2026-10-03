@@ -68,7 +68,7 @@ final class BranchContext
      */
     public static function options(): array
     {
-        return Branch::query()->where('active', true)->orderByDesc('is_main')->orderBy('name')->get(['id', 'name'])
-            ->map(fn (Branch $b) => ['id' => $b->id, 'name' => $b->name])->values()->all();
+        return array_values(Branch::query()->where('active', true)->orderByDesc('is_main')->orderBy('name')->get(['id', 'name'])
+            ->map(fn (Branch $b) => ['id' => $b->id, 'name' => $b->name])->all());
     }
 }

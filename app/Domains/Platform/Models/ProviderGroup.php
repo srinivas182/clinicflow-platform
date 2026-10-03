@@ -28,7 +28,7 @@ class ProviderGroup extends Model
      */
     public function members(): Collection
     {
-        return Provider::query()->whereIn('id', DB::table('provider_group_members')->where('provider_group_id', $this->id)->pluck('tenant_id'))->orderBy('name')->get();
+        return collect(Provider::query()->whereIn('id', DB::table('provider_group_members')->where('provider_group_id', $this->id)->pluck('tenant_id'))->orderBy('name')->get()->all());
     }
 
     public function isAdmin(int $userId): bool

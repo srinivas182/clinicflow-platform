@@ -16,6 +16,6 @@ class DnsResolver
     {
         $records = @dns_get_record($host, DNS_TXT);
 
-        return is_array($records) ? array_values(array_map(fn (array $r) => (string) ($r['txt'] ?? ''), $records)) : [];
+        return is_array($records) ? array_map(fn (array $r): string => (string) ($r['txt'] ?? ''), array_values($records)) : [];
     }
 }
