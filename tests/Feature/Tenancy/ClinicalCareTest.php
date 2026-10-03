@@ -134,6 +134,13 @@ it('escalates an unanswered urgent message to the covering doctor', function ():
     expect($messaging->escalateUrgent())->toBe(1)
         ->and($thread->fresh()?->local_staff_ids)->toContain($third->id)
         ->and(collect($this->sms->sent)->where('channel', 'email')->count())->toBeGreaterThan(0);
+
+    // A reply from the recipient means no escalation.
+    $answered = $messaging->start($this->doctor, 'BP review', $this->patient, [$this->colleague->id], null, null, null, true);
+    $messaging->post($answered, $this->doctor, 'Please review BP.');
+    $messaging->post($answered, $this->colleague, 'Done — reviewed.');
+    $this->travel(5)->hours();
+    expect($messaging->escalateUrgent())->toBe(0)->and($answered->fresh()?->escalated_at)->toBeNull();
 });
 
 it('refers with only the history the patient agreed to share and brings status and feedback back', function (): void {

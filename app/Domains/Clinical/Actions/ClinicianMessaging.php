@@ -126,9 +126,14 @@ class ClinicianMessaging
         $count = 0;
         MessageThread::query()->where('urgent', true)->whereNull('escalated_at')->where('urgent_due_at', '<', now())->get()
             ->each(function (MessageThread $t) use (&$count): void {
-                $lastFromUs = $t->messages()->whereNotNull('sender_staff_id')->max('created_at');
-                $lastFromThem = $t->messages()->whereNull('sender_staff_id')->max('created_at');
-                if ($lastFromUs !== null && ($lastFromThem === null || $lastFromUs < $lastFromThem)) {
+                // Answered = anyone other than the original sender (or the other practice) wrote after the first message.
+                $first = $t->messages()->orderBy('id')->first();
+                if (! $first instanceof ThreadMessage) {
+                    return;
+                }
+                $answered = $t->messages()->where('id', '>', $first->id)
+                    ->where(fn ($q) => $q->whereNull('sender_staff_id')->orWhere('sender_staff_id', '!=', $first->sender_staff_id))->exists();
+                if ($answered) {
                     return;
                 }
                 $covers = Staff::query()->whereIn('id', $t->local_staff_ids)->whereNotNull('covering_staff_id')->pluck('covering_staff_id')->all();
