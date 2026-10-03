@@ -88,14 +88,20 @@ class MessagingAdminController extends Controller
             }
         }
 
+        $active = (bool) $data['enabled'];
+        if ($active && array_diff(array_column($d->credentialFields(), 'key'), array_keys(array_filter($credentials))) !== []) {
+            throw ValidationException::withMessages(['credentials' => "Enter all {$d->label()} credentials before switching it on."]);
+        }
+
+        // Only one active supplier per channel: switching one on switches the others off (their keys are kept).
         $row->forceFill([
-            'channel' => $d->channel(), 'mode' => $data['mode'], 'enabled' => (bool) $data['enabled'], 'is_default' => (bool) $data['is_default'],
+            'channel' => $d->channel(), 'mode' => $data['mode'], 'enabled' => $active, 'is_default' => $active,
             'credentials' => $credentials, 'sender' => $data['sender'] ?? null,
             'test_recipients' => array_values(array_filter(array_map('trim', explode(',', (string) ($data['test_recipients'] ?? ''))))),
         ])->save();
 
-        if ($row->is_default) {
-            MessagingProvider::query()->where('channel', $d->channel())->whereKeyNot($row->id)->update(['is_default' => false]);
+        if ($active) {
+            MessagingProvider::query()->where('channel', $d->channel())->whereKeyNot($row->id)->update(['enabled' => false, 'is_default' => false]);
         }
 
         activity('platform')->causedBy($request->user())->withProperties(['driver' => $d->value, 'mode' => $row->mode, 'enabled' => $row->enabled])->log('Messaging supplier saved');
