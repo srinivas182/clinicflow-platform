@@ -2,12 +2,12 @@
 
 use App\Domains\Clinical\Actions\BreakGlass;
 use App\Domains\Clinical\Actions\ClinicianMessaging;
+use App\Domains\Clinical\Actions\ManageAllergies;
 use App\Domains\Clinical\Actions\Referrals;
 use App\Domains\Clinical\Care\ChronicCare;
 use App\Domains\Clinical\Care\ChronicRegistration;
 use App\Domains\Clinical\Care\Pregnancy;
 use App\Domains\Clinical\Care\Prevention;
-use App\Domains\Clinical\Models\Allergy;
 use App\Domains\Clinical\Models\MessageThread;
 use App\Domains\Clinical\Models\Referral;
 use App\Domains\Clinical\Support\PracticeCrypto;
@@ -138,7 +138,7 @@ it('escalates an unanswered urgent message to the covering doctor', function ():
 
 it('refers with only the history the patient agreed to share and brings status and feedback back', function (): void {
     $identity = linkToBoth($this);
-    Allergy::create(['patient_id' => $this->patient->id, 'substance' => 'Penicillin', 'reaction' => 'Rash', 'status' => 'active']);
+    app(ManageAllergies::class)->add($this->patient, 'Penicillin', 'Rash');
     app(ChronicCare::class)->addProblem($this->patient, 'E11.9', null, $this->doctor);
     $referrals = app(Referrals::class);
 
