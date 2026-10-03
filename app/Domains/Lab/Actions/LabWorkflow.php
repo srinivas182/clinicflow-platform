@@ -144,7 +144,7 @@ class LabWorkflow
         $cell = $order->patient->cell;
         if (is_string($cell) && $cell !== '') {
             // The SMS never contains results; the patient views them in the app.
-            app(SendMessage::class)->handle('sms', $cell, 'Your lab results are ready. Open the Clinic Flow app to view them.', null, 'lab_order', $order->id);
+            app(SendMessage::class)->template('lab.results_ready', 'sms', $cell, ['patient' => $order->patient->fullName()], (string) ($order->patient->preferred_language ?? 'en'), 'lab_order', $order->id);
         }
         activity('lab')->performedOn($order)->causedBy(null)->withProperties(['doctor' => $doctor->id])->log('Results released to patient');
 
