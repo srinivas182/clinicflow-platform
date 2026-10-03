@@ -35,7 +35,9 @@ class CompleteConsultation
         $signed = Prescription::query()->where('consultation_id', $consultation->id)->where('status', 'signed')->exists();
         $visit = $consultation->visit;
 
-        if ($signed) {
+        if ($visit->check_in_channel === 'online') {
+            // Online consult: no queue stages; the patient collects via e-script or the practice pharmacy.
+        } elseif ($signed) {
             $this->transition->handle($visit, VisitStage::Pharmacy, $by);
         } elseif (DischargeGate::patientDueCents($visit) === 0) {
             $this->transition->handle($visit, VisitStage::Done, $by);

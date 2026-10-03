@@ -4,6 +4,23 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.16.0] — Sprint 12A: online consults done properly
+
+### Added
+- Online availability per doctor and mode (video, audio, chat or all): weekly hours, date exceptions (days off, partial days off, extra sessions) and a buffer between consults.
+- Price table per mode and duration (15 minutes minimum; 30, 45, 60 optional), practice prices with per-doctor overrides; extension price derived from the table.
+- Paid booking in the patient portal and at the front desk: doctor → mode → duration → date → times where the whole duration fits; the slot is held while the patient pays (default 10 minutes) through the practice's own gateway; confirmed on payment with a confirmation message; unpaid holds expire and release the slot and wallet reservation.
+- Each online consult gets a virtual visit (ticket V001…) with a consultation and invoice, so notes, ICD-10, prescribing, e-scripts, finance reports and refunds work as for in-person visits.
+- Join rules: waiting screen with camera/microphone test and countdown before the start (no join pass, nothing charged); join from the start time; late joins only within the booked time; time-left display and 2-minute warning; grace period (default 3 minutes) then the call closes; the patient is never charged for grace.
+- Extensions: the doctor adds a block (default 15 minutes) during the call; the patient pays first; time and wallet reservation are added on payment.
+- Cancellation policy: free cancellation before the cut-off (default 2 hours); no refund inside it; full refund when the practice cancels or the doctor has not joined 10 minutes after the start (fixed). Refunds go back through the practice's gateway — automatic for Paystack and Yoco, a "refund due" task with deadline and reminders for PayFast, Peach, cash and card.
+- Chat consults: a live, time-boxed chat for the booked duration, charged per session only if both took part; a follow-up chat window after every online consult (default 3 days).
+- Settings → Online consults (hours, exceptions, prices, rules, refund tasks); doctor "Chats" list; patient "Online consults" page.
+- `telemedicine:tick` every minute: expire holds, refund doctor no-shows, close finished consults.
+
+### Changed
+- Online consults are no longer booked through in-person rosters; the earlier "join 15 minutes before" rule is replaced by joining at the start time.
+
 ## [0.15.0] — Sprint 11: telemedicine and e-scripts
 
 ### Added

@@ -16,6 +16,7 @@ use App\Domains\Messaging\Contracts\MessageSender;
 use App\Domains\Messaging\Support\GatewayMessageSender;
 use App\Domains\Prescribing\Contracts\DrugDatabase;
 use App\Domains\Prescribing\Support\DemoDrugDatabase;
+use App\Domains\Telemedicine\Support\OnlineConsultHooks;
 use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -40,6 +41,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         LedgerPoster::register();
+        OnlineConsultHooks::register();
 
         /*
          * Workspace permissions are answered by the provider-side Staff record

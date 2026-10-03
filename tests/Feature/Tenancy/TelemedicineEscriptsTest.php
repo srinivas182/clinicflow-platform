@@ -1,5 +1,8 @@
 <?php
 
+use App\Domains\Billing\Actions\RecordPayment;
+use App\Domains\Billing\Enums\PaymentMethod;
+use App\Domains\Billing\Models\Invoice;
 use App\Domains\Hub\Actions\EscriptExchange;
 use App\Domains\Hub\Actions\NetworkIdentity;
 use App\Domains\Hub\Models\HubEscript;
@@ -16,11 +19,12 @@ use App\Domains\Platform\Models\Subscription;
 use App\Domains\Prescribing\Actions\AmendPrescription;
 use App\Domains\Prescribing\Actions\RequestSigningPin;
 use App\Domains\Prescribing\Actions\SignPrescription;
-use App\Domains\Scheduling\Actions\BookAppointment;
 use App\Domains\Scheduling\Actions\CancelAppointment;
 use App\Domains\Scheduling\Enums\ConsultType;
 use App\Domains\Scheduling\Models\Appointment;
-use App\Domains\Scheduling\Models\RosterSession;
+use App\Domains\Telemedicine\Actions\OnlineBooking;
+use App\Domains\Telemedicine\Models\TeleAvailability;
+use App\Domains\Telemedicine\Models\TelePrice;
 use App\Domains\Telemedicine\Models\TeleSession;
 use App\Domains\Telemedicine\Models\VideoConfig;
 use App\Domains\Telemedicine\Support\LiveKit;
@@ -28,6 +32,7 @@ use App\Domains\Visits\Enums\PayerType;
 use App\Domains\Wallet\Models\Wallet;
 use App\Domains\Wallet\Models\WalletReservation;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Database\Seeders\ClinicalReferenceSeeder;
 use Database\Seeders\PackageSeeder;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
@@ -81,10 +86,16 @@ function bookOnline(object $t, ConsultType $type = ConsultType::Video): Appointm
     return $t->clinic->run(function () use ($type): Appointment {
         $doctor = Staff::query()->findOrFail(test()->doctorUser->id);
         $start = now()->addDay()->setTime(9, 0);
-        RosterSession::query()->firstOrCreate(['staff_id' => $doctor->id, 'session_type' => 'telemedicine', 'starts_at' => $start], ['ends_at' => $start->copy()->addHours(2), 'slot_minutes' => 15]);
+        TeleAvailability::query()->firstOrCreate(['staff_id' => $doctor->id, 'mode' => 'all', 'weekday' => $start->dayOfWeek], ['start_time' => '08:00', 'end_time' => '12:00']);
+        foreach (['video' => 35000, 'audio' => 28000, 'chat' => 20000] as $mode => $cents) {
+            TelePrice::query()->firstOrCreate(['staff_id' => null, 'mode' => $mode, 'duration_minutes' => 15], ['price_cents' => $cents]);
+        }
         $patient = Patient::query()->where('cell', '0825550147')->first() ?? registerTestPatient('Thandi', '880412', null, '0825550147');
+        $appointment = app(OnlineBooking::class)->book($patient, $doctor, $type, 15, CarbonImmutable::parse($start));
+        $invoice = Invoice::query()->where('visit_id', $appointment->getAttribute('visit_id'))->sole();
+        app(RecordPayment::class)->handle($invoice, PaymentMethod::Cash, (int) $appointment->getAttribute('price_cents'));
 
-        return app(BookAppointment::class)->handle($patient, $doctor, $start, $type);
+        return $appointment->fresh();
     });
 }
 
@@ -177,17 +188,23 @@ it('releases the reservation when the consult never connects', function (): void
     expect(Wallet::for($this->clinic->id)->balance_cents)->toBe(50000)->and(WalletReservation::query()->sole()->status)->toBe('released');
 });
 
-it('opens the call screen only for the booked doctor from 15 minutes before', function (): void {
+it('gives a join pass only from the start time; before that a waiting screen', function (): void {
     enableTelemedicine($this);
     $appointment = bookOnline($this);
     Http::fake(['cf-test.livekit.cloud/twirp/*' => Http::response([], 200)]);
-
-    $this->actingAs($this->doctorUser)->get("http://sunrise.clinicflow.test/telemedicine/{$appointment->id}/call")->assertForbidden();
+    $url = "http://sunrise.clinicflow.test/telemedicine/{$appointment->id}/call";
 
     $this->travelTo(now()->addDay()->setTime(8, 50));
-    $this->actingAs($this->otherDoctorUser)->get("http://sunrise.clinicflow.test/telemedicine/{$appointment->id}/call")->assertForbidden();
-    $this->actingAs($this->doctorUser)->get("http://sunrise.clinicflow.test/telemedicine/{$appointment->id}/call")
-        ->assertInertia(fn ($page) => $page->component('Telemedicine/Call')->where('serverUrl', 'wss://cf-test.livekit.cloud')->where('type', 'video')->has('token'));
+    $this->actingAs($this->otherDoctorUser)->get($url)->assertForbidden();
+    $this->actingAs($this->doctorUser)->get($url)->assertInertia(fn ($page) => $page->component('Telemedicine/Call')->where('token', null));
+    Http::assertNothingSent();
+
+    $this->travelTo(now()->setTime(9, 0));
+    $this->actingAs($this->doctorUser)->get($url)
+        ->assertInertia(fn ($page) => $page->where('serverUrl', 'wss://cf-test.livekit.cloud')->where('type', 'video')->where('token', fn ($t) => is_string($t) && $t !== ''));
+
+    $this->travelTo(now()->setTime(9, 19));
+    $this->actingAs($this->doctorUser)->get($url)->assertRedirect()->assertSessionHas('error');
 });
 
 it('sends e-scripts only for linked patients and lets the chosen pharmacy dispense once', function (): void {

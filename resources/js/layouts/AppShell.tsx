@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Activity, Bell, CalendarDays, ChartColumn, CircleHelp, ClipboardList, Clock, FileCheck, FileSignature, FileText, FlaskConical, Globe, Inbox, LayoutDashboard, Pill, Search, Settings, Share2, ShieldCheck, Stethoscope, Users, Video, Wallet } from 'lucide-react';
+import { Activity, Bell, CalendarDays, ChartColumn, CircleHelp, ClipboardList, Clock, FileCheck, FileSignature, FileText, FlaskConical, Globe, Inbox, LayoutDashboard, MessagesSquare, Pill, Search, Settings, Share2, ShieldCheck, Stethoscope, Users, Video, Wallet } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Logo } from '@/components/Logo';
 import type { SharedProps } from '@/types';
@@ -19,6 +19,7 @@ const nav = [
     { label: 'Finance', icon: ChartColumn, href: '/finance' },
     { label: 'Network', icon: Share2, href: '/network' },
     { label: 'Online consults', icon: Video, href: '/telemedicine' },
+    { label: 'Chats', icon: MessagesSquare, href: '/chats' },
     { label: 'E-scripts', icon: FileSignature, href: '/escripts' },
     { label: 'Wallet', icon: Wallet, href: '/settings/wallet' },
     { label: 'Claims', icon: FileCheck, href: '/claims' },

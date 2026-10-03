@@ -4,16 +4,22 @@ declare(strict_types=1);
 
 namespace App\Domains\Telemedicine\Http\Controllers;
 
+use App\Domains\Billing\Models\Payment;
 use App\Domains\Identity\Enums\Permission;
 use App\Domains\Patients\Models\Patient;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\Subscription;
 use App\Domains\Portal\Actions\PortalSignIn;
+use App\Domains\Scheduling\Enums\ConsultType;
 use App\Domains\Scheduling\Models\Appointment;
+use App\Domains\Telemedicine\Actions\OnlineBooking;
+use App\Domains\Telemedicine\Models\ChatThread;
 use App\Domains\Telemedicine\Models\TeleSession;
 use App\Domains\Telemedicine\Support\LiveKit;
+use App\Domains\Telemedicine\Support\TeleSettings;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -38,6 +44,7 @@ class TeleConsultController extends Controller
                     'appointmentId' => $t->appointment_id, 'patient' => $t->appointment->patient->fullName(),
                     'type' => $t->appointment->consult_type->value, 'at' => $t->appointment->starts_at->format('D j M H:i'),
                     'patientWaiting' => $t->patient_joined_at !== null, 'status' => $t->status,
+                    'paid' => $t->appointment->getAttribute('payment_status') === 'paid', 'opensAt' => $t->appointment->starts_at->toIso8601String(),
                 ]),
             'videoReady' => LiveKit::active() !== null,
         ]);
@@ -82,27 +89,69 @@ class TeleConsultController extends Controller
         return back()->with('success', $data['enabled'] ? 'Telemedicine is on. The add-on fee is added to your next subscription invoice.' : 'Telemedicine is off.');
     }
 
+    public function extend(Request $request, Appointment $appointment, OnlineBooking $booking): RedirectResponse
+    {
+        $this->authorize(Permission::CONSULTS_WRITE);
+        abort_unless($appointment->staff_id === $this->user($request)->id, 403);
+        $booking->extend($appointment);
+
+        return back()->with('success', 'Extension sent to the patient for payment. Time is added as soon as they pay.');
+    }
+
+    /**
+     * Live state for the call screen: end time (after paid extensions) and any extension awaiting payment.
+     */
+    public function state(Appointment $appointment): JsonResponse
+    {
+        $session = TeleSession::query()->where('appointment_id', $appointment->id)->firstOrFail();
+        $pending = $session->getAttribute('pending_extension_payment');
+        $token = $pending === null ? null : Payment::query()->whereKey($pending)->value('checkout_token');
+
+        return response()->json([
+            'endsAt' => $appointment->fresh()?->ends_at->toIso8601String(),
+            'extensionPayUrl' => $token === null ? null : url('/pay/'.$token),
+            'ended' => $session->ended_at !== null,
+        ]);
+    }
+
     private function call(Appointment $appointment, string $identity, string $name, string $role): Response|RedirectResponse
     {
         $session = TeleSession::query()->where('appointment_id', $appointment->id)->firstOrFail();
         if ($session->ended_at !== null) {
             return back()->with('error', 'This consult has ended.');
         }
+        abort_unless($appointment->getAttribute('payment_status') === 'paid', 403, 'This consult is not paid yet.');
+        if ($appointment->consult_type === ConsultType::Chat) {
+            $thread = ChatThread::query()->where('appointment_id', $appointment->id)->where('kind', 'consult')->firstOrFail();
+
+            return redirect($role === 'doctor' ? "/chats/{$thread->id}" : "/my/chats/{$thread->id}");
+        }
+
+        $grace = TeleSettings::get('grace_minutes');
+        if ($appointment->ends_at->copy()->addMinutes($grace)->isPast()) {
+            return back()->with('error', 'The booked time for this consult is over.');
+        }
+        $open = ! $appointment->starts_at->isFuture();
         $livekit = LiveKit::active();
         abort_if($livekit === null, 503, 'Video consults are not available yet.');
-        abort_if($appointment->starts_at->subMinutes(15)->isFuture(), 403, 'You can join from 15 minutes before the consult.');
 
-        if ($role === 'doctor' && $session->doctor_joined_at === null) {
+        if ($open && $role === 'doctor' && $session->doctor_joined_at === null) {
             $livekit->createRoom($session->room_name);
         }
 
         return Inertia::render('Telemedicine/Call', [
+            'appointmentId' => $appointment->id,
             'serverUrl' => $livekit->url(),
-            'token' => $livekit->joinToken($session->room_name, $identity, $name, 180),
+            // No join pass before the start time: the waiting screen only tests the camera and microphone.
+            'token' => $open ? $livekit->joinToken($session->room_name, $identity, $name, $appointment->duration_minutes + 120) : null,
+            'startsAt' => $appointment->starts_at->toIso8601String(),
+            'endsAt' => $appointment->ends_at->toIso8601String(),
+            'graceMinutes' => $grace,
             'type' => $appointment->consult_type->value,
             'role' => $role,
             'other' => $role === 'doctor' ? $appointment->patient->fullName() : 'your doctor',
-            'leaveUrl' => $role === 'doctor' ? '/telemedicine' : '/my',
+            'leaveUrl' => $role === 'doctor' ? '/telemedicine' : '/my/online',
+            'stateUrl' => $role === 'doctor' ? "/telemedicine/{$appointment->id}/state" : "/my/online/{$appointment->id}/state",
         ]);
     }
 
