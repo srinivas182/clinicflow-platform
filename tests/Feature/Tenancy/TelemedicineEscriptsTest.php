@@ -7,6 +7,7 @@ use App\Domains\Identity\Actions\AddStaffMember;
 use App\Domains\Identity\Contracts\OtpSender;
 use App\Domains\Identity\Enums\StaffRole;
 use App\Domains\Identity\Models\Staff;
+use App\Domains\Patients\Models\Patient;
 use App\Domains\Platform\Enums\ProviderType;
 use App\Domains\Platform\Enums\SubscriptionStatus;
 use App\Domains\Platform\Models\Package;
@@ -81,7 +82,7 @@ function bookOnline(object $t, ConsultType $type = ConsultType::Video): Appointm
         $doctor = Staff::query()->findOrFail(test()->doctorUser->id);
         $start = now()->addDay()->setTime(9, 0);
         RosterSession::query()->firstOrCreate(['staff_id' => $doctor->id, 'session_type' => 'telemedicine', 'starts_at' => $start], ['ends_at' => $start->copy()->addHours(2), 'slot_minutes' => 15]);
-        $patient = \App\Domains\Patients\Models\Patient::query()->where('cell', '0825550147')->first() ?? registerTestPatient('Thandi', '880412', null, '0825550147');
+        $patient = Patient::query()->where('cell', '0825550147')->first() ?? registerTestPatient('Thandi', '880412', null, '0825550147');
 
         return app(BookAppointment::class)->handle($patient, $doctor, $start, $type);
     });
