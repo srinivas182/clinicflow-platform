@@ -130,9 +130,15 @@ it('escalates an unanswered urgent message to the covering doctor', function ():
     $messaging->post($thread, $this->doctor, 'Critical potassium — please act.');
 
     expect($messaging->escalateUrgent())->toBe(0);
+
+    $answered = $messaging->start($this->doctor, 'Answered quickly', $this->patient, [$this->colleague->id], null, null, null, true);
+    $messaging->post($answered, $this->doctor, 'Please call me.');
+    $messaging->post($answered, $this->colleague, 'Calling now.');
+
     $this->travel(5)->hours();
     expect($messaging->escalateUrgent())->toBe(1)
         ->and($thread->fresh()?->local_staff_ids)->toContain($third->id)
+        ->and($answered->fresh()?->escalated_at)->toBeNull()
         ->and(collect($this->sms->sent)->where('channel', 'email')->count())->toBeGreaterThan(0);
 
     // A reply from the recipient means no escalation.
