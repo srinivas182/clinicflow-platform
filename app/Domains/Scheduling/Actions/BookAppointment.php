@@ -46,7 +46,7 @@ class BookAppointment
             throw ValidationException::withMessages(['starts_at' => 'Choose a time in the future.']);
         }
 
-        return DB::transaction(function () use ($patient, $doctor, $startsAt, $type, $reason, $bookedBy): Appointment {
+        return DB::transaction(function () use ($patient, $doctor, $startsAt, $type, $reason, $bookedBy, $provider): Appointment {
             $session = RosterSession::query()
                 ->where('staff_id', $doctor->id)
                 ->where('session_type', ($type->isRemote() ? SessionType::Telemedicine : SessionType::InPerson)->value)
