@@ -135,7 +135,7 @@ jobs:
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G 2>&1 | tee .ci-phpstan.txt
 
       - name: Pest
-        run: vendor/bin/pest --ci 2>&1 | tee .ci-pest.txt
+        run: vendor/bin/pest --parallel --processes=4 --ci 2>&1 | tee .ci-pest.txt
 
       - name: Publish test summary
         if: success()
