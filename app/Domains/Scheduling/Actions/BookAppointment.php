@@ -11,6 +11,10 @@ use App\Domains\Scheduling\Enums\ConsultType;
 use App\Domains\Scheduling\Enums\SessionType;
 use App\Domains\Scheduling\Models\Appointment;
 use App\Domains\Scheduling\Models\RosterSession;
+use App\Domains\Telemedicine\Models\TeleSession;
+use App\Domains\Telemedicine\Support\Telemedicine;
+use App\Domains\Wallet\Actions\WalletLedger;
+use App\Domains\Wallet\Models\Wallet;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -30,8 +34,12 @@ class BookAppointment
             throw ValidationException::withMessages(['staff_id' => 'Appointments can only be booked with a doctor.']);
         }
 
-        if ($type->isRemote()) {
-            throw ValidationException::withMessages(['consult_type' => 'Video, audio and chat consults open with the telemedicine module.']);
+        $provider = tenant();
+        if ($type === ConsultType::Chat) {
+            throw ValidationException::withMessages(['consult_type' => 'Chat consults open with secure chat.']);
+        }
+        if ($type->isRemote() && ($provider === null || ! Telemedicine::enabledFor((string) $provider->getTenantKey()))) {
+            throw ValidationException::withMessages(['consult_type' => 'Online consults need the Telemedicine add-on.']);
         }
 
         if ($startsAt->isPast()) {
@@ -41,7 +49,7 @@ class BookAppointment
         return DB::transaction(function () use ($patient, $doctor, $startsAt, $type, $reason, $bookedBy): Appointment {
             $session = RosterSession::query()
                 ->where('staff_id', $doctor->id)
-                ->where('session_type', SessionType::InPerson->value)
+                ->where('session_type', ($type->isRemote() ? SessionType::Telemedicine : SessionType::InPerson)->value)
                 ->where('starts_at', '<=', $startsAt)
                 ->where('ends_at', '>', $startsAt)
                 ->lockForUpdate()
@@ -84,6 +92,17 @@ class BookAppointment
                 'reason' => $reason,
                 'booked_by' => $bookedBy?->id,
             ]);
+
+            if ($type->isRemote() && $provider !== null) {
+                // Reserve the expected cost in the provider's wallet; fails (and rolls back) below the minimum.
+                $reference = 'appt-'.$appointment->id;
+                app(WalletLedger::class)->reserve(Wallet::for((string) $provider->getTenantKey()), $reference, $type->value, $session->slot_minutes);
+                TeleSession::create([
+                    'appointment_id' => $appointment->id,
+                    'room_name' => Telemedicine::roomName((string) $provider->getTenantKey(), $appointment->id),
+                    'wallet_reference' => $reference,
+                ]);
+            }
 
             activity('scheduling')->performedOn($appointment)->causedBy($bookedBy)->log('Appointment booked');
 

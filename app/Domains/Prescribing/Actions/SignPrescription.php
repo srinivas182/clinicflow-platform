@@ -7,6 +7,7 @@ namespace App\Domains\Prescribing\Actions;
 use App\Domains\Documents\Actions\RenderDocument;
 use App\Domains\Documents\Support\DocumentType;
 use App\Domains\Documents\Support\PracticeData;
+use App\Domains\Hub\Actions\EscriptExchange;
 use App\Domains\Identity\Models\Staff;
 use App\Domains\Prescribing\Models\Prescription;
 use App\Domains\Prescribing\Models\PrescriptionItem;
@@ -75,6 +76,11 @@ class SignPrescription
         ], User::query()->find($doctor->id));
 
         $signed->forceFill(['issued_document_id' => $document->id])->save();
+
+        $issuer = tenant();
+        if ($issuer !== null && $signed->version > 1) {
+            app(EscriptExchange::class)->supersede((string) $issuer->getTenantKey(), $signed->consultation_id, $signed->version);
+        }
 
         return $signed;
     }

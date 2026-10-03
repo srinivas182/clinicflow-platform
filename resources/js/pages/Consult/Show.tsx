@@ -188,6 +188,23 @@ export default function ConsultShow({ visit, patient, triage, consultation, pres
                             >
                                 Change (new version)
                             </Button>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={async () => {
+                                    const q = window.prompt('Patient\'s chosen pharmacy (name)?');
+                                    if (!q) return;
+                                    const list: { id: string; name: string }[] = await fetch(`/reference/pharmacies?q=${encodeURIComponent(q)}`, { headers: { Accept: 'application/json' } }).then((r) => r.json());
+                                    if (list.length === 0) {
+                                        window.alert('No network pharmacy matches that name.');
+                                        return;
+                                    }
+                                    const pick = list.length === 1 ? list[0] : list[Number(window.prompt(list.map((p, i) => `${i + 1}. ${p.name}`).join('\n') + '\nNumber?')) - 1];
+                                    if (pick && window.confirm(`Send this script to ${pick.name}?`)) router.post(`/prescriptions/${current.id}/escript`, { pharmacy_id: pick.id }, { preserveScroll: true });
+                                }}
+                            >
+                                Send e-script
+                            </Button>
                         </div>
                     )}
                     {(draft || !current) && !locked && (

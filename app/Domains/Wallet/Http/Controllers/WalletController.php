@@ -9,6 +9,8 @@ use App\Domains\Billing\Gateways\GatewayFactory;
 use App\Domains\Billing\Models\BillingMandate;
 use App\Domains\Identity\Enums\Permission;
 use App\Domains\Platform\Models\Provider;
+use App\Domains\Platform\Models\Subscription;
+use App\Domains\Telemedicine\Support\Telemedicine;
 use App\Domains\Wallet\Actions\StartTopup;
 use App\Domains\Wallet\Models\Wallet;
 use App\Domains\Wallet\Models\WalletTopup;
@@ -43,6 +45,11 @@ class WalletController extends Controller
             'packs' => array_map(fn (array $p) => ['amount' => $p['amount'] / 100, 'bonus' => $p['bonus'] / 100], WalletSettings::packs()),
             'prices' => ['video' => WalletSettings::priceCents('video') / 100, 'audio' => WalletSettings::priceCents('audio') / 100, 'chat' => WalletSettings::priceCents('chat') / 100],
             'savedCard' => BillingMandate::activeFor($this->provider()->id)?->label(),
+            'telemedicine' => [
+                'offered' => in_array('telemedicine', (array) (Subscription::query()->with('package')->where('tenant_id', $this->provider()->id)->latest('id')->first()?->package->addons ?? []), true),
+                'enabled' => Telemedicine::enabledFor($this->provider()->id),
+                'fee' => (int) config('clinicflow.telemedicine.addon_monthly_cents', 29900) / 100,
+            ],
             'statement' => WalletTransaction::query()->where('wallet_id', $wallet->id)->latest('id')->limit(50)->get()
                 ->map(fn (WalletTransaction $t) => ['at' => $t->created_at->format('j M H:i'), 'type' => $t->type, 'amount' => $t->amount_cents / 100, 'balance' => $t->balance_after_cents / 100, 'description' => $t->description])->values(),
         ]);

@@ -6,6 +6,9 @@ namespace App\Domains\Scheduling\Actions;
 
 use App\Domains\Scheduling\Enums\AppointmentStatus;
 use App\Domains\Scheduling\Models\Appointment;
+use App\Domains\Telemedicine\Models\TeleSession;
+use App\Domains\Wallet\Actions\WalletLedger;
+use App\Domains\Wallet\Models\WalletReservation;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
 
@@ -22,6 +25,15 @@ class CancelAppointment
         }
 
         $appointment->forceFill(['status' => AppointmentStatus::Cancelled, 'cancelled_reason' => trim($reason)])->save();
+
+        $tele = TeleSession::query()->where('appointment_id', $appointment->id)->first();
+        if ($tele instanceof TeleSession && $tele->ended_at === null) {
+            $tele->forceFill(['status' => 'cancelled', 'ended_at' => now()])->save();
+            $reservation = WalletReservation::query()->where('reference', $tele->wallet_reference)->first();
+            if ($reservation instanceof WalletReservation) {
+                app(WalletLedger::class)->release($reservation, 'Appointment cancelled');
+            }
+        }
 
         activity('scheduling')->performedOn($appointment)->causedBy($by)->withProperties(['reason' => $reason])->log('Appointment cancelled');
 
