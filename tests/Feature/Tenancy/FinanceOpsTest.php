@@ -25,7 +25,6 @@ use App\Domains\Platform\Models\Package;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\Setting;
 use App\Domains\Platform\Models\Subscription;
-use App\Domains\Prescribing\Models\Medicine;
 use App\Domains\Visits\Actions\CheckInPatient;
 use App\Domains\Visits\Enums\PayerType;
 use App\Models\User;
@@ -60,11 +59,6 @@ afterEach(function (): void {
     tenancy()->end();
     Provider::query()->get()->each->delete();
 });
-
-function medicineId(string $name): int
-{
-    return (int) Medicine::query()->where('name', $name)->value('id');
-}
 
 it('charges no VAT when not registered and shows the VAT portion on tax invoices when registered', function (): void {
     $plain = seenByDoctor($this, registerTestPatient('Thandi', '880412'), PayerType::Cash)->visit;
