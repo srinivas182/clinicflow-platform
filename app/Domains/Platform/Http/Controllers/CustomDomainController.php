@@ -27,8 +27,8 @@ class CustomDomainController extends Controller
         $provider = $this->provider();
 
         return Inertia::render('Settings/Domains', [
-            'domains' => DB::table('custom_domains')->where('tenant_id', $provider->id)->get(['id', 'domain', 'token', 'status', 'ssl_status', 'last_check']),
-            'target' => (string) DB::table('domains')->where('tenant_id', $provider->id)->where('domain', 'like', '%.'.config('clinicflow.provider_domain'))->value('domain'),
+            'domains' => DB::connection((string) config('tenancy.database.central_connection'))->table('custom_domains')->where('tenant_id', $provider->id)->get(['id', 'domain', 'token', 'status', 'ssl_status', 'last_check']),
+            'target' => (string) DB::connection((string) config('tenancy.database.central_connection'))->table('domains')->where('tenant_id', $provider->id)->where('domain', 'like', '%.'.config('clinicflow.provider_domain'))->value('domain'),
             'spf' => 'v=spf1 include:'.config('clinicflow.provider_domain').' ~all',
         ]);
     }
@@ -44,7 +44,7 @@ class CustomDomainController extends Controller
     public function verify(int $domain, CustomDomains $domains): RedirectResponse
     {
         $this->authorize(Permission::SETTINGS_MANAGE);
-        abort_unless(DB::table('custom_domains')->where('id', $domain)->where('tenant_id', $this->provider()->id)->exists(), 404);
+        abort_unless(DB::connection((string) config('tenancy.database.central_connection'))->table('custom_domains')->where('id', $domain)->where('tenant_id', $this->provider()->id)->exists(), 404);
 
         return $domains->verify($domain) ? back()->with('success', 'Domain verified. The secure certificate is issued automatically on the first visit.') : back()->with('error', 'The TXT record was not found yet. DNS changes can take a few hours.');
     }

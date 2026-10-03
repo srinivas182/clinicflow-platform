@@ -29,13 +29,13 @@ class ProviderGroup extends Model
     public function members(): Collection
     {
         /** @var Collection<int, Provider> $members */
-        $members = collect(Provider::query()->whereIn('id', DB::table('provider_group_members')->where('provider_group_id', $this->id)->pluck('tenant_id'))->orderBy('name')->get()->all());
+        $members = collect(Provider::query()->whereIn('id', DB::connection((string) config('tenancy.database.central_connection'))->table('provider_group_members')->where('provider_group_id', $this->id)->pluck('tenant_id'))->orderBy('name')->get()->all());
 
         return $members;
     }
 
     public function isAdmin(int $userId): bool
     {
-        return DB::table('provider_group_admins')->where('provider_group_id', $this->id)->where('user_id', $userId)->exists();
+        return DB::connection((string) config('tenancy.database.central_connection'))->table('provider_group_admins')->where('provider_group_id', $this->id)->where('user_id', $userId)->exists();
     }
 }

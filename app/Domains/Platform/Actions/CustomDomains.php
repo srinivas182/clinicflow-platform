@@ -31,25 +31,25 @@ class CustomDomains
         if (preg_match('/^(?=.{4,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/', $domain) !== 1 || str_ends_with($domain, '.'.config('clinicflow.provider_domain', 'clinicflow.co.za'))) {
             throw ValidationException::withMessages(['domain' => 'Enter a domain you own, e.g. book.yourpractice.co.za.']);
         }
-        if (DB::table('custom_domains')->where('domain', $domain)->exists() || DB::table('domains')->where('domain', $domain)->exists()) {
+        if (DB::connection((string) config('tenancy.database.central_connection'))->table('custom_domains')->where('domain', $domain)->exists() || DB::connection((string) config('tenancy.database.central_connection'))->table('domains')->where('domain', $domain)->exists()) {
             throw ValidationException::withMessages(['domain' => 'That domain is already in use on Clinic Flow.']);
         }
-        $id = DB::table('custom_domains')->insertGetId(['tenant_id' => $provider->id, 'domain' => $domain, 'token' => 'cf-verify-'.Str::lower(Str::random(24)), 'created_at' => now(), 'updated_at' => now()]);
+        $id = DB::connection((string) config('tenancy.database.central_connection'))->table('custom_domains')->insertGetId(['tenant_id' => $provider->id, 'domain' => $domain, 'token' => 'cf-verify-'.Str::lower(Str::random(24)), 'created_at' => now(), 'updated_at' => now()]);
 
-        return DB::table('custom_domains')->where('id', $id)->firstOrFail();
+        return DB::connection((string) config('tenancy.database.central_connection'))->table('custom_domains')->where('id', $id)->firstOrFail();
     }
 
     public function verify(int $id): bool
     {
-        $d = DB::table('custom_domains')->where('id', $id)->firstOrFail();
+        $d = DB::connection((string) config('tenancy.database.central_connection'))->table('custom_domains')->where('id', $id)->firstOrFail();
         $found = in_array((string) $d->token, $this->dns->txt('_clinicflow.'.$d->domain), true);
         if (! $found) {
-            DB::table('custom_domains')->where('id', $id)->update(['last_check' => 'TXT record not found yet (DNS changes can take a few hours).', 'updated_at' => now()]);
+            DB::connection((string) config('tenancy.database.central_connection'))->table('custom_domains')->where('id', $id)->update(['last_check' => 'TXT record not found yet (DNS changes can take a few hours).', 'updated_at' => now()]);
 
             return false;
         }
         DB::transaction(function () use ($d, $id): void {
-            DB::table('custom_domains')->where('id', $id)->update(['status' => 'verified', 'verified_at' => now(), 'last_check' => null, 'updated_at' => now()]);
+            DB::connection((string) config('tenancy.database.central_connection'))->table('custom_domains')->where('id', $id)->update(['status' => 'verified', 'verified_at' => now(), 'last_check' => null, 'updated_at' => now()]);
             Provider::query()->findOrFail((string) $d->tenant_id)->domains()->firstOrCreate(['domain' => (string) $d->domain]);
         });
 
@@ -58,9 +58,9 @@ class CustomDomains
 
     public function remove(int $id, string $tenantId): void
     {
-        $d = DB::table('custom_domains')->where('id', $id)->where('tenant_id', $tenantId)->firstOrFail();
-        DB::table('domains')->where('domain', $d->domain)->where('tenant_id', $tenantId)->delete();
-        DB::table('custom_domains')->where('id', $id)->delete();
+        $d = DB::connection((string) config('tenancy.database.central_connection'))->table('custom_domains')->where('id', $id)->where('tenant_id', $tenantId)->firstOrFail();
+        DB::connection((string) config('tenancy.database.central_connection'))->table('domains')->where('domain', $d->domain)->where('tenant_id', $tenantId)->delete();
+        DB::connection((string) config('tenancy.database.central_connection'))->table('custom_domains')->where('id', $id)->delete();
     }
 
     /**
@@ -68,6 +68,6 @@ class CustomDomains
      */
     public function tlsAllowed(string $domain): bool
     {
-        return DB::table('custom_domains')->where('domain', strtolower($domain))->where('status', 'verified')->exists();
+        return DB::connection((string) config('tenancy.database.central_connection'))->table('custom_domains')->where('domain', strtolower($domain))->where('status', 'verified')->exists();
     }
 }

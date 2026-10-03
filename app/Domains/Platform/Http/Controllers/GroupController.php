@@ -35,7 +35,7 @@ class GroupController extends Controller
 
     public function mine(Request $request): Response
     {
-        $ids = DB::table('provider_group_admins')->where('user_id', $request->user()?->getAuthIdentifier())->pluck('provider_group_id');
+        $ids = DB::connection((string) config('tenancy.database.central_connection'))->table('provider_group_admins')->where('user_id', $request->user()?->getAuthIdentifier())->pluck('provider_group_id');
 
         return Inertia::render('Groups/Index', ['groups' => ProviderGroup::query()->whereIn('id', $ids)->orderBy('name')->get(['id', 'name'])]);
     }
@@ -45,9 +45,9 @@ class GroupController extends Controller
         return Inertia::render('Admin/Groups', [
             'groups' => ProviderGroup::query()->orderBy('name')->get()->map(fn (ProviderGroup $g) => [
                 'id' => $g->id, 'name' => $g->name, 'billing' => $g->billing, 'members' => $g->members()->map(fn (Provider $p) => ['id' => $p->id, 'name' => $p->name])->values(),
-                'invoices' => DB::table('group_invoices')->where('provider_group_id', $g->id)->latest('id')->limit(6)->get(['id', 'number', 'total_cents', 'status']),
+                'invoices' => DB::connection((string) config('tenancy.database.central_connection'))->table('group_invoices')->where('provider_group_id', $g->id)->latest('id')->limit(6)->get(['id', 'number', 'total_cents', 'status']),
             ])->values(),
-            'providers' => Provider::query()->whereNotIn('id', DB::table('provider_group_members')->pluck('tenant_id'))->orderBy('name')->get(['id', 'name']),
+            'providers' => Provider::query()->whereNotIn('id', DB::connection((string) config('tenancy.database.central_connection'))->table('provider_group_members')->pluck('tenant_id'))->orderBy('name')->get(['id', 'name']),
         ]);
     }
 

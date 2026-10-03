@@ -19,10 +19,10 @@ class ProviderGroups
 {
     public function addMember(ProviderGroup $group, Provider $provider): void
     {
-        if (DB::table('provider_group_members')->where('tenant_id', $provider->id)->exists()) {
+        if (DB::connection((string) config('tenancy.database.central_connection'))->table('provider_group_members')->where('tenant_id', $provider->id)->exists()) {
             throw ValidationException::withMessages(['tenant_id' => "{$provider->name} already belongs to a group."]);
         }
-        DB::table('provider_group_members')->insert(['provider_group_id' => $group->id, 'tenant_id' => $provider->id]);
+        DB::connection((string) config('tenancy.database.central_connection'))->table('provider_group_members')->insert(['provider_group_id' => $group->id, 'tenant_id' => $provider->id]);
     }
 
     public function addAdmin(ProviderGroup $group, string $email): void
@@ -31,7 +31,7 @@ class ProviderGroups
         if (! $user instanceof User) {
             throw ValidationException::withMessages(['email' => 'No Clinic Flow user has that email address.']);
         }
-        DB::table('provider_group_admins')->insertOrIgnore(['provider_group_id' => $group->id, 'user_id' => $user->id]);
+        DB::connection((string) config('tenancy.database.central_connection'))->table('provider_group_admins')->insertOrIgnore(['provider_group_id' => $group->id, 'user_id' => $user->id]);
     }
 
     /**
@@ -67,8 +67,8 @@ class ProviderGroups
         }
 
         return DB::transaction(function () use ($group, $invoices): int {
-            $next = DB::table('group_invoices')->count() + 1;
-            $id = (int) DB::table('group_invoices')->insertGetId(['provider_group_id' => $group->id, 'number' => 'CFG-'.now()->format('Y').'-'.str_pad((string) $next, 5, '0', STR_PAD_LEFT),
+            $next = DB::connection((string) config('tenancy.database.central_connection'))->table('group_invoices')->count() + 1;
+            $id = (int) DB::connection((string) config('tenancy.database.central_connection'))->table('group_invoices')->insertGetId(['provider_group_id' => $group->id, 'number' => 'CFG-'.now()->format('Y').'-'.str_pad((string) $next, 5, '0', STR_PAD_LEFT),
                 'total_cents' => (int) $invoices->sum('total_cents'), 'status' => 'open', 'created_at' => now(), 'updated_at' => now()]);
             SubscriptionInvoice::query()->whereIn('id', $invoices->pluck('id'))->update(['group_invoice_id' => $id]);
 
@@ -81,7 +81,7 @@ class ProviderGroups
      */
     public function settleCombined(int $groupInvoiceId, string $method, string $reference): void
     {
-        $gi = DB::table('group_invoices')->where('id', $groupInvoiceId)->first();
+        $gi = DB::connection((string) config('tenancy.database.central_connection'))->table('group_invoices')->where('id', $groupInvoiceId)->first();
         if ($gi === null || $gi->status === 'paid') {
             throw ValidationException::withMessages(['invoice' => 'This group invoice is already settled.']);
         }
@@ -89,7 +89,7 @@ class ProviderGroups
             foreach (SubscriptionInvoice::query()->where('group_invoice_id', $groupInvoiceId)->where('status', '!=', 'paid')->get() as $invoice) {
                 app(SettleSubscriptionInvoice::class)->settle($invoice, $method, $reference);
             }
-            DB::table('group_invoices')->where('id', $groupInvoiceId)->update(['status' => 'paid', 'paid_at' => now(), 'reference' => $reference, 'updated_at' => now()]);
+            DB::connection((string) config('tenancy.database.central_connection'))->table('group_invoices')->where('id', $groupInvoiceId)->update(['status' => 'paid', 'paid_at' => now(), 'reference' => $reference, 'updated_at' => now()]);
         });
     }
 }
