@@ -37,13 +37,13 @@ class TrackTeleSession
         }
 
         if (($event === 'participant_left' && $session->connected_at !== null) || $event === 'room_finished') {
-            $this->end($session, $at);
+            $this->finish($session, $at);
         }
 
         return $session;
     }
 
-    private function end(TeleSession $session, CarbonImmutable $at): void
+    public function finish(TeleSession $session, CarbonImmutable $at): void
     {
         $reservation = WalletReservation::query()->where('reference', $session->wallet_reference)->first();
 

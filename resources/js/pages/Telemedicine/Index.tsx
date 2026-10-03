@@ -10,6 +10,8 @@ interface Row {
     at: string;
     patientWaiting: boolean;
     status: string;
+    paid: boolean;
+    opensAt: string;
 }
 
 export default function TeleIndex({ consults, videoReady }: { consults: Row[]; videoReady: boolean }) {
@@ -17,7 +19,7 @@ export default function TeleIndex({ consults, videoReady }: { consults: Row[]; v
         <AppShell active="Online consults">
             <Head title="Online consults" />
             <h1 className="mb-1 text-2xl font-semibold">Online consults</h1>
-            <p className="mb-5 text-sm text-muted">Join from 15 minutes before the booked time. Minutes are counted only while you and the patient are both connected.</p>
+            <p className="mb-5 text-sm text-muted">You can join at the booked time (a waiting screen lets you test your devices before then). Minutes are counted only while you and the patient are both connected.</p>
             <Flash />
             {!videoReady && <p className="mb-4 rounded-lg bg-status-warning-wash px-3 py-2 text-sm text-status-warning">Video is not configured yet by Clinic Flow. Consults cannot start until it is.</p>}
             <Card>
@@ -29,8 +31,9 @@ export default function TeleIndex({ consults, videoReady }: { consults: Row[]; v
                             <span className="flex-1 font-medium">{c.patient}</span>
                             <Badge>{c.type}</Badge>
                             {c.patientWaiting && <Badge tone="success">Patient waiting</Badge>}
+                            {!c.paid && <Badge tone="warning">Awaiting payment</Badge>}
                             <Link href={`/telemedicine/${c.appointmentId}/call`}>
-                                <Button size="sm" disabled={!videoReady}>
+                                <Button size="sm" disabled={!videoReady || !c.paid}>
                                     Open
                                 </Button>
                             </Link>

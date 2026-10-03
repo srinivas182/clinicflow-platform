@@ -12,3 +12,4 @@ Schedule::command('subscriptions:collect')->dailyAt('06:00')->onOneServer();
 Schedule::command('claims:remittances')->hourly()->onOneServer();
 Schedule::command('pharmacy:return-uncollected')->dailyAt('23:30')->onOneServer();
 Schedule::command('wallet:auto-topup')->everyFifteenMinutes()->onOneServer();
+Schedule::command('telemedicine:tick')->everyMinute()->withoutOverlapping()->onOneServer();

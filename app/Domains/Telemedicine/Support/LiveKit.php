@@ -49,6 +49,14 @@ final class LiveKit
     }
 
     /**
+     * @return array{ok: bool, error: ?string}
+     */
+    public function deleteRoom(string $room): array
+    {
+        return $this->call('DeleteRoom', ['room' => $room]);
+    }
+
+    /**
      * Creates and removes a test room.
      *
      * @return array{ok: bool, error: ?string}
@@ -61,7 +69,7 @@ final class LiveKit
             return $created;
         }
 
-        return $this->call('DeleteRoom', ['room' => $room]);
+        return $this->deleteRoom($room);
     }
 
     /**

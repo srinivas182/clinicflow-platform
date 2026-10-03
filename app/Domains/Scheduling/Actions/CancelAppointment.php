@@ -6,9 +6,7 @@ namespace App\Domains\Scheduling\Actions;
 
 use App\Domains\Scheduling\Enums\AppointmentStatus;
 use App\Domains\Scheduling\Models\Appointment;
-use App\Domains\Telemedicine\Models\TeleSession;
-use App\Domains\Wallet\Actions\WalletLedger;
-use App\Domains\Wallet\Models\WalletReservation;
+use App\Domains\Telemedicine\Actions\OnlineBooking;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
 
@@ -24,16 +22,11 @@ class CancelAppointment
             throw ValidationException::withMessages(['appointment' => 'Only booked appointments can be cancelled.']);
         }
 
-        $appointment->forceFill(['status' => AppointmentStatus::Cancelled, 'cancelled_reason' => trim($reason)])->save();
-
-        $tele = TeleSession::query()->where('appointment_id', $appointment->id)->first();
-        if ($tele instanceof TeleSession && $tele->ended_at === null) {
-            $tele->forceFill(['status' => 'cancelled', 'ended_at' => now()])->save();
-            $reservation = WalletReservation::query()->where('reference', $tele->wallet_reference)->first();
-            if ($reservation instanceof WalletReservation) {
-                app(WalletLedger::class)->release($reservation, 'Appointment cancelled');
-            }
+        if ($appointment->getAttribute('visit_id') !== null && $appointment->getAttribute('payment_status') !== null) {
+            return app(OnlineBooking::class)->cancel($appointment, 'practice', $reason, $by);
         }
+
+        $appointment->forceFill(['status' => AppointmentStatus::Cancelled, 'cancelled_reason' => trim($reason)])->save();
 
         activity('scheduling')->performedOn($appointment)->causedBy($by)->withProperties(['reason' => $reason])->log('Appointment cancelled');
 
