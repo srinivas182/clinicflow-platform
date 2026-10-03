@@ -66,7 +66,7 @@ class NetworkIdentity
         $hash = $saId !== null ? SaIdNumber::tryParse($saId)?->lookupHash() : null;
 
         return HubIdentity::query()
-            ->when($cell !== null, fn ($q) => $q->where('cell', preg_replace('/\D/', '', $cell)))
+            ->when($cell !== null, fn ($q) => $q->where('cell', preg_replace('/\D/', '', (string) $cell)))
             ->when($hash !== null, fn ($q) => $cell === null ? $q->where('sa_id_hash', $hash) : $q->orWhere('sa_id_hash', $hash))
             ->first();
     }
@@ -142,7 +142,7 @@ class NetworkIdentity
     }
 
     /**
-     * @return list<array{provider: string, linked_at: string}>
+     * @return array<int, array{provider: string, linked_at: string, provider_id: string}>
      */
     public function linkedProviders(HubIdentity $identity): array
     {
