@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Activity, Bell, BookOpen, CalendarDays, ChartColumn, CircleHelp, ClipboardList, Clock, FileCheck, FileSignature, FileText, FlaskConical, Globe, Inbox, LayoutDashboard, MessagesSquare, Pill, Search, Settings, Share2, ShieldCheck, Stethoscope, Users, Video, Wallet } from 'lucide-react';
+import { Activity, Bell, BookOpen, CalendarDays, ChartColumn, CircleHelp, ClipboardList, Clock, FileCheck, FileSignature, FileText, FlaskConical, Forward, Globe, Inbox, LayoutDashboard, Mail, MessagesSquare, Pill, Search, Settings, Share2, ShieldAlert, ShieldCheck, Stethoscope, Users, Video, Wallet } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Logo } from '@/components/Logo';
 import type { SharedProps } from '@/types';
@@ -21,6 +21,9 @@ const nav = [
     { label: 'Network', icon: Share2, href: '/network' },
     { label: 'Online consults', icon: Video, href: '/telemedicine' },
     { label: 'Chats', icon: MessagesSquare, href: '/chats' },
+    { label: 'Messages', icon: Mail, href: '/messages' },
+    { label: 'Referrals', icon: Forward, href: '/referrals' },
+    { label: 'Compliance', icon: ShieldAlert, href: '/compliance/break-glass' },
     { label: 'E-scripts', icon: FileSignature, href: '/escripts' },
     { label: 'Wallet', icon: Wallet, href: '/settings/wallet' },
     { label: 'Claims', icon: FileCheck, href: '/claims' },
