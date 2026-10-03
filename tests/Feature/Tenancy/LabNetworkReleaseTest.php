@@ -214,7 +214,7 @@ it('sends network lab requests for linked patients and delivers results back wit
 
     $home = ['address' => '12 Vilakazi St, Soweto', 'date' => now()->addDay()->toDateString(), 'window' => '08:00–10:00'];
     $order = $labs->send($visit, $this->doctor, $this->clinic, $this->labProvider->id, ['K', 'HB'], $home);
-    expect($order->status)->toBe('sent')->and(HubLabOrder::query()->sole()->payload['home_collection'])->toBe($home);
+    expect($order->status)->toBe('sent')->and(HubLabOrder::query()->sole()->payload['home_collection'])->toEqual($home);
     tenancy()->end();
 
     $this->labProvider->run(function () use ($labs): void {
