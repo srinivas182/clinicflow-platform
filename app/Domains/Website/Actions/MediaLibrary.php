@@ -63,7 +63,7 @@ class MediaLibrary
     }
 
     /**
-     * @return array{0: int, 1: int}
+     * @return array{0: int<1, max>, 1: int<1, max>}
      */
     private function fit(int $w, int $h, int $max): array
     {
@@ -85,7 +85,7 @@ class MediaLibrary
             return $bytes;
         }
         [$w, $h] = $this->fit(imagesx($src), imagesy($src), $max);
-        $dst = imagecreatetruecolor($w, $h);
+        $dst = imagecreatetruecolor(max(1, $w), max(1, $h));
         imagealphablending($dst, false);
         imagesavealpha($dst, true);
         imagecopyresampled($dst, $src, 0, 0, 0, 0, $w, $h, imagesx($src), imagesy($src));

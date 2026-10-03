@@ -107,9 +107,9 @@ class Feedback
             return null;
         }
 
-        return DB::table('reviews')->join('patients', 'patients.id', '=', 'reviews.patient_id')->where('reviews.public_ok', true)->whereNull('reviews.flagged_at')
+        return array_values(DB::table('reviews')->join('patients', 'patients.id', '=', 'reviews.patient_id')->where('reviews.public_ok', true)->whereNull('reviews.flagged_at')
             ->orderByDesc('reviews.id')->limit(12)->get(['reviews.rating', 'reviews.comment', 'reviews.created_at', 'patients.first_names', 'patients.surname'])
             ->map(fn ($r) => ['rating' => (int) $r->rating, 'comment' => $r->comment === null ? null : (string) $r->comment,
-                'name' => mb_substr((string) $r->first_names, 0, 1).'. '.mb_substr((string) $r->surname, 0, 1).'.', 'date' => substr((string) $r->created_at, 0, 7)])->values()->all();
+                'name' => mb_substr((string) $r->first_names, 0, 1).'. '.mb_substr((string) $r->surname, 0, 1).'.', 'date' => substr((string) $r->created_at, 0, 7)])->all());
     }
 }
