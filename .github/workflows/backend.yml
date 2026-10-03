@@ -61,7 +61,9 @@ jobs:
           MYSQL_DATABASE: clinicflow_platform
         ports:
           - 3306:3306
+        # Test databases live in memory: tenancy tests create and drop many databases.
         options: >-
+          --tmpfs /var/lib/mysql:rw,size=4g
           --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
           --health-interval=5s --health-timeout=5s --health-retries=20
 
@@ -121,7 +123,7 @@ jobs:
           git push origin HEAD:${{ github.head_ref }}
 
       - name: Create Network Hub database
-        run: mysql -h 127.0.0.1 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS clinicflow_hub CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+        run: mysql -h 127.0.0.1 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS clinicflow_hub CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; SET GLOBAL innodb_flush_log_at_trx_commit=2; SET GLOBAL sync_binlog=0; SET GLOBAL max_connections=500;"
 
       - name: Prepare application
         run: |
