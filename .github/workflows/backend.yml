@@ -135,7 +135,9 @@ jobs:
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G 2>&1 | tee .ci-phpstan.txt
 
       - name: Pest
-        run: vendor/bin/pest --ci 2>&1 | tee .ci-pest.txt
+        # Stops a stuck run with time left to report it (the job limit is 45 minutes).
+        timeout-minutes: 38
+        run: vendor/bin/pest --ci --log-events-text .ci-events.txt 2>&1 | tee .ci-pest.txt
 
       - name: Publish test summary
         if: success()
@@ -147,12 +149,21 @@ jobs:
           gh api "repos/${GITHUB_REPOSITORY}/statuses/${sha}" -f state=success -f context="backend/tests" -f description="${summary:0:140}"
 
       - name: Report failure on the pull request
-        if: failure() && github.event_name == 'pull_request'
+        if: (failure() || cancelled()) && github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           {
             echo "### Backend CI failed — \`${GITHUB_SHA::8}\`"
+            if [ -s .ci-events.txt ]; then
+              echo ""
+              echo "<details><summary>Last tests started (shows where a stuck run stopped)</summary>"
+              echo ""
+              echo '```'
+              grep -E "Test (Prepared|Started)" .ci-events.txt | tail -n 15 | cut -c1-220
+              echo '```'
+              echo "</details>"
+            fi
             for f in .ci-pint.txt .ci-phpstan.txt .ci-pest.txt; do
               if [ -s "$f" ]; then
                 echo ""
