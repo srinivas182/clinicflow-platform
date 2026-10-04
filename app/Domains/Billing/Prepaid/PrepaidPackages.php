@@ -42,7 +42,7 @@ class PrepaidPackages
                 throw ValidationException::withMessages(["items.{$i}" => 'Each service must be a consultation, procedure or lab test, with a quantity from 1 to 50.']);
             }
         }
-        $row = ['name' => trim($name), 'description' => $description, 'price_cents' => $priceCents, 'items' => json_encode(array_values($items)), 'active' => $active, 'updated_at' => now()];
+        $row = ['name' => trim($name), 'description' => $description, 'price_cents' => $priceCents, 'items' => json_encode($items), 'active' => $active, 'updated_at' => now()];
         if ($id === null) {
             return (int) DB::table('prepaid_packages')->insertGetId($row + ['created_at' => now()]);
         }
@@ -94,7 +94,9 @@ class PrepaidPackages
      */
     public static function remaining(object $patientPackage): array
     {
-        return array_map('intval', (array) json_decode((string) $patientPackage->remaining, true));
+        $raw = property_exists($patientPackage, 'remaining') ? $patientPackage->remaining : '[]';
+
+        return array_map('intval', (array) json_decode(is_string($raw) ? $raw : '[]', true));
     }
 
     public static function serviceFor(InvoiceLine $line): ?string
