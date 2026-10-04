@@ -1,5 +1,6 @@
 import { Link } from "@inertiajs/react";
 import {
+    Activity,
     BadgeCheck,
     BookText,
     Building2,
@@ -8,6 +9,7 @@ import {
     Globe,
     Handshake,
     Layers,
+    LifeBuoy,
     MessageCircle,
     MessageSquare,
     MessageSquareWarning,
@@ -33,6 +35,8 @@ const nav = [
     { label: "Calendars", icon: CalendarDays, href: "/admin/calendars" },
     { label: "Reviews", icon: MessageSquareWarning, href: "/admin/reviews" },
     { label: "Resellers", icon: Handshake, href: "/admin/resellers" },
+    { label: "Support", icon: LifeBuoy, href: "/admin/support" },
+    { label: "Status page", icon: Activity, href: "/admin/status" },
     { label: "WhatsApp", icon: MessageCircle, href: "/admin/whatsapp" },
     { label: "Couriers", icon: Truck, href: "/admin/couriers" },
     { label: "Messaging", icon: MessageSquare, href: "/admin/messaging" },
