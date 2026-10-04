@@ -4,6 +4,16 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.26.0] — Sprint 17A-2: locum marketplace after the shift
+
+### Added
+- Hours: the locum submits start, end and unpaid break once the shift has started; the practice confirms them or adjusts them with a reason.
+- Shift invoice: issued on confirmation (LOC-YYYY-NNNNNN), PDF from the locum to the practice with hours, rate and total (VAT added only if the locum is VAT registered); "paid directly by the practice, not through Clinic Flow"; the practice can mark it paid.
+- Shift alerts: verified locums in the shift's area (or the invited locum) get an email once per shift; optional SMS, off by default.
+- Reminders: the day before a booked shift, to the locum and the practice owner (`locums:remind`, hourly).
+- Cancellations: either side cancels a booked shift with a reason before it starts; the roster session is removed and the locum's access ends unless another shift is booked; cancellations within 24 hours are recorded as late; the other side is emailed.
+- Private "would book again" per completed shift, visible only to that practice and the super admin; the super admin also sees late cancellations per locum.
+
 ## [0.25.0] — Sprint 17A-1: locum marketplace (profiles, verification, shifts, booking)
 
 ### Added

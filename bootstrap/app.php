@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         __DIR__.'/../app/Domains/Scheduling/Console',
         __DIR__.'/../app/Domains/Website/Console',
         __DIR__.'/../app/Domains/Billing/Console',
+        __DIR__.'/../app/Domains/Locums/Console',
         __DIR__.'/../app/Domains/Platform/Support/Console',
         __DIR__.'/../app/Domains/Hub/Console',
     ])

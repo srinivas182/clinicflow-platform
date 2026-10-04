@@ -6,6 +6,7 @@ namespace App\Domains\Locums\Http\Controllers;
 
 use App\Domains\Identity\Enums\Permission;
 use App\Domains\Locums\Actions\LocumMarketplace;
+use App\Domains\Locums\Actions\LocumShiftLifecycle;
 use App\Domains\Platform\Models\Provider;
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -41,7 +42,7 @@ class LocumController extends Controller
         return Inertia::render('Locums/Portal', [
             'profile' => $profile === null ? null : ['hpcsa_number' => $profile->hpcsa_number, 'qualifications' => $profile->qualifications, 'languages' => json_decode((string) $profile->languages, true),
                 'areas' => json_decode((string) $profile->areas, true), 'hourly_rate' => $profile->hourly_rate_cents === null ? null : $profile->hourly_rate_cents / 100, 'bio' => $profile->bio,
-                'status' => $profile->status, 'note' => $profile->review_note],
+                'status' => $profile->status, 'note' => $profile->review_note, 'vat_number' => $profile->vat_number, 'alerts_email' => (bool) $profile->alerts_email, 'alerts_sms' => (bool) $profile->alerts_sms],
             'documents' => $profileId === null ? [] : $this->db()->table('locum_documents')->where('locum_profile_id', $profileId)->orderByDesc('id')->get(['kind', 'filename', 'expires_on']),
             'shifts' => $profileId === null ? [] : $this->db()->table('locum_shifts')->where('status', 'open')->where('starts_at', '>', now())
                 ->where(fn ($q) => $q->whereNull('invited_profile_id')->orWhere('invited_profile_id', $profileId))->orderBy('starts_at')->limit(100)->get()
@@ -49,8 +50,10 @@ class LocumController extends Controller
                     'rate' => $s->rate_cents / 100, 'basis' => $s->rate_basis, 'requirements' => $s->requirements, 'invited' => $s->invited_profile_id !== null,
                     'applied' => $this->db()->table('locum_applications')->where('locum_shift_id', $s->id)->where('locum_profile_id', $profileId)->exists()])->values(),
             'applications' => $profileId === null ? [] : $this->db()->table('locum_applications')->join('locum_shifts', 'locum_shifts.id', '=', 'locum_applications.locum_shift_id')
-                ->where('locum_applications.locum_profile_id', $profileId)->orderByDesc('locum_shifts.starts_at')->limit(50)->get(['locum_shifts.tenant_id', 'locum_shifts.title', 'locum_shifts.starts_at', 'locum_applications.status'])
-                ->map(fn ($a) => ['practice' => Provider::query()->whereKey($a->tenant_id)->value('name'), 'title' => $a->title, 'starts' => $a->starts_at, 'status' => $a->status])->values(),
+                ->where('locum_applications.locum_profile_id', $profileId)->orderByDesc('locum_shifts.starts_at')->limit(50)
+                ->get(['locum_shifts.id as shift_id', 'locum_shifts.tenant_id', 'locum_shifts.title', 'locum_shifts.starts_at', 'locum_shifts.ends_at', 'locum_shifts.hours_status', 'locum_shifts.invoice_number', 'locum_shifts.invoice_paid_at', 'locum_applications.status'])
+                ->map(fn ($a) => ['shift' => $a->shift_id, 'practice' => Provider::query()->whereKey($a->tenant_id)->value('name'), 'title' => $a->title, 'starts' => $a->starts_at, 'ends' => $a->ends_at, 'status' => $a->status,
+                    'hours' => $a->hours_status, 'invoice' => $a->invoice_number, 'paid' => $a->invoice_paid_at !== null])->values(),
         ]);
     }
 
@@ -59,9 +62,11 @@ class LocumController extends Controller
         $data = $request->validate([
             'hpcsa_number' => ['required', 'string', 'max:20'], 'qualifications' => ['required', 'string', 'max:500'], 'languages' => ['required', 'array', 'min:1'], 'languages.*' => ['string', 'max:30'],
             'areas' => ['required', 'array', 'min:1'], 'areas.*' => ['string', 'max:60'], 'hourly_rate' => ['nullable', 'numeric', 'min:0'], 'bio' => ['nullable', 'string', 'max:1000'],
-        ]);
+            'vat_number' => ['nullable', 'regex:/^4\d{9}$/'], 'alerts_email' => ['boolean'], 'alerts_sms' => ['boolean'],
+        ], ['vat_number.regex' => 'A South African VAT number has 10 digits and starts with 4.']);
         $market->saveProfile($this->user($request), ['hpcsa_number' => $data['hpcsa_number'], 'qualifications' => $data['qualifications'], 'languages' => array_values($data['languages']),
-            'areas' => array_values($data['areas']), 'hourly_rate_cents' => isset($data['hourly_rate']) ? (int) round(((float) $data['hourly_rate']) * 100) : null, 'bio' => $data['bio'] ?? null]);
+            'areas' => array_values($data['areas']), 'hourly_rate_cents' => isset($data['hourly_rate']) ? (int) round(((float) $data['hourly_rate']) * 100) : null, 'bio' => $data['bio'] ?? null,
+            'vat_number' => $data['vat_number'] ?? null, 'alerts_email' => (bool) ($data['alerts_email'] ?? true), 'alerts_sms' => (bool) ($data['alerts_sms'] ?? false)]);
 
         return back()->with('success', 'Profile saved. Upload your HPCSA registration and indemnity cover for verification.');
     }
@@ -93,6 +98,12 @@ class LocumController extends Controller
                 ->get(['locum_profiles.*', 'users.name', 'users.email'])->map(fn ($p) => [
                     'id' => $p->id, 'name' => $p->name, 'email' => $p->email, 'hpcsa' => $p->hpcsa_number, 'qualifications' => $p->qualifications, 'status' => $p->status,
                     'documents' => $this->db()->table('locum_documents')->where('locum_profile_id', $p->id)->get(['id', 'kind', 'filename', 'expires_on']),
+                    'lateCancellations' => $this->db()->table('locum_shifts')->join('locum_applications', 'locum_applications.locum_shift_id', '=', 'locum_shifts.id')
+                        ->where('locum_applications.locum_profile_id', $p->id)->where('locum_shifts.cancelled_by', 'locum')->where('locum_shifts.late_cancellation', true)->count(),
+                    'wouldRebook' => $this->db()->table('locum_shifts')->join('locum_applications', 'locum_applications.locum_shift_id', '=', 'locum_shifts.id')
+                        ->where('locum_applications.locum_profile_id', $p->id)->where('locum_shifts.rebook', true)->count(),
+                    'wouldNotRebook' => $this->db()->table('locum_shifts')->join('locum_applications', 'locum_applications.locum_shift_id', '=', 'locum_shifts.id')
+                        ->where('locum_applications.locum_profile_id', $p->id)->where('locum_shifts.rebook', false)->count(),
                 ])->values(),
         ]);
     }
@@ -124,6 +135,9 @@ class LocumController extends Controller
         return Inertia::render('Locums/Practice', [
             'shifts' => $this->db()->table('locum_shifts')->where('tenant_id', $provider->id)->orderByDesc('starts_at')->limit(100)->get()->map(fn ($s) => [
                 'id' => $s->id, 'title' => $s->title, 'starts' => $s->starts_at, 'ends' => $s->ends_at, 'rate' => $s->rate_cents / 100, 'basis' => $s->rate_basis, 'status' => $s->status,
+                'hours' => $s->hours_status, 'worked' => $s->worked_start === null ? null : substr((string) $s->worked_start, 11, 5).'–'.substr((string) $s->worked_end, 11, 5).' (break '.$s->break_minutes.' min)',
+                'invoice' => $s->invoice_number, 'total' => $s->invoice_total_cents === null ? null : $s->invoice_total_cents / 100, 'paid' => $s->invoice_paid_at !== null,
+                'rebook' => $s->rebook === null ? null : (bool) $s->rebook, 'late' => (bool) $s->late_cancellation, 'cancelledBy' => $s->cancelled_by,
                 'applications' => $this->db()->table('locum_applications')->join('locum_profiles', 'locum_profiles.id', '=', 'locum_applications.locum_profile_id')->join('users', 'users.id', '=', 'locum_profiles.user_id')
                     ->where('locum_applications.locum_shift_id', $s->id)->get(['locum_applications.id', 'locum_applications.status', 'locum_applications.message', 'users.name', 'locum_profiles.qualifications', 'locum_profiles.languages', 'locum_profiles.hpcsa_number'])
                     ->map(fn ($a) => ['id' => $a->id, 'status' => $a->status, 'message' => $a->message, 'name' => $a->name, 'qualifications' => $a->qualifications, 'languages' => json_decode((string) $a->languages, true), 'hpcsa' => $a->hpcsa_number])->values(),
@@ -141,12 +155,15 @@ class LocumController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:120'], 'starts_at' => ['required', 'date'], 'ends_at' => ['required', 'date'], 'rate' => ['required', 'numeric', 'min:0'],
             'rate_basis' => ['required', Rule::in(['hour', 'shift'])], 'requirements' => ['nullable', 'string', 'max:1000'], 'branch_id' => ['nullable', 'integer'], 'invited_profile_id' => ['nullable', 'integer'],
+            'area' => ['nullable', 'string', 'max:60'],
         ]);
-        $market->postShift($this->provider(), ['title' => $data['title'], 'starts_at' => $data['starts_at'], 'ends_at' => $data['ends_at'], 'rate_cents' => (int) round(((float) $data['rate']) * 100),
+        $shiftId = $market->postShift($this->provider(), ['area' => $data['area'] ?? null, 'title' => $data['title'], 'starts_at' => $data['starts_at'], 'ends_at' => $data['ends_at'], 'rate_cents' => (int) round(((float) $data['rate']) * 100),
             'rate_basis' => $data['rate_basis'], 'requirements' => $data['requirements'] ?? null, 'branch_id' => isset($data['branch_id']) ? (int) $data['branch_id'] : null,
             'invited_profile_id' => isset($data['invited_profile_id']) ? (int) $data['invited_profile_id'] : null], $this->user($request)->id);
 
-        return back()->with('success', 'Shift posted.');
+        $alerted = app(LocumShiftLifecycle::class)->alert($shiftId);
+
+        return back()->with('success', "Shift posted. {$alerted} locum(s) notified.");
     }
 
     public function accept(int $application, LocumMarketplace $market): RedirectResponse
@@ -164,6 +181,42 @@ class LocumController extends Controller
         abort_if($updated === 0, 422, 'Only open shifts can be cancelled here.');
 
         return back()->with('success', 'Shift cancelled.');
+    }
+
+    // ---------------- after the shift ----------------
+
+    public function locumAction(Request $request, int $shift, string $action, LocumShiftLifecycle $life): HttpResponse
+    {
+        $profileId = $this->profileId($request);
+        $mine = (int) $this->db()->table('locum_applications')->where('locum_shift_id', $shift)->whereIn('status', ['accepted', 'cancelled'])->value('locum_profile_id') === $profileId;
+        abort_unless($mine, 403);
+        if ($action === 'invoice') {
+            return response($life->invoicePdf($shift), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="locum-invoice.pdf"']);
+        }
+        $action === 'hours'
+            ? $life->submitHours($shift, $profileId, $request->string('start')->toString(), $request->string('end')->toString(), $request->integer('break_minutes'))
+            : $life->cancelBooked($shift, 'locum', $request->string('reason')->toString());
+
+        return back()->with('success', $action === 'hours' ? 'Hours sent to the practice.' : 'Shift cancelled.');
+    }
+
+    public function practiceAction(Request $request, int $shift, string $action, LocumShiftLifecycle $life): HttpResponse
+    {
+        $this->authorize(Permission::STAFF_MANAGE);
+        $provider = $this->provider();
+        abort_unless($this->db()->table('locum_shifts')->where('id', $shift)->where('tenant_id', $provider->id)->exists(), 404);
+        if ($action === 'invoice') {
+            return response($life->invoicePdf($shift), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="locum-invoice.pdf"']);
+        }
+        match ($action) {
+            'hours' => $life->confirmHours($shift, $provider, $request->input('start'), $request->input('end'), $request->filled('break_minutes') ? $request->integer('break_minutes') : null, $request->input('note')),
+            'paid' => $life->markPaid($shift, $provider),
+            'cancel-booked' => $life->cancelBooked($shift, 'practice', $request->string('reason')->toString()),
+            'rebook' => $life->rebook($shift, $provider, $request->boolean('again'), $request->input('note')),
+            default => abort(404),
+        };
+
+        return back()->with('success', 'Saved.');
     }
 
     private function profileId(Request $request): int

@@ -23,3 +23,4 @@ Schedule::command('pharmacy:publish-stock')->hourly()->onOneServer();
 Schedule::command('feedback:request')->dailyAt('10:00')->onOneServer();
 Schedule::command('packages:expire')->dailyAt('01:00')->onOneServer();
 Schedule::command('status:check')->everyMinute()->withoutOverlapping()->onOneServer();
+Schedule::command('locums:remind')->hourly()->onOneServer();
