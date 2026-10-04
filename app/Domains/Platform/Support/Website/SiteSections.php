@@ -15,7 +15,7 @@ use Illuminate\Validation\ValidationException;
  */
 final class SiteSections
 {
-    public const TYPES = ['hero', 'cards', 'features', 'steps', 'split', 'faq', 'cta', 'contact', 'richtext'];
+    public const TYPES = ['hero', 'cards', 'features', 'steps', 'split', 'faq', 'cta', 'contact', 'richtext', 'team', 'gallery', 'hours', 'map', 'booking', 'reviews'];
 
     private const TEXT_FIELDS = ['eyebrow', 'heading', 'text', 'note'];
 
@@ -129,8 +129,8 @@ final class SiteSections
     private static function image(mixed $value, string $key): string
     {
         $src = trim(is_scalar($value) ? (string) $value : '');
-        if ($src !== '' && preg_match('#^(/images/[a-z0-9/_-]+\.(svg|png|jpe?g|webp)|https://[^\s"\'<>]+)$#i', $src) !== 1) {
-            throw ValidationException::withMessages([$key => 'Images must be a site image (/images/...) or an https:// address.']);
+        if ($src !== '' && preg_match('#^(/images/[a-z0-9/_-]+\.(svg|png|jpe?g|webp)|/media/[0-9a-hjkmnp-tv-z]{26}(/thumb)?|https://[^\s"\'<>]+)$#i', $src) !== 1) {
+            throw ValidationException::withMessages([$key => 'Images must come from your media library, a site image (/images/...) or an https:// address.']);
         }
 
         return $src;

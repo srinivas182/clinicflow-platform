@@ -8,6 +8,7 @@ use App\Domains\Documents\Support\PracticeData;
 use App\Domains\Platform\Models\CmsPage;
 use App\Domains\Platform\Models\Setting;
 use App\Domains\Platform\Models\SitePage;
+use App\Domains\Website\Actions\Feedback;
 
 /**
  * Menus, brand and contact details for rendering the two kinds of site.
@@ -49,6 +50,8 @@ final class SiteData
                 'contact' => ['phone' => $tokens['phone'], 'email' => $tokens['email'], 'address' => $tokens['address'], 'hours' => $tokens['hours']],
                 'footer' => [['label' => 'Staff sign-in', 'href' => '/workspace']],
                 'poweredBy' => true,
+                'reviews' => Feedback::publicReviews(),
+                'ogImage' => Setting::get('website', 'og_image'),
             ],
         ];
     }

@@ -14,7 +14,7 @@ export interface SiteItem {
 }
 
 export interface SiteSection {
-    type: 'hero' | 'cards' | 'features' | 'steps' | 'split' | 'faq' | 'cta' | 'contact' | 'richtext';
+    type: 'hero' | 'cards' | 'features' | 'steps' | 'split' | 'faq' | 'cta' | 'contact' | 'richtext' | 'team' | 'gallery' | 'hours' | 'map' | 'booking' | 'reviews';
     eyebrow?: string;
     heading?: string;
     text?: string;
@@ -35,4 +35,6 @@ export interface SiteInfo {
     contact: { phone: string; email: string; address: string; hours: string };
     footer: SiteLink[];
     poweredBy: boolean;
+    reviews?: { rating: number; comment: string | null; name: string; date: string }[] | null;
+    ogImage?: string | null;
 }

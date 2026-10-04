@@ -4,6 +4,19 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.22.0] — Sprint 16A: website media, sections, booking widget, patient feedback
+
+### Added
+- Website media library: upload JPG/PNG/WebP (5 MB), resized for the web with a thumbnail and camera data removed, alt text required, "used on" tracking (images in use cannot be deleted), share image for social links.
+- New page sections: team, gallery, opening hours, directions, book online (next free times) and patient feedback.
+- SEO: social-share tags, sitemap.xml and robots.txt for every practice site.
+- Embeddable booking widget (one script tag): next free times per doctor from a public, names-and-times-only feed; booking opens on the practice's site.
+- Patient feedback: one request after a finished visit (at most every 30 days, opt-out respected), 1–5 stars and comment, practice replies, abuse reporting with super-admin decision. Private by default; shown on the website only after the practice confirms legal approval (HPCSA advertising rules) and only where the patient agreed, with initials.
+- `feedback:request` daily.
+
+### Notes
+- Servers need the PHP GD extension for image resizing (added to CI).
+
 ## [0.21.0] — Sprint 14B: WhatsApp, couriers, pharmacy comparison
 
 ### Added

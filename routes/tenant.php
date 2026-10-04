@@ -47,6 +47,7 @@ use App\Domains\Telemedicine\Http\Controllers\TeleConsultController;
 use App\Domains\Visits\Http\Controllers\DeviceController;
 use App\Domains\Visits\Http\Controllers\FrontDeskController;
 use App\Domains\Wallet\Http\Controllers\WalletController;
+use App\Domains\Website\Http\Controllers\WebsiteToolsController;
 use App\Http\Controllers\Provider\ProviderHomeController;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
@@ -74,6 +75,13 @@ Route::middleware([
     Route::get('/pay/{token}', [PayLinkController::class, 'show'])->middleware('throttle:30,1')->name('paylink.show');
     Route::get('/pay/{token}/done', [PayLinkController::class, 'done'])->name('paylink.done');
     Route::get('/calendar/{token}.ics', [CalendarController::class, 'ical'])->middleware('throttle:60,1')->name('calendar.ical');
+    Route::get('/media/{media}/{size?}', [WebsiteToolsController::class, 'serveMedia'])->whereIn('size', ['thumb'])->name('media.serve');
+    Route::get('/feedback/{token}', [WebsiteToolsController::class, 'feedbackForm'])->name('feedback.form');
+    Route::post('/feedback/{token}', [WebsiteToolsController::class, 'feedbackSubmit'])->middleware('throttle:10,1')->name('feedback.submit');
+    Route::get('/widget.js', [WebsiteToolsController::class, 'widgetScript'])->name('widget.script');
+    Route::get('/widget/slots', [WebsiteToolsController::class, 'widgetSlots'])->middleware('throttle:60,1')->name('widget.slots');
+    Route::get('/sitemap.xml', [WebsiteToolsController::class, 'sitemap'])->name('site.sitemap');
+    Route::get('/robots.txt', [WebsiteToolsController::class, 'robots'])->name('site.robots');
 
     // Patient portal (patients sign in with their cell number and an SMS code).
     Route::prefix('my')->name('portal.')->group(function (): void {
@@ -120,6 +128,13 @@ Route::middleware([
         Route::get('/workspace', ProviderHomeController::class)->name('provider.home');
 
         Route::get('/settings/website', [WebsiteSettingsController::class, 'index'])->name('settings.website');
+        Route::get('/settings/website/media', [WebsiteToolsController::class, 'media'])->name('website.media');
+        Route::post('/settings/website/media', [WebsiteToolsController::class, 'upload'])->middleware('throttle:30,1')->name('website.media.upload');
+        Route::put('/settings/website/media/{media}', [WebsiteToolsController::class, 'updateMedia'])->name('website.media.update');
+        Route::delete('/settings/website/media/{media}', [WebsiteToolsController::class, 'deleteMedia'])->name('website.media.delete');
+        Route::get('/settings/website/feedback', [WebsiteToolsController::class, 'reviews'])->name('website.reviews');
+        Route::put('/settings/website/feedback', [WebsiteToolsController::class, 'reviewSettings'])->name('website.reviews.settings');
+        Route::post('/settings/website/feedback/{review}/{action}', [WebsiteToolsController::class, 'reviewAction'])->whereIn('action', ['reply', 'flag'])->name('website.reviews.act');
         Route::put('/settings/website/pages/{page}', [WebsiteSettingsController::class, 'updatePage'])->name('settings.website.page');
         Route::put('/settings/website/details', [WebsiteSettingsController::class, 'updateDetails'])->name('settings.website.details');
         Route::get('/patients', [PatientController::class, 'index'])->name('patients.index');

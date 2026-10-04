@@ -22,6 +22,7 @@ use App\Domains\Scheduling\Http\Controllers\CalendarAdminController;
 use App\Domains\Scheduling\Http\Controllers\CalendarController;
 use App\Domains\Telemedicine\Http\Controllers\TelemedicineAdminController;
 use App\Domains\Wallet\Http\Controllers\WalletController;
+use App\Domains\Website\Http\Controllers\FlaggedReviewsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -77,6 +78,8 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/wallet', [WalletController::class, 'adminSettings'])->name('wallet.settings');
             Route::get('/telemedicine', [TelemedicineAdminController::class, 'index'])->name('telemedicine.index');
             Route::get('/accounting', [AccountingAdminController::class, 'index'])->name('accounting.index');
+            Route::get('/reviews', [FlaggedReviewsController::class, 'index'])->name('reviews.index');
+            Route::post('/reviews/{flag}', [FlaggedReviewsController::class, 'decide'])->name('reviews.decide');
             Route::get('/groups', [GroupController::class, 'admin'])->name('groups.index');
             Route::get('/whatsapp', [WhatsAppController::class, 'admin'])->name('whatsapp.index');
             Route::put('/whatsapp/providers/{driver}', [WhatsAppController::class, 'saveProvider'])->whereIn('driver', ['meta', 'twilio', 'clickatell'])->name('whatsapp.provider');
