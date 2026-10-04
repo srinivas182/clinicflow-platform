@@ -4,6 +4,18 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.27.0] — Sprint 17B-1: corporate wellness (accounts, events, screening)
+
+### Added
+- Corporate accounts (company, contact, billing details, VAT number, rate per employee).
+- Wellness days: date and time window, location, slot length, people per slot, chosen checks (blood pressure, glucose, cholesterol, BMI, flu vaccine), shareable registration link.
+- Public employee registration with the employee's own POPIA and treatment consent; matched to an existing patient by cell number, otherwise registered (SA ID or date of birth); full slots refused; one registration per employee per event; SMS confirmation.
+- Screening capture by nurses with BMI calculated and risk flags (blood pressure, glucose, cholesterol, BMI); SMS to the employee when results are ready, asking for a follow-up if any value is flagged.
+- Employees see their own wellness results on "My care" in the patient portal; employers never see individual results.
+
+### Notes
+- Risk thresholds are DEMO values for the clinical reviewer to confirm. Employer billing and anonymised employer reports follow in 17B-2.
+
 ## [0.26.0] — Sprint 17A-2: locum marketplace after the shift
 
 ### Added

@@ -51,6 +51,7 @@ use App\Domains\Visits\Http\Controllers\DeviceController;
 use App\Domains\Visits\Http\Controllers\FrontDeskController;
 use App\Domains\Wallet\Http\Controllers\WalletController;
 use App\Domains\Website\Http\Controllers\WebsiteToolsController;
+use App\Domains\Wellness\Http\Controllers\WellnessController;
 use App\Http\Controllers\Provider\ProviderHomeController;
 use App\Http\Middleware\SupportSessionGuard;
 use Illuminate\Support\Facades\Route;
@@ -81,6 +82,8 @@ Route::middleware([
     Route::get('/pay/{token}', [PayLinkController::class, 'show'])->middleware('throttle:30,1')->name('paylink.show');
     Route::get('/pay/{token}/done', [PayLinkController::class, 'done'])->name('paylink.done');
     Route::get('/calendar/{token}.ics', [CalendarController::class, 'ical'])->middleware('throttle:60,1')->name('calendar.ical');
+    Route::get('/wellness/{token}', [WellnessController::class, 'publicForm'])->where('token', '[A-Za-z0-9]{32}')->name('wellness.public');
+    Route::post('/wellness/{token}', [WellnessController::class, 'publicRegister'])->where('token', '[A-Za-z0-9]{32}')->middleware('throttle:10,1')->name('wellness.register');
     Route::get('/media/{media}/{size?}', [WebsiteToolsController::class, 'serveMedia'])->whereIn('size', ['thumb'])->name('media.serve');
     Route::get('/feedback/{token}', [WebsiteToolsController::class, 'feedbackForm'])->name('feedback.form');
     Route::post('/feedback/{token}', [WebsiteToolsController::class, 'feedbackSubmit'])->middleware('throttle:10,1')->name('feedback.submit');
@@ -264,6 +267,11 @@ Route::middleware([
         Route::get('/me/calendar', [CalendarController::class, 'show'])->name('calendar.show');
         Route::get('/me/calendar/{driver}/connect', [CalendarController::class, 'connect'])->whereIn('driver', ['google', 'microsoft'])->name('calendar.connect');
         Route::put('/me/calendar', [CalendarController::class, 'update'])->name('calendar.update');
+        Route::get('/corporate-wellness', [WellnessController::class, 'index'])->name('wellness.index');
+        Route::post('/corporate-wellness/accounts', [WellnessController::class, 'saveAccount'])->name('wellness.accounts');
+        Route::post('/corporate-wellness/events', [WellnessController::class, 'createEvent'])->name('wellness.events');
+        Route::get('/corporate-wellness/events/{event}', [WellnessController::class, 'event'])->name('wellness.event');
+        Route::post('/corporate-wellness/registrations/{registration}/screen', [WellnessController::class, 'screen'])->name('wellness.screen');
         Route::get('/locums', [LocumController::class, 'practice'])->name('locums.practice');
         Route::post('/locums/shifts', [LocumController::class, 'postShift'])->name('locums.shifts.store');
         Route::post('/locums/shifts/{shift}/cancel', [LocumController::class, 'cancel'])->name('locums.shifts.cancel');

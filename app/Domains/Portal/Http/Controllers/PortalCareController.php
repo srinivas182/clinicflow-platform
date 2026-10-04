@@ -51,6 +51,12 @@ class PortalCareController extends Controller
             'pregnancy' => $pregnancy->summary($patient),
             'sharing' => $consent->categories($patient->getAttribute('hub_identity_id'), $provider->id),
             'categories' => ShareConsent::CATEGORIES,
+            // The employee's own wellness screening results (never shared with the employer).
+            'wellness' => DB::table('wellness_screenings')->join('wellness_registrations', 'wellness_registrations.id', '=', 'wellness_screenings.wellness_registration_id')
+                ->join('wellness_events', 'wellness_events.id', '=', 'wellness_registrations.wellness_event_id')->whereIn('wellness_registrations.patient_id', $ids)
+                ->orderByDesc('wellness_events.starts_at')->get(['wellness_events.title', 'wellness_events.starts_at', 'wellness_screenings.*'])
+                ->map(fn ($w) => ['title' => $w->title, 'date' => substr((string) $w->starts_at, 0, 10), 'bp' => $w->bp_systolic ? "{$w->bp_systolic}/{$w->bp_diastolic}" : null,
+                    'glucose' => $w->glucose, 'cholesterol' => $w->cholesterol, 'bmi' => $w->bmi, 'flu' => (bool) $w->flu_vaccinated, 'flags' => json_decode((string) $w->flags, true)])->values(),
             'whatsapp' => ['available' => WhatsAppRouter::enabledFor($provider->id), 'optedIn' => $patient->getAttribute('whatsapp_opt_in_at') !== null],
         ]);
     }

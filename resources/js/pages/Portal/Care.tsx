@@ -28,6 +28,16 @@ interface Props {
     sharing: string[];
     categories: string[];
     whatsapp: { available: boolean; optedIn: boolean };
+    wellness?: {
+        title: string;
+        date: string;
+        bp: string | null;
+        glucose: string | null;
+        cholesterol: string | null;
+        bmi: string | null;
+        flu: boolean;
+        flags: string[];
+    }[];
 }
 
 export default function PortalCare({
@@ -40,6 +50,7 @@ export default function PortalCare({
     sharing,
     categories,
     whatsapp,
+    wellness = [],
 }: Props) {
     const [chosen, setChosen] = useState<string[]>(sharing);
 
@@ -185,6 +196,38 @@ export default function PortalCare({
                             </Badge>
                         ))}
                     </div>
+                </Card>
+            )}
+            {wellness.length > 0 && (
+                <Card
+                    title="Your wellness screenings (private to you)"
+                    className="mb-4"
+                >
+                    {wellness.map((w, i) => (
+                        <div key={i} className="mb-2 text-sm">
+                            <p className="font-medium">
+                                {w.title} · {w.date}
+                            </p>
+                            <p>
+                                {w.bp && `BP ${w.bp} · `}
+                                {w.glucose && `Glucose ${w.glucose} mmol/L · `}
+                                {w.cholesterol &&
+                                    `Cholesterol ${w.cholesterol} mmol/L · `}
+                                {w.bmi && `BMI ${w.bmi}`}{" "}
+                                {w.flu && "· Flu vaccine given"}
+                            </p>
+                            {w.flags.length > 0 ? (
+                                <p className="text-xs text-status-warning">
+                                    Please book a follow-up:{" "}
+                                    {w.flags.join(", ").replaceAll("_", " ")}
+                                </p>
+                            ) : (
+                                <p className="text-xs text-muted">
+                                    All checks in the healthy range.
+                                </p>
+                            )}
+                        </div>
+                    ))}
                 </Card>
             )}
         </PortalLayout>
