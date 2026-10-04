@@ -84,8 +84,7 @@ class SupportDesk
         if ($grant === null || ! (bool) $admin->getAttribute('is_platform_admin')) {
             throw ValidationException::withMessages(['grant' => 'This practice has not granted support access, or it has ended.']);
         }
-        $tenantId = property_exists($grant, 'tenant_id') && is_string($grant->tenant_id) ? $grant->tenant_id : '';
-        $provider = Provider::query()->findOrFail($tenantId);
+        $provider = Provider::query()->findOrFail((string) data_get($grant, 'tenant_id'));
         $token = Str::random(64);
         WorkspaceHandoff::create(['token_hash' => hash('sha256', $token), 'user_id' => $admin->id, 'tenant_id' => $provider->id, 'expires_at' => now()->addSeconds(60), 'support_grant_id' => $grantId]);
         $scheme = parse_url((string) config('app.url'), PHP_URL_SCHEME);

@@ -6,6 +6,7 @@ namespace App\Domains\Platform\Http\Controllers;
 
 use App\Domains\Identity\Actions\ConsumeWorkspaceHandoff;
 use App\Domains\Identity\Enums\Permission;
+use App\Domains\Identity\Models\Membership;
 use App\Domains\Identity\Models\WorkspaceHandoff;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\SupportDesk\SupportDesk;
@@ -53,6 +54,10 @@ class SupportController extends Controller
         $ticket = $request->integer('ticket_id') ?: null;
         if ($ticket !== null) {
             abort_unless($this->db()->table('support_tickets')->where('id', $ticket)->where('tenant_id', $provider->id)->exists(), 404);
+        }
+        // Only the practice owner may let Clinic Flow support into the workspace; anyone managing settings may end it.
+        if ($action === 'grant') {
+            abort_unless(Membership::query()->where('tenant_id', $provider->id)->where('user_id', $user->id)->where('role', 'owner')->exists(), 403, 'Only the practice owner can grant support access.');
         }
         match ($action) {
             'open' => $desk->open($provider, $user, $request->string('subject')->toString(), $request->string('body')->toString()),
