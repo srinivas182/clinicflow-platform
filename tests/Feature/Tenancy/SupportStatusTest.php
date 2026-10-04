@@ -94,3 +94,13 @@ it('lets only the practice owner grant support access, while a practice admin ma
     $this->actingAs($practiceAdmin)->post("{$base}/support/revoke", ['grant_id' => $grant->id])->assertSessionHasNoErrors();
     expect(($this->central)()->table('support_grants')->value('revoked_at'))->not->toBeNull();
 });
+
+it('never lets a support grant from one practice open another practice', function (): void {
+    $other = makeProvider('Northside Clinic', ProviderType::Clinic, 'northside.clinicflow.test');
+    $this->actingAs($this->ownerUser)->post('http://sunrise.clinicflow.test/support/grant', ['hours' => 24])->assertSessionHasNoErrors();
+    $grant = ($this->central)()->table('support_grants')->sole();
+
+    $this->withSession(['support_grant_id' => (int) $grant->id])->actingAs($this->admin)->get('http://northside.clinicflow.test/settings/branches')
+        ->assertRedirect()->assertSessionHas('error', 'Support access has ended.');
+    expect($other->id)->not->toBe($this->clinic->id);
+});
