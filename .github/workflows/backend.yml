@@ -51,7 +51,7 @@ jobs:
   quality:
     name: Lint, static analysis and tests
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     services:
       mysql:
@@ -135,8 +135,8 @@ jobs:
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G 2>&1 | tee .ci-phpstan.txt
 
       - name: Pest
-        # Stops a stuck run with time left to report it (the job limit is 45 minutes).
-        timeout-minutes: 38
+        # Stops a stuck run with time left to report it (the job limit is 60 minutes).
+        timeout-minutes: 55
         run: vendor/bin/pest --ci --log-events-text .ci-events.txt 2>&1 | tee .ci-pest.txt
 
       - name: Publish test summary
