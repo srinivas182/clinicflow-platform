@@ -84,7 +84,7 @@ class LocumShiftLifecycle
                 app(SendMessage::class)->handle('email', $locum->email, "Reminder: your locum shift at {$practice} starts {$when}.", 'Shift reminder: '.$practice);
             }
             foreach ($this->owners((string) $shift->tenant_id) as $email) {
-                app(SendMessage::class)->handle('email', $email, 'Reminder: '.($locum?->name ?? 'your locum')." works the locum shift starting {$when}.", 'Locum shift tomorrow');
+                app(SendMessage::class)->handle('email', $email, 'Reminder: '.($locum instanceof User ? $locum->name : 'your locum')." works the locum shift starting {$when}.", 'Locum shift tomorrow');
             }
             $this->db()->table('locum_shifts')->where('id', $shift->id)->update(['reminded_at' => now()]);
             $count++;
