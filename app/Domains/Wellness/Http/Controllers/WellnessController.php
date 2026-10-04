@@ -111,7 +111,7 @@ class WellnessController extends Controller
         return back()->with('success', 'Invoice marked paid.');
     }
 
-    public function employerLink(string $token, ?string $doc, EmployerReporting $reporting): \Symfony\Component\HttpFoundation\Response
+    public function employerLink(EmployerReporting $reporting, string $token, ?string $doc = null): \Symfony\Component\HttpFoundation\Response
     {
         $event = $reporting->eventForToken($token);
         abort_if($event === null, 404, 'This link has expired. Ask the practice for a new one.');
