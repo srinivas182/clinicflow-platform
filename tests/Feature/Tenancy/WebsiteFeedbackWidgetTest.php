@@ -89,7 +89,7 @@ it('asks for feedback once after a visit, keeps it private by default and shows 
     $reviewId = $this->clinic->run(fn () => (int) DB::table('reviews')->value('id'));
     $this->actingAs($this->ownerUser)->post("http://sunrise.clinicflow.test/settings/website/feedback/{$reviewId}/flag", ['reason' => 'Contains a staff member\'s phone number'])->assertSessionHasNoErrors();
     $this->clinic->run(fn () => expect(Feedback::publicReviews())->toBe([]));
-    $flag = DB::table('flagged_reviews')->sole();
+    $flag = DB::connection((string) config('tenancy.database.central_connection'))->table('flagged_reviews')->sole();
 
     $admin = User::factory()->create();
     $admin->forceFill(['is_platform_admin' => true])->save();

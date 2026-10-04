@@ -49,7 +49,7 @@ class MediaLibrary
     {
         $needle = "/media/{$media->id}";
 
-        return array_values(SitePage::query()->get()->filter(fn (SitePage $p) => str_contains((string) json_encode($p->sections), $needle))->pluck('title')->all());
+        return array_values(SitePage::query()->get()->filter(fn (SitePage $p) => str_contains((string) json_encode($p->sections, JSON_UNESCAPED_SLASHES), $needle))->pluck('title')->all());
     }
 
     public function delete(Media $media): void
