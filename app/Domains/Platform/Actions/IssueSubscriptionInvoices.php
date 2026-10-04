@@ -9,6 +9,7 @@ use App\Domains\Messaging\Support\MessagingUsage;
 use App\Domains\Platform\Enums\SubscriptionStatus;
 use App\Domains\Platform\Models\Subscription;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -49,11 +50,14 @@ class IssueSubscriptionInvoices
                     $amount += (int) config('clinicflow.whatsapp.addon_monthly_cents', 19900) * ($annual ? 12 : 1);
                 }
                 $amount += (int) ($subscription->getAttribute('extra_branches') ?? 0) * (int) config('clinicflow.branches.extra_monthly_cents', 49900) * ($annual ? 12 : 1);
+                $locumFees = DB::table('locum_fees')->where('tenant_id', $subscription->tenant_id)->whereNull('subscription_invoice_id');
+                $locumFeeIds = (clone $locumFees)->pluck('id')->all();
+                $amount += (int) $locumFees->sum('amount_cents');
                 $vat = (int) round($amount * (float) config('clinicflow.payments.vat_rate', 0.15));
                 $year = now()->format('Y');
                 $next = SubscriptionInvoice::query()->where('number', 'like', "CF-{$year}-%")->count() + 1;
 
-                SubscriptionInvoice::create([
+                $issued = SubscriptionInvoice::create([
                     'number' => "CF-{$year}-".str_pad((string) $next, 6, '0', STR_PAD_LEFT),
                     'tenant_id' => $subscription->tenant_id,
                     'subscription_id' => $subscription->id,
@@ -68,6 +72,8 @@ class IssueSubscriptionInvoices
                     'checkout_token' => Str::random(48),
                     'due_at' => $periodStart,
                 ]);
+                // Locum booking fees are billed once, on this invoice.
+                DB::table('locum_fees')->whereIn('id', $locumFeeIds)->update(['subscription_invoice_id' => $issued->id]);
                 $count++;
             });
 

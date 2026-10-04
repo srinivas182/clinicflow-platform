@@ -4,6 +4,17 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.25.0] — Sprint 17A-1: locum marketplace (profiles, verification, shifts, booking)
+
+### Added
+- Locum profiles for doctors (HPCSA number, qualifications, languages, areas, preferred rate) with HPCSA registration, indemnity cover and CV uploads (expiry dates required for registration and indemnity).
+- Super-admin verification (HPCSA number checked on the HPCSA register); verifying requires current registration and indemnity documents; a changed HPCSA number needs re-verification.
+- Practices post shifts (open to all verified locums or offered to one), see applicants, accept one; other applicants are declined.
+- On acceptance: locum access to that practice only from 1 hour before to 12 hours after each booked shift (several shifts keep their own windows), plus a roster session for patient bookings; a practice's own permanent doctors are never turned into locums.
+- Eligibility checked against the shift date (registration and indemnity must be valid), overlapping bookings blocked.
+- Optional booking fee per confirmed shift (default R0), billed once on the practice's next subscription invoice.
+- Payment for shifts is between practice and locum (not through Clinic Flow).
+
 ## [0.24.0] — Sprint 16B-2: support console and status page
 
 ### Added
