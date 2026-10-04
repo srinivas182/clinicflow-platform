@@ -36,7 +36,7 @@ class LocumMarketplace
     }
 
     /**
-     * @param  array{hpcsa_number: string, qualifications: string, languages: list<string>, areas: list<string>, hourly_rate_cents: ?int, bio: ?string}  $data
+     * @param  array{hpcsa_number: string, qualifications: string, languages: list<string>, areas: list<string>, hourly_rate_cents: ?int, bio: ?string, vat_number?: ?string, alerts_email?: bool, alerts_sms?: bool}  $data
      */
     public function saveProfile(User $user, array $data): int
     {
@@ -46,7 +46,9 @@ class LocumMarketplace
         $existing = $this->db()->table('locum_profiles')->where('user_id', $user->id)->first();
         $row = ['hpcsa_number' => strtoupper(str_replace(' ', '', trim($data['hpcsa_number']))), 'qualifications' => trim($data['qualifications']),
             'languages' => json_encode($data['languages']), 'areas' => json_encode($data['areas']),
-            'hourly_rate_cents' => $data['hourly_rate_cents'], 'bio' => $data['bio'], 'updated_at' => now()];
+            'hourly_rate_cents' => $data['hourly_rate_cents'], 'bio' => $data['bio'], 'updated_at' => now(),
+            'vat_number' => isset($data['vat_number']) && preg_match('/^4\d{9}$/', (string) $data['vat_number']) === 1 ? $data['vat_number'] : null,
+            'alerts_email' => $data['alerts_email'] ?? true, 'alerts_sms' => $data['alerts_sms'] ?? false];
         if ($existing === null) {
             return (int) $this->db()->table('locum_profiles')->insertGetId($row + ['user_id' => $user->id, 'status' => 'pending', 'created_at' => now()]);
         }
@@ -108,7 +110,7 @@ class LocumMarketplace
     }
 
     /**
-     * @param  array{title: string, starts_at: string, ends_at: string, rate_cents: int, rate_basis: string, requirements: ?string, branch_id: ?int, invited_profile_id: ?int}  $data
+     * @param  array{title: string, starts_at: string, ends_at: string, rate_cents: int, rate_basis: string, requirements: ?string, branch_id: ?int, invited_profile_id: ?int, area?: ?string}  $data
      */
     public function postShift(Provider $provider, array $data, int $by): int
     {
@@ -119,7 +121,7 @@ class LocumMarketplace
         }
 
         return (int) $this->db()->table('locum_shifts')->insertGetId([
-            'tenant_id' => $provider->id, 'branch_id' => $data['branch_id'], 'title' => trim($data['title']), 'starts_at' => $start, 'ends_at' => $end,
+            'tenant_id' => $provider->id, 'branch_id' => $data['branch_id'], 'title' => trim($data['title']), 'area' => isset($data['area']) && trim((string) $data['area']) !== '' ? trim((string) $data['area']) : null, 'starts_at' => $start, 'ends_at' => $end,
             'rate_cents' => $data['rate_cents'], 'rate_basis' => $data['rate_basis'] === 'shift' ? 'shift' : 'hour', 'requirements' => $data['requirements'],
             'invited_profile_id' => $data['invited_profile_id'], 'status' => 'open', 'created_by' => $by, 'created_at' => now(), 'updated_at' => now(),
         ]);

@@ -268,6 +268,7 @@ Route::middleware([
         Route::post('/locums/shifts', [LocumController::class, 'postShift'])->name('locums.shifts.store');
         Route::post('/locums/shifts/{shift}/cancel', [LocumController::class, 'cancel'])->name('locums.shifts.cancel');
         Route::post('/locums/applications/{application}/accept', [LocumController::class, 'accept'])->name('locums.accept');
+        Route::match(['get', 'post'], '/locums/shifts/{shift}/{action}', [LocumController::class, 'practiceAction'])->whereIn('action', ['hours', 'paid', 'cancel-booked', 'rebook', 'invoice'])->name('locums.shift.act');
         Route::get('/packages', [PrepaidController::class, 'index'])->name('packages.index');
         Route::post('/packages', [PrepaidController::class, 'save'])->name('packages.save');
         Route::post('/patients/{patient}/packages', [PrepaidController::class, 'sell'])->name('packages.sell');

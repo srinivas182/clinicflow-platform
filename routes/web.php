@@ -73,6 +73,7 @@ foreach ($centralDomains as $index => $domain) {
             Route::post('/locum/profile', [LocumController::class, 'saveProfile'])->name('locum.profile');
             Route::post('/locum/documents', [LocumController::class, 'uploadDocument'])->middleware('throttle:20,1')->name('locum.documents');
             Route::post('/locum/shifts/{shift}/apply', [LocumController::class, 'apply'])->middleware('throttle:30,1')->name('locum.apply');
+            Route::match(['get', 'post'], '/locum/shifts/{shift}/{action}', [LocumController::class, 'locumAction'])->whereIn('action', ['hours', 'cancel', 'invoice'])->name('locum.shift.act');
             Route::get('/groups/{group}', [GroupController::class, 'show'])->name('groups.show');
             Route::get('/workspaces', [WorkspaceController::class, 'index'])->name('workspaces');
             Route::post('/workspaces/{provider}/open', [WorkspaceController::class, 'open'])->name('workspaces.open');
