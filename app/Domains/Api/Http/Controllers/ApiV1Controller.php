@@ -104,7 +104,7 @@ class ApiV1Controller extends Controller
     public function book(Request $request, BookAppointment $book): JsonResponse
     {
         $data = $request->validate(['patient_id' => ['required', 'string', 'size:26'], 'staff_id' => ['required', 'integer'], 'starts_at' => ['required', 'date']]);
-        $appointment = $book->handle(Patient::query()->findOrFail($data['patient_id']), Staff::query()->findOrFail((int) $data['staff_id']), CarbonImmutable::parse($data['starts_at']));
+        $appointment = $book->handle(Patient::query()->whereKey((string) $data['patient_id'])->firstOrFail(), Staff::query()->whereKey((int) $data['staff_id'])->firstOrFail(), CarbonImmutable::parse($data['starts_at']));
 
         return response()->json(['data' => $this->appointmentJson($appointment)], 201);
     }
@@ -115,10 +115,10 @@ class ApiV1Controller extends Controller
     public function reschedule(Request $request, string $appointment, BookAppointment $book, CancelAppointment $cancel): JsonResponse
     {
         $data = $request->validate(['starts_at' => ['required', 'date'], 'staff_id' => ['nullable', 'integer']]);
-        $old = Appointment::query()->findOrFail($appointment);
+        $old = Appointment::query()->whereKey($appointment)->firstOrFail();
         abort_unless($old->status === AppointmentStatus::Booked, 422, 'Only booked appointments can be rescheduled.');
         $new = DB::transaction(function () use ($old, $data, $book, $cancel): Appointment {
-            $new = $book->handle($old->patient, isset($data['staff_id']) ? Staff::query()->findOrFail((int) $data['staff_id']) : $old->staff, CarbonImmutable::parse($data['starts_at']), $old->consult_type, $old->reason);
+            $new = $book->handle($old->patient, isset($data['staff_id']) ? Staff::query()->whereKey((int) $data['staff_id'])->firstOrFail() : $old->staff, CarbonImmutable::parse($data['starts_at']), $old->consult_type, $old->reason);
             $cancel->handle($old, 'Rescheduled through the practice API');
 
             return $new;
@@ -130,7 +130,7 @@ class ApiV1Controller extends Controller
     public function cancel(Request $request, string $appointment, CancelAppointment $cancel): JsonResponse
     {
         $data = $request->validate(['reason' => ['required', 'string', 'max:255']]);
-        $a = Appointment::query()->findOrFail($appointment);
+        $a = Appointment::query()->whereKey($appointment)->firstOrFail();
         abort_unless($a->status === AppointmentStatus::Booked, 422, 'Only booked appointments can be cancelled.');
 
         return response()->json(['data' => $this->appointmentJson($cancel->handle($a, $data['reason']))]);

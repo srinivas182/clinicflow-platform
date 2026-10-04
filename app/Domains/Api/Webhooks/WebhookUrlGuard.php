@@ -42,6 +42,6 @@ class WebhookUrlGuard
         $v4 = gethostbynamel($host) ?: [];
         $v6 = array_column(dns_get_record($host, DNS_AAAA) ?: [], 'ipv6');
 
-        return array_values(array_merge($v4, array_map('strval', $v6)));
+        return array_merge($v4, array_map('strval', $v6));
     }
 }
