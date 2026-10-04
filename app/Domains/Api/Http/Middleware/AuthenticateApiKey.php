@@ -39,6 +39,8 @@ class AuthenticateApiKey
             return $this->log($key, $request, $this->error(429, "Rate limit: {$limit} requests per minute."));
         }
 
+        $request->attributes->set('api_key_id', $key->id);
+
         return $this->log($key, $request, $next($request));
     }
 

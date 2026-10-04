@@ -82,6 +82,10 @@ Route::middleware(['api', InitializeTenancyByDomain::class, PreventAccessFromCen
     Route::get('patients', [ApiV1Controller::class, 'patient'])->middleware('api.key:patients:read')->name('patients');
     Route::get('invoices', [ApiV1Controller::class, 'invoices'])->middleware('api.key:invoices:read')->name('invoices');
     Route::get('prices', [ApiV1Controller::class, 'prices'])->middleware('api.key:prices:read')->name('prices');
+    Route::post('appointments/book', [ApiV1Controller::class, 'book'])->middleware('api.key:appointments:write')->name('appointments.book');
+    Route::post('appointments/{appointment}/reschedule', [ApiV1Controller::class, 'reschedule'])->middleware('api.key:appointments:write')->name('appointments.reschedule');
+    Route::post('appointments/{appointment}/cancel', [ApiV1Controller::class, 'cancel'])->middleware('api.key:appointments:write')->name('appointments.cancel');
+    Route::post('patients/register', [ApiV1Controller::class, 'registerPatient'])->middleware('api.key:patients:write')->name('patients.register');
 });
 
 Route::middleware([
@@ -285,6 +289,7 @@ Route::middleware([
         Route::get('/settings/api', [ApiKeysController::class, 'index'])->name('api.keys');
         Route::post('/settings/api/keys', [ApiKeysController::class, 'store'])->name('api.keys.store');
         Route::post('/settings/api/keys/{key}/revoke', [ApiKeysController::class, 'revoke'])->name('api.keys.revoke');
+        Route::post('/settings/api/webhooks/{action}', [ApiKeysController::class, 'webhook'])->whereIn('action', ['add', 'on', 'off', 'test'])->name('api.webhooks');
         Route::get('/corporate-wellness', [WellnessController::class, 'index'])->name('wellness.index');
         Route::post('/corporate-wellness/accounts', [WellnessController::class, 'saveAccount'])->name('wellness.accounts');
         Route::post('/corporate-wellness/events', [WellnessController::class, 'createEvent'])->name('wellness.events');
