@@ -82,7 +82,12 @@ class PrepaidPackages
     public function activatePaid(string $invoiceId): void
     {
         $invoice = Invoice::query()->find($invoiceId);
-        if (! $invoice instanceof Invoice || $invoice->balanceCents() > 0) {
+        if (! $invoice instanceof Invoice || ! DB::table('patient_packages')->where('invoice_id', $invoiceId)->where('status', 'pending')->exists()) {
+            return;
+        }
+        // The payment event fires before the invoice totals are updated: recalculate from the payments first.
+        $invoice->recalculate();
+        if ($invoice->balanceCents() > 0) {
             return;
         }
         DB::table('patient_packages')->where('invoice_id', $invoiceId)->where('status', 'pending')

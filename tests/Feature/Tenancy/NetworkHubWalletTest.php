@@ -35,7 +35,8 @@ beforeEach(function (): void {
 
     $this->clinicA = makeProvider('Sunrise Medical Centre', ProviderType::Clinic, 'sunrise.clinicflow.test');
     $this->clinicB = makeProvider('Ubuntu Kids Clinic', ProviderType::Clinic, 'ubuntu.clinicflow.test');
-    $this->receptionB = User::factory()->create();
+    // Fixed name: the page shows the signed-in user, and a random name must never collide with the patient's.
+    $this->receptionB = User::factory()->create(['name' => 'Reception B', 'email' => 'reception.b@ubuntu.test']);
     $this->ownerA = User::factory()->create(['email' => 'owner@sunrise.test']);
     app(AddStaffMember::class)->handle($this->clinicB, $this->receptionB, StaffRole::Receptionist);
     app(AddStaffMember::class)->handle($this->clinicA, $this->ownerA, StaffRole::Owner);
