@@ -157,19 +157,19 @@ class LocumShiftLifecycle
         $shift = $this->db()->table('locum_shifts')->where('id', $shiftId)->first();
         abort_if($shift === null || $shift->invoice_number === null, 404);
         $profile = $this->db()->table('locum_profiles')->where('id', $this->bookedProfileId($shiftId))->first();
-        $locum = User::query()->find($profile?->user_id);
-        $practice = Provider::query()->find($shift->tenant_id);
+        $locum = User::query()->whereKey((int) data_get($profile, 'user_id'))->first();
+        $practice = Provider::query()->whereKey((string) $shift->tenant_id)->first();
         $e = fn (?string $v) => htmlspecialchars((string) $v, ENT_QUOTES);
         $s = CarbonImmutable::parse((string) $shift->worked_start);
         $en = CarbonImmutable::parse((string) $shift->worked_end);
         $hours = round(max(0, $s->diffInMinutes($en) - (int) $shift->break_minutes) / 60, 2);
-        $vat = filled($profile?->vat_number);
+        $vat = filled(data_get($profile, 'vat_number'));
         $total = (int) $shift->invoice_total_cents;
         $net = $vat ? (int) round($total / 1.15) : $total;
         $money = fn (int $c) => 'R '.number_format($c / 100, 2, '.', ' ');
         $html = '<html><body style="font-family: DejaVu Sans, sans-serif; font-size: 11px">'
             .'<h2>'.($vat ? 'Tax invoice' : 'Invoice').' '.$e($shift->invoice_number).'</h2>'
-            .'<p><b>From:</b> '.$e($locum?->name).' · HPCSA '.$e($profile?->hpcsa_number).($vat ? ' · VAT '.$e($profile?->vat_number) : '').'</p>'
+            .'<p><b>From:</b> '.$e($locum?->name).' · HPCSA '.$e(data_get($profile, 'hpcsa_number')).($vat ? ' · VAT '.$e(data_get($profile, 'vat_number')) : '').'</p>'
             .'<p><b>To:</b> '.$e($practice?->name).'</p>'
             .'<p><b>Shift:</b> '.$e($shift->title).' · '.$s->format('j M Y H:i').'–'.$en->format('H:i').' · break '.(int) $shift->break_minutes.' min · '.$hours.' h'
             .($shift->hours_status === 'adjusted' ? ' (adjusted by the practice: '.$e($shift->hours_note).')' : '').'</p>'
@@ -237,7 +237,7 @@ class LocumShiftLifecycle
     /**
      * @return array{0: CarbonImmutable, 1: CarbonImmutable}
      */
-    private function validHours(object $shift, string $start, string $end, int $breakMinutes): array
+    private function validHours(\stdClass $shift, string $start, string $end, int $breakMinutes): array
     {
         $s = CarbonImmutable::parse($start);
         $e = CarbonImmutable::parse($end);
@@ -250,7 +250,7 @@ class LocumShiftLifecycle
         return [$s, $e];
     }
 
-    private function bookedShift(int $shiftId, ?Provider $provider = null): object
+    private function bookedShift(int $shiftId, ?Provider $provider = null): \stdClass
     {
         $shift = $this->db()->table('locum_shifts')->where('id', $shiftId)->first();
         if ($shift === null || $shift->status !== 'filled' || ($provider !== null && $shift->tenant_id !== $provider->id)) {
@@ -267,7 +267,7 @@ class LocumShiftLifecycle
 
     private function bookedUser(int $shiftId): ?User
     {
-        return User::query()->find($this->db()->table('locum_profiles')->where('id', $this->bookedProfileId($shiftId))->value('user_id'));
+        return User::query()->whereKey((int) $this->db()->table('locum_profiles')->where('id', $this->bookedProfileId($shiftId))->value('user_id'))->first();
     }
 
     /**
