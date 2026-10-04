@@ -91,9 +91,10 @@ it('asks for feedback once after a visit, keeps it private by default and shows 
     $this->clinic->run(fn () => expect(Feedback::publicReviews())->toBe([]));
     $flag = DB::connection((string) config('tenancy.database.central_connection'))->table('flagged_reviews')->sole();
 
+    tenancy()->end();
     $admin = User::factory()->create();
     $admin->forceFill(['is_platform_admin' => true])->save();
-    $this->actingAs($admin)->post("http://localhost/admin/reviews/{$flag->id}", ['decision' => 'keep'])->assertSessionHasNoErrors();
+    $this->actingAs($admin)->post("http://localhost/admin/reviews/{$flag->id}", ['decision' => 'keep'])->assertRedirect()->assertSessionHasNoErrors();
     $this->clinic->run(fn () => expect(Feedback::publicReviews())->toHaveCount(1));
 });
 
