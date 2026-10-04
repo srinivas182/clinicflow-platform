@@ -1,4 +1,4 @@
-import { Head, Link, useForm } from "@inertiajs/react";
+import { Head, Link, router, useForm } from "@inertiajs/react";
 import { Flash } from "@/components/Flash";
 import { Badge, Button, Card } from "@/components/ui";
 import { AppShell } from "@/layouts/AppShell";
@@ -24,6 +24,13 @@ interface Props {
         link: string;
         registered: number;
         screened: number;
+        invoice: {
+            id: number;
+            number: string;
+            total: number;
+            paid: boolean;
+        } | null;
+        reportSent: boolean;
     }[];
     services: string[];
 }
@@ -235,6 +242,81 @@ export default function WellnessIndex({ accounts, events, services }: Props) {
                             <span className="block font-mono text-xs text-muted">
                                 {e.link}
                             </span>
+                        </span>
+                        <span className="flex items-center gap-2 text-xs">
+                            {e.invoice ? (
+                                <>
+                                    <a
+                                        className="text-teal-deep"
+                                        href={`/corporate-wellness/events/${e.id}/employer/invoice.pdf`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        {e.invoice.number} ·{" "}
+                                        {rand(e.invoice.total, 2)}
+                                    </a>
+                                    {e.invoice.paid ? (
+                                        <Badge tone="success">paid</Badge>
+                                    ) : (
+                                        <button
+                                            className="text-teal-deep"
+                                            onClick={() => {
+                                                const reference =
+                                                    window.prompt(
+                                                        "Payment reference",
+                                                    );
+                                                if (reference)
+                                                    router.post(
+                                                        `/corporate-wellness/invoices/${e.invoice?.id}/paid`,
+                                                        { reference },
+                                                        {
+                                                            preserveScroll: true,
+                                                        },
+                                                    );
+                                            }}
+                                        >
+                                            mark paid
+                                        </button>
+                                    )}
+                                </>
+                            ) : (
+                                e.screened > 0 && (
+                                    <button
+                                        className="text-teal-deep"
+                                        onClick={() =>
+                                            router.post(
+                                                `/corporate-wellness/events/${e.id}/employer/invoice`,
+                                                {},
+                                                { preserveScroll: true },
+                                            )
+                                        }
+                                    >
+                                        Invoice employer
+                                    </button>
+                                )
+                            )}
+                            <a
+                                className="text-teal-deep"
+                                href={`/corporate-wellness/events/${e.id}/employer/report.pdf`}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                Summary
+                            </a>
+                            <button
+                                className="text-teal-deep"
+                                onClick={() =>
+                                    router.post(
+                                        `/corporate-wellness/events/${e.id}/employer/send`,
+                                        {},
+                                        { preserveScroll: true },
+                                    )
+                                }
+                            >
+                                {e.reportSent
+                                    ? "Send again"
+                                    : "Send to employer"}
+                            </button>
                         </span>
                         <Link href={`/corporate-wellness/events/${e.id}`}>
                             <Button size="sm" variant="secondary">

@@ -56,7 +56,7 @@ class LocumShiftLifecycle
                 continue;
             }
             $when = CarbonImmutable::parse((string) $shift->starts_at)->format('D j M H:i');
-            $text = ($shift->invited_profile_id !== null ? "{$practice} offered you a locum shift" : "New locum shift at {$practice}")." on {$when}. Sign in to Clinic Flow to apply: ".url('/locum');
+            $text = ($shift->invited_profile_id !== null ? "{$practice} offered you a locum shift" : "New locum shift at {$practice}")." on {$when}. Sign in to Clinic Flow to apply: ".rtrim((string) config('app.url'), '/').'/locum';
             if ((bool) $p->alerts_email && filled($p->email)) {
                 app(SendMessage::class)->handle('email', (string) $p->email, $text, 'Locum shift: '.$practice);
             }
