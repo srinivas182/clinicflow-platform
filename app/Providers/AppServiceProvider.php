@@ -73,6 +73,11 @@ class AppServiceProvider extends ServiceProvider
                 return false;
             }
 
+            // Support sessions (practice-granted) may look at everything but change nothing (SupportSessionGuard blocks writes).
+            if (request()->hasSession() && is_numeric(request()->session()->get('support_grant_id')) && (bool) $user->getAttribute('is_platform_admin')) {
+                return in_array(request()->method(), ['GET', 'HEAD'], true);
+            }
+
             $staff = Staff::query()->find($user->id);
 
             return $staff instanceof Staff && $staff->checkPermissionTo($ability);

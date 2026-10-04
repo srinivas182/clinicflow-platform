@@ -18,7 +18,9 @@ use App\Domains\Platform\Http\Controllers\PricingController;
 use App\Domains\Platform\Http\Controllers\PublicSiteController;
 use App\Domains\Platform\Http\Controllers\ResellerController;
 use App\Domains\Platform\Http\Controllers\SignupController;
+use App\Domains\Platform\Http\Controllers\StatusController;
 use App\Domains\Platform\Http\Controllers\SubscriptionBillingController;
+use App\Domains\Platform\Http\Controllers\SupportController;
 use App\Domains\Scheduling\Http\Controllers\CalendarAdminController;
 use App\Domains\Scheduling\Http\Controllers\CalendarController;
 use App\Domains\Telemedicine\Http\Controllers\TelemedicineAdminController;
@@ -60,6 +62,8 @@ foreach ($centralDomains as $index => $domain) {
 
         Route::get('/calendar/callback/{driver}', [CalendarController::class, 'callback'])->whereIn('driver', ['google', 'microsoft'])->middleware('throttle:20,1')->name('calendar.callback');
         Route::get('/internal/tls/allowed', [CustomDomainController::class, 'tlsAllowed'])->middleware('throttle:120,1')->name('tls.allowed');
+        Route::get('/status', [StatusController::class, 'show'])->name('status.public');
+        Route::get('/status.json', [StatusController::class, 'json'])->name('status.json');
         Route::get('/accounting/callback/{driver}', AccountingCallbackController::class)->whereIn('driver', ['xero', 'sage', 'zoho'])->middleware('throttle:20,1')->name('accounting.callback');
         Route::middleware('auth')->group(function (): void {
             Route::get('/groups', [GroupController::class, 'mine'])->name('groups.mine');
@@ -80,6 +84,10 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/wallet', [WalletController::class, 'adminSettings'])->name('wallet.settings');
             Route::get('/telemedicine', [TelemedicineAdminController::class, 'index'])->name('telemedicine.index');
             Route::get('/accounting', [AccountingAdminController::class, 'index'])->name('accounting.index');
+            Route::get('/support', [SupportController::class, 'admin'])->name('support.index');
+            Route::post('/support/{action}', [SupportController::class, 'adminAction'])->whereIn('action', ['reply', 'close', 'enter'])->name('support.act');
+            Route::get('/status', [StatusController::class, 'admin'])->name('status.admin');
+            Route::post('/status/{action}', [StatusController::class, 'act'])->whereIn('action', ['report', 'update', 'component'])->name('status.act');
             Route::get('/resellers', [ResellerController::class, 'admin'])->name('resellers.index');
             Route::post('/resellers', [ResellerController::class, 'store'])->name('resellers.store');
             Route::post('/resellers/{reseller}/pay', [ResellerController::class, 'pay'])->name('resellers.pay');

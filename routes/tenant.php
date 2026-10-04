@@ -33,6 +33,7 @@ use App\Domains\Pharmacy\Http\Controllers\ProcurementController;
 use App\Domains\Platform\Http\Controllers\CustomDomainController;
 use App\Domains\Platform\Http\Controllers\ProviderSiteController;
 use App\Domains\Platform\Http\Controllers\SubscriptionBillingController;
+use App\Domains\Platform\Http\Controllers\SupportController;
 use App\Domains\Platform\Http\Controllers\WebsiteSettingsController;
 use App\Domains\Portal\Http\Controllers\PortalCareController;
 use App\Domains\Portal\Http\Controllers\PortalController;
@@ -50,6 +51,7 @@ use App\Domains\Visits\Http\Controllers\FrontDeskController;
 use App\Domains\Wallet\Http\Controllers\WalletController;
 use App\Domains\Website\Http\Controllers\WebsiteToolsController;
 use App\Http\Controllers\Provider\ProviderHomeController;
+use App\Http\Middleware\SupportSessionGuard;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
@@ -70,8 +72,10 @@ Route::middleware([
     'web',
     InitializeTenancyByDomain::class,
     PreventAccessFromCentralDomains::class,
+    SupportSessionGuard::class,
 ])->group(function (): void {
     Route::get('/auth/handoff/{token}', HandoffController::class)->name('provider.handoff');
+    Route::get('/auth/support/{token}', [SupportController::class, 'enter'])->name('provider.support.enter');
 
     Route::get('/pay/{token}', [PayLinkController::class, 'show'])->middleware('throttle:30,1')->name('paylink.show');
     Route::get('/pay/{token}/done', [PayLinkController::class, 'done'])->name('paylink.done');
@@ -263,6 +267,8 @@ Route::middleware([
         Route::post('/packages', [PrepaidController::class, 'save'])->name('packages.save');
         Route::post('/patients/{patient}/packages', [PrepaidController::class, 'sell'])->name('packages.sell');
         Route::post('/invoice-lines/{line}/redeem', [PrepaidController::class, 'redeem'])->name('packages.redeem');
+        Route::get('/support', [SupportController::class, 'practice'])->name('support.practice');
+        Route::post('/support/{action}', [SupportController::class, 'practiceAction'])->whereIn('action', ['open', 'reply', 'grant', 'revoke'])->name('support.practice.act');
         Route::get('/finance/vat', [FinanceOpsController::class, 'vat'])->name('finance.vat');
         Route::put('/settings/vat', [FinanceOpsController::class, 'saveVat'])->name('settings.vat');
         Route::get('/finance/debtors', [FinanceOpsController::class, 'debtors'])->name('finance.debtors');

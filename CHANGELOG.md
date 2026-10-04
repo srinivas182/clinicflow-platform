@@ -4,6 +4,17 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.24.0] — Sprint 16B-2: support console and status page
+
+### Added
+- Support tickets: practices raise tickets and reply; Clinic Flow support replies and closes them.
+- Consented support access: only the practice can allow it (1–72 hours, optionally tied to a ticket) and end it at any time. Support opens the practice through a one-minute sign-in link; the session is read-only (any change is refused), every page viewed is written to the practice's audit log, and it ends as soon as the access expires or is revoked.
+- Status page: public page and JSON feed showing component health (web app, messaging, video, payments, Network Hub), incidents with updates and planned maintenance; components are checked every minute unless the super admin sets them by hand.
+- `status:check` every minute.
+
+### Notes
+- At deployment the public status page is also published separately from the main servers (static copy from `/status.json` plus an external uptime monitor) so it stays up during an outage.
+
 ## [0.23.0] — Sprint 16B-1: prepaid packages and reseller programme
 
 ### Added
