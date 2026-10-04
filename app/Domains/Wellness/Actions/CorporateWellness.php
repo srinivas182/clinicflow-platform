@@ -103,7 +103,7 @@ class CorporateWellness
                 ?? app(RegisterPatient::class)->handle(new RegistrationData(
                     firstNames: trim($data['first_names']), surname: trim($data['surname']),
                     idType: filled($data['id_number']) ? IdType::SaId : IdType::None, idNumber: filled($data['id_number']) ? (string) $data['id_number'] : null,
-                    passportCountry: null, dateOfBirth: filled($data['id_number']) ? null : $data['date_of_birth'],
+                    passportCountry: null, dateOfBirth: filled($data['id_number']) || $data['date_of_birth'] === null ? null : CarbonImmutable::parse($data['date_of_birth']),
                     cell: $data['cell'], noCell: false, email: $data['email'], preferredLanguage: 'en', preferredChannel: Channel::Sms, address: null,
                     guardianName: null, guardianRelationship: null, guardianCell: null, popiaConsent: true, treatmentConsent: true,
                     consentGivenBy: ConsentGivenBy::Patient, maturityConfirmed: false, medicalAidScheme: null,
