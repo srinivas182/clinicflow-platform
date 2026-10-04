@@ -46,7 +46,7 @@ class ApiKeys
         $key = 'cf_live_'.Str::random(40);
         $id = (int) DB::table('api_keys')->insertGetId([
             'name' => trim($name), 'prefix' => substr($key, 0, 14), 'key_hash' => hash('sha256', $key), 'scopes' => json_encode($scopes),
-            'allowed_ips' => $ips === [] ? null : json_encode(array_values($ips)), 'expires_at' => $expiresAt, 'created_by' => $by, 'created_at' => now(), 'updated_at' => now(),
+            'allowed_ips' => $ips === [] ? null : json_encode($ips), 'expires_at' => $expiresAt, 'created_by' => $by, 'created_at' => now(), 'updated_at' => now(),
         ]);
         activity('api')->withProperties(['key' => $id, 'scopes' => $scopes])->log('API key created');
 
