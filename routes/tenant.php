@@ -84,6 +84,7 @@ Route::middleware([
     Route::get('/calendar/{token}.ics', [CalendarController::class, 'ical'])->middleware('throttle:60,1')->name('calendar.ical');
     Route::get('/wellness/{token}', [WellnessController::class, 'publicForm'])->where('token', '[A-Za-z0-9]{32}')->name('wellness.public');
     Route::post('/wellness/{token}', [WellnessController::class, 'publicRegister'])->where('token', '[A-Za-z0-9]{32}')->middleware('throttle:10,1')->name('wellness.register');
+    Route::get('/wellness-report/{token}/{doc?}', [WellnessController::class, 'employerLink'])->where(['token' => '[A-Za-z0-9]{40}', 'doc' => 'invoice'])->middleware('throttle:30,1')->name('wellness.employer');
     Route::get('/media/{media}/{size?}', [WebsiteToolsController::class, 'serveMedia'])->whereIn('size', ['thumb'])->name('media.serve');
     Route::get('/feedback/{token}', [WebsiteToolsController::class, 'feedbackForm'])->name('feedback.form');
     Route::post('/feedback/{token}', [WebsiteToolsController::class, 'feedbackSubmit'])->middleware('throttle:10,1')->name('feedback.submit');
@@ -272,6 +273,8 @@ Route::middleware([
         Route::post('/corporate-wellness/events', [WellnessController::class, 'createEvent'])->name('wellness.events');
         Route::get('/corporate-wellness/events/{event}', [WellnessController::class, 'event'])->name('wellness.event');
         Route::post('/corporate-wellness/registrations/{registration}/screen', [WellnessController::class, 'screen'])->name('wellness.screen');
+        Route::match(['get', 'post'], '/corporate-wellness/events/{event}/employer/{action}', [WellnessController::class, 'employer'])->whereIn('action', ['invoice', 'send', 'report.pdf', 'invoice.pdf'])->name('wellness.employer.act');
+        Route::post('/corporate-wellness/invoices/{invoice}/paid', [WellnessController::class, 'invoicePaid'])->name('wellness.invoice.paid');
         Route::get('/locums', [LocumController::class, 'practice'])->name('locums.practice');
         Route::post('/locums/shifts', [LocumController::class, 'postShift'])->name('locums.shifts.store');
         Route::post('/locums/shifts/{shift}/cancel', [LocumController::class, 'cancel'])->name('locums.shifts.cancel');

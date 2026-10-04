@@ -4,7 +4,9 @@ use App\Domains\Identity\Actions\AddStaffMember;
 use App\Domains\Identity\Enums\StaffRole;
 use App\Domains\Platform\Enums\ProviderType;
 use App\Domains\Platform\Models\Provider;
+use App\Domains\Platform\Models\Setting;
 use App\Domains\Wellness\Actions\CorporateWellness;
+use App\Domains\Wellness\Actions\EmployerReporting;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
@@ -87,4 +89,78 @@ it('classifies screening values with the documented thresholds', function (): vo
     expect(CorporateWellness::flags(120, 80, 5.0, 4.2, 22.0))->toBe([])
         ->and(CorporateWellness::flags(132, 80, 8.0, 6.5, 26.0))->toBe(['bp_elevated', 'glucose_raised', 'cholesterol_high', 'bmi_overweight'])
         ->and(CorporateWellness::flags(null, null, 12.0, null, 17.0))->toBe(['glucose_high', 'bmi_underweight']);
+});
+
+/** Registers and screens $n employees for the event; $cholesterolFor limits how many get a cholesterol value. */
+function screenEmployees(object $t, string $token, int $n, int $cholesterolFor): void
+{
+    $t->clinic->run(function () use ($token, $n, $cholesterolFor, $t): void {
+        $w = app(CorporateWellness::class);
+        for ($i = 0; $i < $n; $i++) {
+            $reg = $w->register($token, ['first_names' => "Employee{$i}", 'surname' => 'Worker', 'id_number' => null, 'date_of_birth' => '1990-01-01',
+                'cell' => '08200000'.str_pad((string) $i, 2, '0', STR_PAD_LEFT), 'email' => null, 'slot_at' => (string) CarbonImmutable::parse('tomorrow 09:00'), 'consent' => true]);
+            $w->screen($reg, ['bp_systolic' => $i < 3 ? 150 : 120, 'bp_diastolic' => $i < 3 ? 95 : 78, 'glucose' => 5.2,
+                'cholesterol' => $i < $cholesterolFor ? 5.5 : null, 'height_cm' => 170, 'weight_kg' => 70], $t->nurseUser->id);
+        }
+    });
+}
+
+it('invoices the employer once per event at the contracted rate, adding VAT only when the practice is VAT registered', function (): void {
+    [$event, $token] = wellnessDay($this, 20);
+    $reporting = app(EmployerReporting::class);
+    $this->clinic->run(fn () => expect(fn () => $reporting->invoice($event))->toThrow(ValidationException::class));
+    screenEmployees($this, $token, 2, 0);
+
+    $this->clinic->run(function () use ($event, $reporting): void {
+        $id = $reporting->invoice($event);
+        $inv = DB::table('corporate_invoices')->find($id);
+        expect($inv->subtotal_cents)->toBe(70000)->and($inv->vat_cents)->toBe(0)->and($inv->total_cents)->toBe(70000)
+            ->and(fn () => $reporting->invoice($event))->toThrow(ValidationException::class)
+            ->and(fn () => $reporting->markPaid($id, ''))->toThrow(ValidationException::class);
+        $reporting->markPaid($id, 'EFT-ACME-1');
+        expect(DB::table('corporate_invoices')->value('paid_at'))->not->toBeNull();
+
+        Setting::put('vat', 'registered', true);
+        DB::table('corporate_invoices')->delete();
+        $vatInvoice = DB::table('corporate_invoices')->find($reporting->invoice($event));
+        expect($vatInvoice->vat_cents)->toBe(10500)->and($vatInvoice->total_cents)->toBe(80500);
+    });
+});
+
+it('reports only anonymised totals to the employer and withholds any figure based on fewer than 10 people', function (): void {
+    [$small, $smallToken] = wellnessDay($this, 20);
+    screenEmployees($this, $smallToken, 9, 9);
+    $reporting = app(EmployerReporting::class);
+    $this->clinic->run(fn () => expect($reporting->summary($small))->toBe(['screened' => 9, 'withheld' => true, 'checks' => []]));
+
+    $big = $this->clinic->run(fn () => app(CorporateWellness::class)->createEvent((int) DB::table('corporate_accounts')->value('id'), 'Second day', 'Acme Plant',
+        (string) CarbonImmutable::parse('tomorrow 09:00'), (string) CarbonImmutable::parse('tomorrow 10:00'), 30, 20, ['bp', 'cholesterol', 'bmi']));
+    $bigToken = $this->clinic->run(fn () => (string) DB::table('wellness_events')->where('id', $big)->value('token'));
+    screenEmployees($this, $bigToken, 12, 5);
+
+    $this->clinic->run(function () use ($big, $reporting): void {
+        $sum = $reporting->summary($big);
+        expect($sum['screened'])->toBe(12)->and($sum['withheld'])->toBeFalse()
+            ->and($sum['checks']['bp']['bands'])->toBe(['High' => 3, 'Elevated' => 0, 'Healthy range' => 9])
+            ->and($sum['checks']['cholesterol']['withheld'])->toBeTrue()->and($sum['checks']['cholesterol']['bands'])->toBe([]);
+        $pdf = $reporting->reportPdf($big);
+        expect(str_starts_with($pdf, '%PDF'))->toBeTrue();
+    });
+});
+
+it('emails the employer an expiring link to the summary and invoice', function (): void {
+    [$event, $token] = wellnessDay($this, 20);
+    screenEmployees($this, $token, 10, 10);
+    $reporting = app(EmployerReporting::class);
+    $link = $this->clinic->run(function () use ($event, $reporting): string {
+        $reporting->invoice($event);
+
+        return $reporting->sendToEmployer($event);
+    });
+    $this->clinic->run(fn () => expect(DB::table('message_log')->where('recipient', 'hr@acme.test')->where('body', 'like', '%totals only%')->exists())->toBeTrue());
+
+    $this->get($link)->assertOk()->assertHeader('Content-Type', 'application/pdf');
+    $this->get($link.'/invoice')->assertOk()->assertHeader('Content-Type', 'application/pdf');
+    $this->travel(31)->days();
+    $this->get($link)->assertNotFound();
 });

@@ -7,6 +7,7 @@ namespace App\Domains\Wellness\Http\Controllers;
 use App\Domains\Identity\Enums\Permission;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Wellness\Actions\CorporateWellness;
+use App\Domains\Wellness\Actions\EmployerReporting;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,6 +33,9 @@ class WellnessController extends Controller
                     'id' => $e->id, 'company' => $e->company, 'title' => $e->title, 'location' => $e->location, 'starts' => $e->starts_at, 'ends' => $e->ends_at, 'status' => $e->status,
                     'link' => url('/wellness/'.$e->token), 'registered' => DB::table('wellness_registrations')->where('wellness_event_id', $e->id)->count(),
                     'screened' => DB::table('wellness_registrations')->where('wellness_event_id', $e->id)->where('status', 'screened')->count(),
+                    'invoice' => ($inv = DB::table('corporate_invoices')->where('wellness_event_id', $e->id)->first()) === null ? null
+                        : ['id' => $inv->id, 'number' => $inv->number, 'total' => $inv->total_cents / 100, 'paid' => $inv->paid_at !== null],
+                    'reportSent' => DB::table('wellness_report_links')->where('wellness_event_id', $e->id)->exists(),
                 ])->values(),
             'services' => CorporateWellness::SERVICES,
         ]);
@@ -81,6 +85,39 @@ class WellnessController extends Controller
         $flags = $wellness->screen($registration, $v, (int) $request->user()?->getAuthIdentifier());
 
         return back()->with('success', $flags === [] ? 'Saved. All results in the healthy range.' : 'Saved. Follow-up suggested: '.implode(', ', $flags).'.');
+    }
+
+    // ---------------- employer billing and reports ----------------
+
+    public function employer(Request $request, int $event, string $action, EmployerReporting $reporting): \Symfony\Component\HttpFoundation\Response
+    {
+        $this->authorize(Permission::BILLING_COLLECT);
+        abort_unless(DB::table('wellness_events')->where('id', $event)->exists(), 404);
+
+        return match ($action) {
+            'invoice' => tap(back()->with('success', 'Invoice created.'), fn () => $reporting->invoice($event)),
+            'send' => tap(back()->with('success', 'Summary and invoice link emailed to the employer contact.'), fn () => $reporting->sendToEmployer($event)),
+            'report.pdf' => response($reporting->reportPdf($event), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="wellness-summary.pdf"']),
+            'invoice.pdf' => response($reporting->invoicePdf($event), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="wellness-invoice.pdf"']),
+            default => abort(404),
+        };
+    }
+
+    public function invoicePaid(Request $request, int $invoice, EmployerReporting $reporting): RedirectResponse
+    {
+        $this->authorize(Permission::BILLING_COLLECT);
+        $reporting->markPaid($invoice, $request->string('reference')->toString());
+
+        return back()->with('success', 'Invoice marked paid.');
+    }
+
+    public function employerLink(string $token, ?string $doc, EmployerReporting $reporting): \Symfony\Component\HttpFoundation\Response
+    {
+        $event = $reporting->eventForToken($token);
+        abort_if($event === null, 404, 'This link has expired. Ask the practice for a new one.');
+        $pdf = $doc === 'invoice' ? $reporting->invoicePdf($event) : $reporting->reportPdf($event);
+
+        return response($pdf, 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="wellness-'.($doc === 'invoice' ? 'invoice' : 'summary').'.pdf"']);
     }
 
     // ---------------- public employee registration ----------------

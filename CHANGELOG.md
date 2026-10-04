@@ -4,6 +4,16 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.28.0] — Sprint 17B-2: corporate wellness billing and anonymised employer reports
+
+### Added
+- Employer invoice per wellness day (CW-YYYY-NNNNN): screened employees × contracted rate (excluding VAT), VAT added only when the practice is VAT registered; one invoice per event; mark paid with a reference; PDF.
+- Anonymised employer summary: employees screened and the share in each risk band per check, as a PDF. No names or individual results ever. Any figure based on fewer than 10 people is withheld (the whole report if fewer than 10 were screened). Only blood pressure, glucose, cholesterol, BMI and flu vaccination can appear — sensitive tests such as HIV are never included.
+- Send to employer: an emailed link (valid 30 days) to the summary and invoice on the practice's own site.
+
+### Fixed
+- Locum shift alerts linked to the practice's site instead of the locum portal on the platform domain.
+
 ## [0.27.0] — Sprint 17B-1: corporate wellness (accounts, events, screening)
 
 ### Added

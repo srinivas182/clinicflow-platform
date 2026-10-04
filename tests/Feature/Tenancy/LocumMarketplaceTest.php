@@ -195,3 +195,14 @@ it('alerts verified locums in the shift area once, and reminds both sides the da
     bookShift($this, $soweto, '+20 hours', '+28 hours');
     expect($life->remind())->toBe(1)->and($life->remind())->toBe(0);
 });
+
+it('links shift alerts to the locum portal on the platform domain, even when sent from a practice', function (): void {
+    verifiedLocum($this, 'Dr Mokoena');
+    $this->actingAs($this->ownerUser)->post('http://sunrise.clinicflow.test/locums/shifts', ['title' => 'GP locum', 'area' => 'Soweto', 'starts_at' => (string) CarbonImmutable::parse('+4 days 08:00'),
+        'ends_at' => (string) CarbonImmutable::parse('+4 days 16:00'), 'rate' => 700, 'rate_basis' => 'hour'])->assertSessionHasNoErrors();
+    expect(locumDb()->table('locum_alerts')->count())->toBe(1);
+    $this->clinic->run(function (): void {
+        $body = (string) DB::table('message_log')->where('subject', 'like', 'Locum shift%')->value('body');
+        expect($body)->toContain(rtrim((string) config('app.url'), '/').'/locum')->not->toContain('sunrise.clinicflow.test/locum');
+    });
+});
