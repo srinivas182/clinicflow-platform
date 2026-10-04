@@ -16,6 +16,7 @@ use App\Domains\Platform\Http\Controllers\CustomDomainController;
 use App\Domains\Platform\Http\Controllers\GroupController;
 use App\Domains\Platform\Http\Controllers\PricingController;
 use App\Domains\Platform\Http\Controllers\PublicSiteController;
+use App\Domains\Platform\Http\Controllers\ResellerController;
 use App\Domains\Platform\Http\Controllers\SignupController;
 use App\Domains\Platform\Http\Controllers\SubscriptionBillingController;
 use App\Domains\Scheduling\Http\Controllers\CalendarAdminController;
@@ -62,6 +63,7 @@ foreach ($centralDomains as $index => $domain) {
         Route::get('/accounting/callback/{driver}', AccountingCallbackController::class)->whereIn('driver', ['xero', 'sage', 'zoho'])->middleware('throttle:20,1')->name('accounting.callback');
         Route::middleware('auth')->group(function (): void {
             Route::get('/groups', [GroupController::class, 'mine'])->name('groups.mine');
+            Route::get('/reseller', [ResellerController::class, 'portal'])->name('reseller.portal');
             Route::get('/groups/{group}', [GroupController::class, 'show'])->name('groups.show');
             Route::get('/workspaces', [WorkspaceController::class, 'index'])->name('workspaces');
             Route::post('/workspaces/{provider}/open', [WorkspaceController::class, 'open'])->name('workspaces.open');
@@ -78,6 +80,9 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/wallet', [WalletController::class, 'adminSettings'])->name('wallet.settings');
             Route::get('/telemedicine', [TelemedicineAdminController::class, 'index'])->name('telemedicine.index');
             Route::get('/accounting', [AccountingAdminController::class, 'index'])->name('accounting.index');
+            Route::get('/resellers', [ResellerController::class, 'admin'])->name('resellers.index');
+            Route::post('/resellers', [ResellerController::class, 'store'])->name('resellers.store');
+            Route::post('/resellers/{reseller}/pay', [ResellerController::class, 'pay'])->name('resellers.pay');
             Route::get('/reviews', [FlaggedReviewsController::class, 'index'])->name('reviews.index');
             Route::post('/reviews/{flag}', [FlaggedReviewsController::class, 'decide'])->name('reviews.decide');
             Route::get('/groups', [GroupController::class, 'admin'])->name('groups.index');

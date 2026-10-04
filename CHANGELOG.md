@@ -4,6 +4,16 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.23.0] — Sprint 16B-1: prepaid packages and reseller programme
+
+### Added
+- Prepaid packages: practices define fixed services paid in advance (consultations, procedure or lab codes; never open-ended cover). Selling a package creates an invoice; the package activates when it is paid in full and is valid for three years (Consumer Protection Act s63). Staff use a package against a matching unpaid invoice line, which issues a credit note so revenue and VAT stay correct; each line can be covered once; packages expire daily after three years.
+- Reseller programme: the super admin adds resellers (commission % and months, default 20% for 12 months); a reseller's link (?ref=CODE) is remembered for 30 days and the practice that signs up is credited to them; commission is recorded on each paid subscription invoice (excluding VAT) within the window; monthly statements; the super admin marks months paid with the EFT reference; resellers see their link, referrals and statements in a reseller portal.
+- `packages:expire` daily.
+
+### Notes
+- Legal reviewer to confirm prepaid package wording (not insurance / Medical Schemes Act) and validity.
+
 ## [0.22.0] — Sprint 16A: website media, sections, booking widget, patient feedback
 
 ### Added

@@ -21,3 +21,4 @@ Schedule::command('accounting:export hourly')->hourly()->onOneServer();
 Schedule::command('calendar:busy')->everyFifteenMinutes()->withoutOverlapping()->onOneServer();
 Schedule::command('pharmacy:publish-stock')->hourly()->onOneServer();
 Schedule::command('feedback:request')->dailyAt('10:00')->onOneServer();
+Schedule::command('packages:expire')->dailyAt('01:00')->onOneServer();
