@@ -13,6 +13,7 @@ use App\Domains\Billing\Models\PlatformGatewayConfig;
 use App\Domains\Billing\Models\SubscriptionInvoice;
 use App\Domains\Platform\Enums\ProviderStatus;
 use App\Domains\Platform\Enums\SubscriptionStatus;
+use App\Domains\Platform\Resellers\ResellerProgramme;
 use App\Domains\Wallet\Actions\WalletLedger;
 use App\Domains\Wallet\Models\WalletTopup;
 use Illuminate\Http\Request;
@@ -123,6 +124,7 @@ class SettleSubscriptionInvoice
             }
 
             activity('platform')->performedOn($provider)->withProperties(['invoice' => $locked->number])->log('Subscription paid');
+            app(ResellerProgramme::class)->recordCommission($locked);
         });
     }
 }

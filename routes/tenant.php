@@ -7,6 +7,7 @@ use App\Domains\Billing\Http\Controllers\GatewayWebhookController;
 use App\Domains\Billing\Http\Controllers\InvoiceController;
 use App\Domains\Billing\Http\Controllers\PayLinkController;
 use App\Domains\Billing\Http\Controllers\PaymentSettingsController;
+use App\Domains\Billing\Http\Controllers\PrepaidController;
 use App\Domains\Branches\Http\Controllers\BranchController;
 use App\Domains\Claims\Http\Controllers\ClaimController;
 use App\Domains\Clinical\Http\Controllers\CareController;
@@ -258,6 +259,10 @@ Route::middleware([
         Route::get('/me/calendar', [CalendarController::class, 'show'])->name('calendar.show');
         Route::get('/me/calendar/{driver}/connect', [CalendarController::class, 'connect'])->whereIn('driver', ['google', 'microsoft'])->name('calendar.connect');
         Route::put('/me/calendar', [CalendarController::class, 'update'])->name('calendar.update');
+        Route::get('/packages', [PrepaidController::class, 'index'])->name('packages.index');
+        Route::post('/packages', [PrepaidController::class, 'save'])->name('packages.save');
+        Route::post('/patients/{patient}/packages', [PrepaidController::class, 'sell'])->name('packages.sell');
+        Route::post('/invoice-lines/{line}/redeem', [PrepaidController::class, 'redeem'])->name('packages.redeem');
         Route::get('/finance/vat', [FinanceOpsController::class, 'vat'])->name('finance.vat');
         Route::put('/settings/vat', [FinanceOpsController::class, 'saveVat'])->name('settings.vat');
         Route::get('/finance/debtors', [FinanceOpsController::class, 'debtors'])->name('finance.debtors');

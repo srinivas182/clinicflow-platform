@@ -3,6 +3,7 @@
 use App\Domains\Identity\Http\Middleware\EnsureWorkspaceMember;
 use App\Domains\Platform\Http\Middleware\EnsurePlatformAdmin;
 use App\Domains\Platform\Http\Middleware\EnsureProviderWritable;
+use App\Http\Middleware\CaptureResellerRef;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         __DIR__.'/../app/Domains/Finance/Console',
         __DIR__.'/../app/Domains/Scheduling/Console',
         __DIR__.'/../app/Domains/Website/Console',
+        __DIR__.'/../app/Domains/Billing/Console',
         __DIR__.'/../app/Domains/Hub/Console',
     ])
     ->withMiddleware(function (Middleware $middleware): void {
@@ -40,6 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            CaptureResellerRef::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

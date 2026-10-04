@@ -3,7 +3,10 @@
 namespace App\Providers;
 
 use App\Domains\Billing\Contracts\PaymentGateway;
+use App\Domains\Billing\Enums\PaymentStatus;
 use App\Domains\Billing\Gateways\GatewayFactory;
+use App\Domains\Billing\Models\Payment;
+use App\Domains\Billing\Prepaid\PrepaidPackages;
 use App\Domains\Billing\Support\FakePaymentGateway;
 use App\Domains\Branches\Support\BranchContext;
 use App\Domains\Claims\Contracts\ClaimsSwitch;
@@ -46,6 +49,11 @@ class AppServiceProvider extends ServiceProvider
         LedgerPoster::register();
         OnlineConsultHooks::register();
         BranchContext::register();
+        Payment::saved(function (Payment $p): void {
+            if (tenant() !== null && $p->status === PaymentStatus::Succeeded && ($p->wasRecentlyCreated || $p->wasChanged('status'))) {
+                app(PrepaidPackages::class)->activatePaid($p->invoice_id);
+            }
+        });
         Appointment::saved(function (Appointment $a): void {
             if (tenant() !== null) {
                 app(CalendarSync::class)->sync($a);

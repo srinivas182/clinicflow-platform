@@ -14,6 +14,7 @@ use App\Domains\Platform\Enums\VerificationType;
 use App\Domains\Platform\Models\Package;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\Subscription;
+use App\Domains\Platform\Resellers\ResellerProgramme;
 use App\Domains\Platform\Support\SubdomainPolicy;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
@@ -69,6 +70,8 @@ class StartProviderSignup
         ]);
 
         $provider->domains()->create(['domain' => SubdomainPolicy::domainFor($subdomain)]);
+        $ref = request()->cookie(ResellerProgramme::COOKIE);
+        app(ResellerProgramme::class)->attach($provider, is_string($ref) ? $ref : null);
 
         Subscription::create([
             'tenant_id' => $provider->id,
