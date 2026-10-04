@@ -4,6 +4,7 @@ use App\Domains\Finance\Http\Controllers\AccountingAdminController;
 use App\Domains\Finance\Http\Controllers\AccountingCallbackController;
 use App\Domains\Identity\Http\Controllers\LoginController;
 use App\Domains\Identity\Http\Controllers\WorkspaceController;
+use App\Domains\Locums\Http\Controllers\LocumController;
 use App\Domains\Messaging\Http\Controllers\MessagingAdminController;
 use App\Domains\Messaging\Http\Controllers\WhatsAppController;
 use App\Domains\Pharmacy\Http\Controllers\DeliveryController;
@@ -68,6 +69,10 @@ foreach ($centralDomains as $index => $domain) {
         Route::middleware('auth')->group(function (): void {
             Route::get('/groups', [GroupController::class, 'mine'])->name('groups.mine');
             Route::get('/reseller', [ResellerController::class, 'portal'])->name('reseller.portal');
+            Route::get('/locum', [LocumController::class, 'portal'])->name('locum.portal');
+            Route::post('/locum/profile', [LocumController::class, 'saveProfile'])->name('locum.profile');
+            Route::post('/locum/documents', [LocumController::class, 'uploadDocument'])->middleware('throttle:20,1')->name('locum.documents');
+            Route::post('/locum/shifts/{shift}/apply', [LocumController::class, 'apply'])->middleware('throttle:30,1')->name('locum.apply');
             Route::get('/groups/{group}', [GroupController::class, 'show'])->name('groups.show');
             Route::get('/workspaces', [WorkspaceController::class, 'index'])->name('workspaces');
             Route::post('/workspaces/{provider}/open', [WorkspaceController::class, 'open'])->name('workspaces.open');
@@ -84,6 +89,9 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/wallet', [WalletController::class, 'adminSettings'])->name('wallet.settings');
             Route::get('/telemedicine', [TelemedicineAdminController::class, 'index'])->name('telemedicine.index');
             Route::get('/accounting', [AccountingAdminController::class, 'index'])->name('accounting.index');
+            Route::get('/locums', [LocumController::class, 'admin'])->name('locums.index');
+            Route::post('/locums/{profile}/review', [LocumController::class, 'review'])->name('locums.review');
+            Route::get('/locums/documents/{document}', [LocumController::class, 'document'])->name('locums.document');
             Route::get('/support', [SupportController::class, 'admin'])->name('support.index');
             Route::post('/support/{action}', [SupportController::class, 'adminAction'])->whereIn('action', ['reply', 'close', 'enter'])->name('support.act');
             Route::get('/status', [StatusController::class, 'admin'])->name('status.admin');

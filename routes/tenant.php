@@ -23,6 +23,7 @@ use App\Domains\Hub\Http\Controllers\NetworkController;
 use App\Domains\Identity\Http\Controllers\HandoffController;
 use App\Domains\Lab\Http\Controllers\LabCatalogController;
 use App\Domains\Lab\Http\Controllers\LabController;
+use App\Domains\Locums\Http\Controllers\LocumController;
 use App\Domains\Messaging\Http\Controllers\MessagingSettingsController;
 use App\Domains\Messaging\Http\Controllers\WhatsAppController;
 use App\Domains\Patients\Http\Controllers\PatientAdminController;
@@ -263,6 +264,10 @@ Route::middleware([
         Route::get('/me/calendar', [CalendarController::class, 'show'])->name('calendar.show');
         Route::get('/me/calendar/{driver}/connect', [CalendarController::class, 'connect'])->whereIn('driver', ['google', 'microsoft'])->name('calendar.connect');
         Route::put('/me/calendar', [CalendarController::class, 'update'])->name('calendar.update');
+        Route::get('/locums', [LocumController::class, 'practice'])->name('locums.practice');
+        Route::post('/locums/shifts', [LocumController::class, 'postShift'])->name('locums.shifts.store');
+        Route::post('/locums/shifts/{shift}/cancel', [LocumController::class, 'cancel'])->name('locums.shifts.cancel');
+        Route::post('/locums/applications/{application}/accept', [LocumController::class, 'accept'])->name('locums.accept');
         Route::get('/packages', [PrepaidController::class, 'index'])->name('packages.index');
         Route::post('/packages', [PrepaidController::class, 'save'])->name('packages.save');
         Route::post('/patients/{patient}/packages', [PrepaidController::class, 'sell'])->name('packages.sell');
