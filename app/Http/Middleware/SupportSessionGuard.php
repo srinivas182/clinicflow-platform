@@ -19,7 +19,8 @@ class SupportSessionGuard
     public function handle(Request $request, Closure $next): Response
     {
         $grantId = $request->hasSession() ? $request->session()->get('support_grant_id') : null;
-        if (! is_numeric($grantId)) {
+        // Only Clinic Flow support (platform admins) can hold a support session; a stray marker never affects practice users.
+        if (! is_numeric($grantId) || ! (bool) $request->user()?->getAttribute('is_platform_admin')) {
             return $next($request);
         }
         $provider = tenant();

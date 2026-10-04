@@ -55,7 +55,10 @@ it('lets a practice raise tickets and grant time-limited, read-only, logged supp
     $this->clinic->run(fn () => expect(DB::table('activity_log')->where('description', 'Support viewed a page')->exists())->toBeTrue()
         ->and(DB::table('activity_log')->where('description', 'Support access granted')->exists())->toBeTrue());
 
-    $this->actingAs($this->ownerUser)->post("{$base}/support/revoke", ['grant_id' => $grant->id])->assertSessionHasNoErrors();
+    // The owner revokes from their own browser session.
+    $this->flushSession();
+    $this->actingAs($this->ownerUser)->post("{$base}/support/revoke", ['grant_id' => $grant->id])->assertRedirect()->assertSessionHasNoErrors();
+    expect(($this->central)()->table('support_grants')->where('id', $grant->id)->value('revoked_at'))->not->toBeNull();
     $this->withSession($session)->actingAs($this->admin)->get("{$base}/settings/branches")->assertRedirect()->assertSessionHas('error', 'Support access has ended.');
 });
 
