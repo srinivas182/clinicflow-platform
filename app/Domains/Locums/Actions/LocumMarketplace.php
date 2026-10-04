@@ -45,7 +45,7 @@ class LocumMarketplace
         }
         $existing = $this->db()->table('locum_profiles')->where('user_id', $user->id)->first();
         $row = ['hpcsa_number' => strtoupper(str_replace(' ', '', trim($data['hpcsa_number']))), 'qualifications' => trim($data['qualifications']),
-            'languages' => json_encode(array_values($data['languages'])), 'areas' => json_encode(array_values($data['areas'])),
+            'languages' => json_encode($data['languages']), 'areas' => json_encode($data['areas']),
             'hourly_rate_cents' => $data['hourly_rate_cents'], 'bio' => $data['bio'], 'updated_at' => now()];
         if ($existing === null) {
             return (int) $this->db()->table('locum_profiles')->insertGetId($row + ['user_id' => $user->id, 'status' => 'pending', 'created_at' => now()]);

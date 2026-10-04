@@ -32,8 +32,8 @@ class EnsureWorkspaceMember
             ->usable()
             ->first() : null;
         // Marketplace locums may only work inside one of their booked shift windows.
-        $usable = $membership instanceof Membership && $user instanceof User && $provider !== null
-            && ($membership->role !== StaffRole::LocumDoctor || app(LocumMarketplace::class)->withinShiftWindow($user->id, (string) $provider->getTenantKey()));
+        $usable = $membership instanceof Membership
+            && ($membership->role !== StaffRole::LocumDoctor || app(LocumMarketplace::class)->withinShiftWindow($membership->user_id, $membership->tenant_id));
 
         // Clinic Flow support under a grant this practice gave (unexpired, not revoked, for this practice only).
         // SupportSessionGuard keeps such sessions read-only and logs every page.
