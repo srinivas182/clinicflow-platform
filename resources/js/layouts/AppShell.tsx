@@ -1,5 +1,5 @@
 import { Link, router, usePage } from "@inertiajs/react";
-import { Activity, Bell, BookOpen, BookText, Building2, CalendarDays, ChartColumn, CircleHelp, ClipboardList, Clock, FileCheck, FileSignature, FileText, FlaskConical, Forward, Globe, HandCoins, HeartPulse, Image, Inbox, LayoutDashboard, LifeBuoy, Mail, MessageCircle, MessagesSquare, PackageSearch, Percent, Pill, Search, Settings, Share2, ShieldAlert, ShieldCheck, Star, Stethoscope, Ticket, Truck, UserPlus, Users, Video, Wallet } from "lucide-react";
+import { Activity, Bell, BookOpen, BookText, Building2, CalendarDays, ChartColumn, CircleHelp, ClipboardList, Clock, FileCheck, FileSignature, FileText, FlaskConical, Forward, Globe, HandCoins, HeartPulse, Image, Inbox, KeyRound, LayoutDashboard, LifeBuoy, Mail, MessageCircle, MessagesSquare, PackageSearch, Percent, Pill, Search, Settings, Share2, ShieldAlert, ShieldCheck, Star, Stethoscope, Ticket, Truck, UserPlus, Users, Video, Wallet } from "lucide-react";
 import type { ReactNode } from "react";
 import { Logo } from "@/components/Logo";
 import type { SharedProps } from "@/types";
@@ -27,6 +27,7 @@ const nav = [
     { label: "Prepaid packages", icon: Ticket, href: "/packages" },
     { label: "Locums", icon: UserPlus, href: "/locums" },
     { label: "Corporate wellness", icon: HeartPulse, href: "/corporate-wellness" },
+    { label: "API", icon: KeyRound, href: "/settings/api" },
     { label: "Support", icon: LifeBuoy, href: "/support" },
     { label: "VAT", icon: Percent, href: "/finance/vat" },
     { label: "Stock and ordering", icon: PackageSearch, href: "/procurement" },

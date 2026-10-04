@@ -4,6 +4,14 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.29.0] — Sprint 17C-1: public API keys and read endpoints
+
+### Added
+- Practice API keys (Settings → API, owner and practice admin only): chosen permissions, optional IP allowlist and expiry, shown once and stored only as a hash, last-used time, revoke; recent request log.
+- Practice API v1 on each practice's own address (/api/v1): free times per doctor, appointments by date range (no reasons), exact patient lookup by cell or ID number (demographics only; ID numbers matched through their lookup hash), invoices by date range, online consult prices and prepaid packages; OpenAPI 3.1 description at /api/v1/openapi.json.
+- API guard: package feature `api` (Clinic Pro), valid key, permission, allowed IP, 60 requests per minute per key (configurable); every request logged.
+- No clinical information is available through the API.
+
 ## [0.28.0] — Sprint 17B-2: corporate wellness billing and anonymised employer reports
 
 ### Added

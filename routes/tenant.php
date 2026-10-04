@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Domains\Api\Http\Controllers\ApiKeysController;
+use App\Domains\Api\Http\Controllers\ApiV1Controller;
 use App\Domains\Billing\Http\Controllers\BillingSettingsController;
 use App\Domains\Billing\Http\Controllers\GatewayWebhookController;
 use App\Domains\Billing\Http\Controllers\InvoiceController;
@@ -69,6 +71,18 @@ Route::middleware([InitializeTenancyByDomain::class, PreventAccessFromCentralDom
     ->post('/webhooks/payments/{gateway}', [GatewayWebhookController::class, 'provider'])
     ->whereIn('gateway', ['payfast', 'paystack', 'peach', 'yoco'])
     ->name('webhooks.provider');
+
+/*
+ * Public practice API v1: key-authenticated, no session or CSRF.
+ */
+Route::middleware(['api', InitializeTenancyByDomain::class, PreventAccessFromCentralDomains::class])->prefix('api/v1')->name('practice.api.')->group(function (): void {
+    Route::get('openapi.json', [ApiV1Controller::class, 'openapi'])->middleware('throttle:30,1')->name('openapi');
+    Route::get('availability', [ApiV1Controller::class, 'availability'])->middleware('api.key:availability:read')->name('availability');
+    Route::get('appointments', [ApiV1Controller::class, 'appointments'])->middleware('api.key:appointments:read')->name('appointments');
+    Route::get('patients', [ApiV1Controller::class, 'patient'])->middleware('api.key:patients:read')->name('patients');
+    Route::get('invoices', [ApiV1Controller::class, 'invoices'])->middleware('api.key:invoices:read')->name('invoices');
+    Route::get('prices', [ApiV1Controller::class, 'prices'])->middleware('api.key:prices:read')->name('prices');
+});
 
 Route::middleware([
     'web',
@@ -268,6 +282,9 @@ Route::middleware([
         Route::get('/me/calendar', [CalendarController::class, 'show'])->name('calendar.show');
         Route::get('/me/calendar/{driver}/connect', [CalendarController::class, 'connect'])->whereIn('driver', ['google', 'microsoft'])->name('calendar.connect');
         Route::put('/me/calendar', [CalendarController::class, 'update'])->name('calendar.update');
+        Route::get('/settings/api', [ApiKeysController::class, 'index'])->name('api.keys');
+        Route::post('/settings/api/keys', [ApiKeysController::class, 'store'])->name('api.keys.store');
+        Route::post('/settings/api/keys/{key}/revoke', [ApiKeysController::class, 'revoke'])->name('api.keys.revoke');
         Route::get('/corporate-wellness', [WellnessController::class, 'index'])->name('wellness.index');
         Route::post('/corporate-wellness/accounts', [WellnessController::class, 'saveAccount'])->name('wellness.accounts');
         Route::post('/corporate-wellness/events', [WellnessController::class, 'createEvent'])->name('wellness.events');
