@@ -80,3 +80,17 @@ it('checks components automatically, keeps manual overrides and publishes incide
     expect(($this->central)()->table('status_incidents')->value('resolved_at'))->not->toBeNull()
         ->and($status->summary()['components']->firstWhere('key', 'payments')->status)->toBe('operational');
 });
+
+it('lets only the practice owner grant support access, while a practice admin may end it', function (): void {
+    $practiceAdmin = User::factory()->create();
+    app(AddStaffMember::class)->handle($this->clinic, $practiceAdmin, StaffRole::PracticeAdmin);
+    $base = 'http://sunrise.clinicflow.test';
+
+    $this->actingAs($practiceAdmin)->post("{$base}/support/grant", ['hours' => 24])->assertForbidden();
+    expect(($this->central)()->table('support_grants')->count())->toBe(0);
+
+    $this->actingAs($this->ownerUser)->post("{$base}/support/grant", ['hours' => 24])->assertSessionHasNoErrors();
+    $grant = ($this->central)()->table('support_grants')->sole();
+    $this->actingAs($practiceAdmin)->post("{$base}/support/revoke", ['grant_id' => $grant->id])->assertSessionHasNoErrors();
+    expect(($this->central)()->table('support_grants')->value('revoked_at'))->not->toBeNull();
+});
