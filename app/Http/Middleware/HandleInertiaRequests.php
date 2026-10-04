@@ -37,6 +37,8 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
+                // A newly created API key, shown once (never stored readable).
+                'newApiKey' => $request->session()->get('new_api_key'),
             ],
             'provider' => $provider instanceof Provider ? [
                 'id' => $provider->id,

@@ -8,7 +8,7 @@ return [
      * Platform release version. Bumped on every release (see CHANGELOG.md)
      * and reported by GET /api/v1/health.
      */
-    'version' => env('CLINICFLOW_VERSION', '0.28.0'),
+    'version' => env('CLINICFLOW_VERSION', '0.29.0'),
 
     /*
      * Hosting region. All patient data must stay in South Africa (POPIA s72).
@@ -38,6 +38,10 @@ return [
 
     'whatsapp' => [
         'addon_monthly_cents' => (int) env('WHATSAPP_ADDON_CENTS', 19900),
+    ],
+
+    'api' => [
+        'per_minute' => (int) env('API_PER_MINUTE', 60),
     ],
 
     'locums' => [

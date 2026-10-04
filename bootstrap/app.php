@@ -1,5 +1,6 @@
 <?php
 
+use App\Domains\Api\Http\Middleware\AuthenticateApiKey;
 use App\Domains\Identity\Http\Middleware\EnsureWorkspaceMember;
 use App\Domains\Platform\Http\Middleware\EnsurePlatformAdmin;
 use App\Domains\Platform\Http\Middleware\EnsureProviderWritable;
@@ -40,6 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'workspace' => EnsureWorkspaceMember::class,
             'platform.admin' => EnsurePlatformAdmin::class,
             'provider.writable' => EnsureProviderWritable::class,
+            'api.key' => AuthenticateApiKey::class,
         ]);
         $middleware->web(append: [
             HandleInertiaRequests::class,
