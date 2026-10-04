@@ -207,13 +207,13 @@ jobs:
 
       - name: Save this part's result
         if: success()
-        run: grep -E "Tests:" .ci-pest.txt | tail -1 | sed 's/\x1b\[[0-9;]*m//g' > .ci-summary-${{ matrix.shard }}.txt
+        run: grep -E "Tests:" .ci-pest.txt | tail -1 | sed 's/\x1b\[[0-9;]*m//g' > ci-summary-${{ matrix.shard }}.txt
 
       - uses: actions/upload-artifact@v4
         if: success()
         with:
           name: test-summary-${{ matrix.shard }}
-          path: .ci-summary-${{ matrix.shard }}.txt
+          path: ci-summary-${{ matrix.shard }}.txt
 
       - name: Report failure on the pull request
         if: (failure() || cancelled()) && github.event_name == 'pull_request'
@@ -260,8 +260,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cat .ci-summary-*.txt
-          passed=$(grep -ohE "[0-9]+ passed" .ci-summary-*.txt | awk '{s+=$1} END {print s+0}')
-          assertions=$(grep -ohE "[0-9]+ assertions" .ci-summary-*.txt | awk '{s+=$1} END {print s+0}')
+          cat ci-summary-*.txt
+          passed=$(grep -ohE "[0-9]+ passed" ci-summary-*.txt | awk '{s+=$1} END {print s+0}')
+          assertions=$(grep -ohE "[0-9]+ assertions" ci-summary-*.txt | awk '{s+=$1} END {print s+0}')
           sha=${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           gh api "repos/${GITHUB_REPOSITORY}/statuses/${sha}" -f state=success -f context="backend/tests" -f description="Tests: ${passed} passed (${assertions} assertions)"
