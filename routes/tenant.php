@@ -46,6 +46,7 @@ use App\Domains\Portal\Http\Controllers\PortalController;
 use App\Domains\Portal\Http\Controllers\PortalResultsController;
 use App\Domains\Portal\Http\Middleware\EnsurePortalPatient;
 use App\Domains\Prescribing\Http\Controllers\PrescriptionController;
+use App\Domains\Reports\AnalyticsController;
 use App\Domains\Reports\ReportsController;
 use App\Domains\Scheduling\Http\Controllers\AppointmentController;
 use App\Domains\Scheduling\Http\Controllers\CalendarController;
@@ -322,6 +323,7 @@ Route::middleware([
         Route::get('/me/calendar/{driver}/connect', [CalendarController::class, 'connect'])->whereIn('driver', ['google', 'microsoft'])->name('calendar.connect');
         Route::put('/me/calendar', [CalendarController::class, 'update'])->name('calendar.update');
         Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
+        Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
         Route::post('/reports/run', [ReportsController::class, 'run'])->middleware('throttle:60,1')->name('reports.run');
         Route::post('/reports/export/{format}', [ReportsController::class, 'export'])->whereIn('format', ['csv', 'pdf'])->middleware('throttle:20,1')->name('reports.export');
         Route::post('/reports', [ReportsController::class, 'save'])->name('reports.save');

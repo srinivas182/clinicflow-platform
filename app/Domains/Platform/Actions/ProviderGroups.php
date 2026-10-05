@@ -7,7 +7,9 @@ namespace App\Domains\Platform\Actions;
 use App\Domains\Billing\Models\SubscriptionInvoice;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\ProviderGroup;
+use App\Domains\Reports\Analytics;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -37,7 +39,7 @@ class ProviderGroups
     /**
      * Totals per practice for a period: visits, appointments, new patients, takings and amounts owed.
      *
-     * @return list<array{id: string, name: string, visits: int, appointments: int, new_patients: int, takings: int, owed: int}>
+     * @return list<array<string, mixed>>
      */
     public function dashboard(ProviderGroup $group, string $from, string $to): array
     {
@@ -50,6 +52,9 @@ class ProviderGroups
             'new_patients' => DB::table('patients')->whereBetween('created_at', $range)->count(),
             'takings' => (int) DB::table('payments')->where('status', 'succeeded')->whereBetween('created_at', $range)->sum(DB::raw('amount_cents - refunded_cents')),
             'owed' => (int) DB::table('invoices')->where('status', '!=', 'void')->sum(DB::raw('GREATEST(total_cents - paid_cents - credited_cents, 0)')),
+            // Key figures only (never patient records).
+            ...array_intersect_key(app(Analytics::class)->summary(CarbonImmutable::parse($from), CarbonImmutable::parse($to)),
+                array_flip(['collection_rate', 'no_show_rate', 'avg_wait_minutes', 'utilisation'])),
         ]))->all());
     }
 
