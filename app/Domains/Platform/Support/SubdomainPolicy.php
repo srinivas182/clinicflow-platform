@@ -31,8 +31,9 @@ final class SubdomainPolicy
             && ! in_array($slug, self::RESERVED, true);
     }
 
-    public static function domainFor(string $slug): string
+    /** A practice address under the platform domain, or under a white-label brand's own domain. */
+    public static function domainFor(string $slug, ?string $base = null): string
     {
-        return $slug.'.'.config('clinicflow.provider_domain');
+        return $slug.'.'.($base ?? config('clinicflow.provider_domain'));
     }
 }

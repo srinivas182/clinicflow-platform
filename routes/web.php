@@ -8,6 +8,7 @@ use App\Domains\Locums\Http\Controllers\LocumController;
 use App\Domains\Messaging\Http\Controllers\MessagingAdminController;
 use App\Domains\Messaging\Http\Controllers\WhatsAppController;
 use App\Domains\Pharmacy\Http\Controllers\DeliveryController;
+use App\Domains\Platform\Branding\BrandController;
 use App\Domains\Platform\Http\Controllers\Admin\AutoDebitAdminController;
 use App\Domains\Platform\Http\Controllers\Admin\CmsAdminController;
 use App\Domains\Platform\Http\Controllers\Admin\PackageAdminController;
@@ -93,6 +94,9 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/accounting', [AccountingAdminController::class, 'index'])->name('accounting.index');
             Route::get('/locums', [LocumController::class, 'admin'])->name('locums.index');
             Route::get('/ai-scribe', [ScribeController::class, 'admin'])->name('ai-scribe.index');
+            Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
+            Route::post('/brands', [BrandController::class, 'save'])->name('brands.save');
+            Route::post('/brands/assign', [BrandController::class, 'assign'])->name('brands.assign');
             Route::post('/ai-scribe/providers/{driver}', [ScribeController::class, 'saveProvider'])->whereIn('driver', ['deepgram', 'azure', 'anthropic'])->name('ai-scribe.provider');
             Route::post('/ai-scribe/prices', [ScribeController::class, 'savePrices'])->name('ai-scribe.prices');
             Route::post('/locums/{profile}/review', [LocumController::class, 'review'])->name('locums.review');

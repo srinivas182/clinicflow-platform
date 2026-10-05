@@ -7,6 +7,7 @@ namespace App\Domains\Platform\Actions;
 use App\Domains\Identity\Actions\AddStaffMember;
 use App\Domains\Identity\Enums\StaffRole;
 use App\Domains\Identity\Models\Staff;
+use App\Domains\Platform\Branding\Brands;
 use App\Domains\Platform\Enums\ProviderStatus;
 use App\Domains\Platform\Enums\ProviderType;
 use App\Domains\Platform\Enums\SubscriptionStatus;
@@ -17,6 +18,7 @@ use App\Domains\Platform\Models\Subscription;
 use App\Domains\Platform\Resellers\ResellerProgramme;
 use App\Domains\Platform\Support\SubdomainPolicy;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Stancl\Tenancy\Database\Models\Domain;
 
@@ -44,10 +46,14 @@ class StartProviderSignup
     ): Provider {
         $subdomain = strtolower(trim($subdomain));
         $errors = [];
+        // Signing up through a white-label brand's link puts the practice under that brand and its domain.
+        $brandCookie = request()->cookie(Brands::COOKIE);
+        $brand = app(Brands::class)->bySlug(is_string($brandCookie) ? $brandCookie : null);
+        $base = $brand?->practice_domain !== null ? (string) $brand->practice_domain : null;
 
         if (! SubdomainPolicy::isValid($subdomain)) {
             $errors['subdomain'] = 'Use 3–40 lowercase letters, numbers or hyphens. Some words are reserved.';
-        } elseif (Domain::query()->where('domain', SubdomainPolicy::domainFor($subdomain))->exists()) {
+        } elseif (Domain::query()->where('domain', SubdomainPolicy::domainFor($subdomain, $base))->exists()) {
             $errors['subdomain'] = 'This address is already taken.';
         }
 
@@ -56,7 +62,7 @@ class StartProviderSignup
         }
 
         if (User::query()->where('email', $ownerEmail)->orWhere('phone', $ownerPhone)->exists()) {
-            $errors['owner_email'] = 'This email or cell number already has a Clinic Flow account. Sign in and add a workspace instead.';
+            $errors['owner_email'] = 'This email or cell number already has an account. Sign in and add a workspace instead.';
         }
 
         if ($errors !== []) {
@@ -67,11 +73,14 @@ class StartProviderSignup
             'name' => trim($name),
             'type' => $type,
             'status' => ProviderStatus::PendingVerification,
+            'brand_id' => $brand === null ? null : (int) $brand->id,
         ]);
 
-        $provider->domains()->create(['domain' => SubdomainPolicy::domainFor($subdomain)]);
+        $provider->domains()->create(['domain' => SubdomainPolicy::domainFor($subdomain, $base)]);
         $ref = request()->cookie(ResellerProgramme::COOKIE);
-        app(ResellerProgramme::class)->attach($provider, is_string($ref) ? $ref : null);
+        // The brand's partner earns commission unless another reseller's link was used first.
+        $brandRef = $brand?->reseller_id !== null ? DB::connection((string) config('tenancy.database.central_connection'))->table('resellers')->where('id', (int) $brand->reseller_id)->value('code') : null;
+        app(ResellerProgramme::class)->attach($provider, is_string($ref) ? $ref : (is_string($brandRef) ? $brandRef : null));
 
         Subscription::create([
             'tenant_id' => $provider->id,

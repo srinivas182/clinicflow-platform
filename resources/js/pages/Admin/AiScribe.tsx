@@ -105,6 +105,13 @@ export default function AdminAiScribe({ providers, prices, usage }: Props) {
                                                           "southafricanorth",
                                                   )
                                                 : null,
+                                        summary_model:
+                                            p.driver === "anthropic"
+                                                ? window.prompt(
+                                                      "Model for lab explanations",
+                                                      "claude-haiku-4-5",
+                                                  )
+                                                : null,
                                         cost_per_minute:
                                             window.prompt(
                                                 "Provider cost per minute (R)",
