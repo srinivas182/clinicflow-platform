@@ -111,60 +111,102 @@ class LabWorkflow
         $patient = Patient::query()->findOrFail($order->patient_id);
 
         return DB::transaction(function () use ($order, $values, $by, $labFlags, $reportPath, $patient): LabOrder {
-            $flags = [];
-            foreach ($order->results()->get() as $result) {
-                /** @var LabResult $result */
-                $code = $result->test_code;
-                $test = $this->catalog->resolve($code);
-                $has = array_key_exists($code, $values) && $values[$code] !== '';
-
-                if (! $has) {
-                    if ($reportPath === null) {
-                        throw ValidationException::withMessages(["values.{$code}" => "Enter a result for {$result->name}, or upload the lab report."]);
-                    }
-                    $flags[] = null;
-
-                    continue;
-                }
-                if (! $test instanceof CatalogTest) {
-                    throw ValidationException::withMessages(["values.{$code}" => "{$result->name} is not in this lab's catalogue."]);
-                }
-
-                if ($test->result_type === 'numeric') {
-                    $range = Classifier::rangeFor($test, $patient);
-                    $checked = Classifier::numeric($test, $range, "values.{$code}", $values[$code]);
-                    $flag = $checked['flag'];
-                    $raised = false;
-                    if (($labFlags[$code] ?? null) === 'critical' && ! str_starts_with($flag, 'critical')) {
-                        [$flag, $raised] = ['critical', true];
-                    } elseif (($labFlags[$code] ?? null) === 'abnormal' && $flag === 'normal') {
-                        [$flag, $raised] = ['abnormal', true];
-                    }
-                    $result->forceFill([
-                        'value' => $checked['value'], 'flag' => $flag, 'raised_by_lab' => $raised, 'unit' => (string) $test->unit,
-                        'reference' => Classifier::label($range), 'ref_low' => $range?->ref_low, 'ref_high' => $range?->ref_high,
-                        'critical_low' => $range?->critical_low, 'critical_high' => $range?->critical_high,
-                    ])->save();
-                } else {
-                    $text = trim((string) $values[$code]);
-                    if ($test->result_type === 'choice' && ! in_array($text, (array) $test->choices, true)) {
-                        throw ValidationException::withMessages(["values.{$code}" => 'Choose one of: '.implode(', ', (array) $test->choices).'.']);
-                    }
-                    $flag = $labFlags[$code] ?? null;
-                    if (! in_array($flag, ['normal', 'abnormal', 'critical'], true)) {
-                        throw ValidationException::withMessages(["flags.{$code}" => "Classify {$result->name} as normal, abnormal or critical."]);
-                    }
-                    $result->forceFill(['result_text' => $text, 'flag' => $flag, 'raised_by_lab' => $flag !== 'normal'])->save();
-                }
-                $flags[] = $flag;
-            }
-
+            $flags = $this->classifyResults($order, $patient, $values, $labFlags, $reportPath);
             $classification = Classifier::order($flags);
             $order->forceFill([
                 'status' => 'resulted', 'resulted_by' => $by->id, 'classification' => $classification,
                 'has_critical' => $classification === 'critical', 'report_path' => $reportPath ?? $order->getAttribute('report_path'),
             ])->save();
             activity('lab')->performedOn($order)->withProperties(['classification' => $classification])->log('Results entered');
+
+            return $order;
+        });
+    }
+
+    /**
+     * Shared classification for staff-entered and external-lab results. Numeric values are
+     * flagged against the patient's range; a lab flag can only raise a flag, never lower it.
+     *
+     * @param  array<string, float|int|string>  $values
+     * @param  array<string, string>  $labFlags
+     * @return list<string|null>
+     */
+    private function classifyResults(LabOrder $order, Patient $patient, array $values, array $labFlags, ?string $reportPath): array
+    {
+        $flags = [];
+        foreach ($order->results()->get() as $result) {
+            /** @var LabResult $result */
+            $code = $result->test_code;
+            $test = $this->catalog->resolve($code);
+            $has = array_key_exists($code, $values) && $values[$code] !== '';
+
+            if (! $has) {
+                if ($reportPath === null) {
+                    throw ValidationException::withMessages(["values.{$code}" => "Enter a result for {$result->name}, or upload the lab report."]);
+                }
+                $flags[] = null;
+
+                continue;
+            }
+            if (! $test instanceof CatalogTest) {
+                throw ValidationException::withMessages(["values.{$code}" => "{$result->name} is not in this lab's catalogue."]);
+            }
+
+            if ($test->result_type === 'numeric') {
+                $range = Classifier::rangeFor($test, $patient);
+                $checked = Classifier::numeric($test, $range, "values.{$code}", $values[$code]);
+                $flag = $checked['flag'];
+                $raised = false;
+                if (($labFlags[$code] ?? null) === 'critical' && ! str_starts_with($flag, 'critical')) {
+                    [$flag, $raised] = ['critical', true];
+                } elseif (($labFlags[$code] ?? null) === 'abnormal' && $flag === 'normal') {
+                    [$flag, $raised] = ['abnormal', true];
+                }
+                $result->forceFill([
+                    'value' => $checked['value'], 'flag' => $flag, 'raised_by_lab' => $raised, 'unit' => (string) $test->unit,
+                    'reference' => Classifier::label($range), 'ref_low' => $range?->ref_low, 'ref_high' => $range?->ref_high,
+                    'critical_low' => $range?->critical_low, 'critical_high' => $range?->critical_high,
+                ])->save();
+            } else {
+                $text = trim((string) $values[$code]);
+                if ($test->result_type === 'choice' && ! in_array($text, (array) $test->choices, true)) {
+                    throw ValidationException::withMessages(["values.{$code}" => 'Choose one of: '.implode(', ', (array) $test->choices).'.']);
+                }
+                $flag = $labFlags[$code] ?? null;
+                if (! in_array($flag, ['normal', 'abnormal', 'critical'], true)) {
+                    throw ValidationException::withMessages(["flags.{$code}" => "Classify {$result->name} as normal, abnormal or critical."]);
+                }
+                $result->forceFill(['result_text' => $text, 'flag' => $flag, 'raised_by_lab' => $flag !== 'normal'])->save();
+            }
+            $flags[] = $flag;
+        }
+
+        return $flags;
+    }
+
+    /**
+     * Results from a connected lab system, already verified by that (accredited) lab.
+     * Classified exactly like staff-entered results, then marked verified so the normal
+     * release rules (doctor review, auto-release of normal results, critical escalation) apply.
+     *
+     * @param  array<string, float|int|string>  $values  keyed by test code
+     * @param  array<string, string>  $labFlags
+     */
+    public function applyExternalResults(LabOrder $order, array $values, array $labFlags, string $labName): LabOrder
+    {
+        if (! in_array($order->status, ['ordered', 'collected'], true)) {
+            throw ValidationException::withMessages(['order' => "This order is {$order->status}; results were already received."]);
+        }
+        $patient = Patient::query()->findOrFail($order->patient_id);
+
+        return DB::transaction(function () use ($order, $values, $labFlags, $labName, $patient): LabOrder {
+            $flags = $this->classifyResults($order, $patient, $values, $labFlags, null);
+            $classification = Classifier::order($flags);
+            $order->forceFill([
+                'status' => 'verified', 'classification' => $classification, 'has_critical' => $classification === 'critical',
+                'verified_at' => now(), 'collected_at' => $order->getAttribute('collected_at') ?? now(),
+            ])->save();
+            activity('lab')->performedOn($order)->withProperties(['classification' => $classification, 'lab' => $labName])->log('Results received from connected lab system');
 
             return $order;
         });

@@ -4,6 +4,17 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.32.0] — Sprint 17D-2a: incoming results from lab systems
+
+### Added
+- Connected lab systems send results to /api/lab/v1/hl7 (HL7 v2 ORU^R01 over HTTPS, answered with an HL7 ACK) or /api/lab/v1/fhir (DiagnosticReport with Observations, answered with an OperationOutcome); new API permission lab:write.
+- Matching by order number, then sample barcode. Results are classified exactly like staff-entered results (system flags; the lab can only raise a flag) and marked verified by the accredited lab, so the normal release rules apply (doctor review, auto-release of normal results, critical escalation).
+- Original messages kept encrypted; duplicates ignored.
+- Unmatched lab results (Lab → Unmatched results): no matching order, preliminary results, unexpected or missing tests wait for staff to match to the right order or reject with a reason. A patient or order is never created automatically.
+
+### Changed
+- Result classification shared between staff-entered and lab-system results (no behaviour change for staff entry).
+
 ## [0.31.0] — Sprint 17D-1: FHIR R4 read API with per-patient consent
 
 ### Added

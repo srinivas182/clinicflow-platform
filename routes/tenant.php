@@ -26,6 +26,7 @@ use App\Domains\Hub\Http\Controllers\NetworkController;
 use App\Domains\Identity\Http\Controllers\HandoffController;
 use App\Domains\Lab\Http\Controllers\LabCatalogController;
 use App\Domains\Lab\Http\Controllers\LabController;
+use App\Domains\Lab\Inbound\LabInboundController;
 use App\Domains\Locums\Http\Controllers\LocumController;
 use App\Domains\Messaging\Http\Controllers\MessagingSettingsController;
 use App\Domains\Messaging\Http\Controllers\WhatsAppController;
@@ -87,6 +88,14 @@ Route::middleware(['api', InitializeTenancyByDomain::class, PreventAccessFromCen
     Route::post('appointments/{appointment}/reschedule', [ApiV1Controller::class, 'reschedule'])->middleware('api.key:appointments:write')->name('appointments.reschedule');
     Route::post('appointments/{appointment}/cancel', [ApiV1Controller::class, 'cancel'])->middleware('api.key:appointments:write')->name('appointments.cancel');
     Route::post('patients/register', [ApiV1Controller::class, 'registerPatient'])->middleware('api.key:patients:write')->name('patients.register');
+});
+
+/*
+ * Connected lab systems send results (HL7 v2 over HTTPS, or FHIR); lab:write permission.
+ */
+Route::middleware(['api', InitializeTenancyByDomain::class, PreventAccessFromCentralDomains::class, 'api.key:lab:write'])->prefix('api/lab/v1')->name('practice.lab-inbound.')->group(function (): void {
+    Route::post('hl7', [LabInboundController::class, 'hl7'])->name('hl7');
+    Route::post('fhir', [LabInboundController::class, 'fhir'])->name('fhir');
 });
 
 /*
@@ -248,6 +257,8 @@ Route::middleware([
 
         Route::post('/visits/{visit}/lab-orders', [LabController::class, 'order'])->name('lab.order');
         Route::get('/lab', [LabController::class, 'worklist'])->name('lab.worklist');
+        Route::get('/lab/unmatched', [LabInboundController::class, 'queue'])->name('lab.unmatched');
+        Route::post('/lab/unmatched/{message}/{action}', [LabInboundController::class, 'act'])->whereIn('action', ['match', 'reject'])->name('lab.unmatched.act');
         Route::get('/results', [LabController::class, 'inbox'])->name('lab.inbox');
         Route::post('/lab-orders/{order}/{step}', [LabController::class, 'step'])->whereIn('step', ['collect', 'assign', 'results', 'verify', 'acknowledge', 'review', 'release', 'discuss'])->name('lab.step');
         Route::post('/visits/{visit}/network-lab-orders', [LabController::class, 'networkOrder'])->name('lab.network.order');
