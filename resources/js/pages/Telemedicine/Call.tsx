@@ -2,6 +2,7 @@ import { Head, router } from "@inertiajs/react";
 import { Room, RoomEvent, Track, type RemoteTrack } from "livekit-client";
 import { Mic, MicOff, PhoneOff, Video, VideoOff } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { CallScribe } from "@/components/CallScribe";
 import { Button } from "@/components/ui";
 
 interface Props {
@@ -51,13 +52,18 @@ export default function Call({
             fetch(stateUrl, { headers: { Accept: "application/json" } })
                 .then((r) => r.json())
                 .then(
-                    (d: { endsAt: string; extensionPayUrl: string | null }) => {
+                    (d: {
+                        endsAt: string;
+                        extensionPayUrl: string | null;
+                        scribe?: { id: string; status: string } | null;
+                    }) => {
+                        setScribe(d.scribe ?? null);
                         setEndsAt(d.endsAt);
                         setExtensionPayUrl(d.extensionPayUrl);
                     },
                 )
                 .catch(() => undefined);
-        }, 10000);
+        }, 5000);
         return () => {
             clearInterval(t);
             clearInterval(s);
@@ -79,6 +85,16 @@ export default function Call({
     };
     const remoteRef = useRef<HTMLDivElement>(null);
     const localRef = useRef<HTMLDivElement>(null);
+    const [scribe, setScribe] = useState<{ id: string; status: string } | null>(
+        null,
+    );
+    const refreshScribe = () =>
+        fetch(stateUrl, { headers: { Accept: "application/json" } })
+            .then((r) => r.json())
+            .then((d: { scribe?: { id: string; status: string } | null }) =>
+                setScribe(d.scribe ?? null),
+            )
+            .catch(() => undefined);
     const roomRef = useRef<Room | null>(null);
     const [joined, setJoined] = useState(false);
     const [otherHere, setOtherHere] = useState(false);
@@ -235,6 +251,15 @@ export default function Call({
                     </a>
                 )}
             </header>
+            {joined && (
+                <CallScribe
+                    role={role}
+                    appointmentId={appointmentId}
+                    roomRef={roomRef}
+                    scribe={scribe}
+                    onChange={refreshScribe}
+                />
+            )}
             <main className="relative flex flex-1 items-center justify-center px-6 pb-6">
                 {!joined ? (
                     <div className="max-w-md text-center">

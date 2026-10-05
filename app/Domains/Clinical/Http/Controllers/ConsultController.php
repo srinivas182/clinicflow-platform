@@ -19,6 +19,7 @@ use App\Domains\Prescribing\Models\Medicine;
 use App\Domains\Prescribing\Models\Prescription;
 use App\Domains\Prescribing\Models\PrescriptionItem;
 use App\Domains\Prescribing\Support\SafetyIssue;
+use App\Domains\Scribe\Actions\AiScribe;
 use App\Domains\Visits\Enums\VisitStage;
 use App\Domains\Visits\Models\Visit;
 use App\Http\Controllers\Controller;
@@ -26,6 +27,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -50,7 +52,13 @@ class ConsultController extends Controller
         $draft = $prescriptions->firstWhere('status', Prescription::DRAFT);
         $triage = TriageRecord::query()->where('visit_id', $visit->id)->first();
 
+        $scribeRow = DB::table('scribe_sessions')->where('consultation_id', $consultation->id)->whereIn('status', ['created', 'transcribed', 'drafted', 'failed'])->latest('created_at')->first();
+        $allowance = app(AiScribe::class)->allowance((string) tenant('id'));
+
         return Inertia::render('Consult/Show', [
+            'scribe' => ['enabled' => $allowance['enabled'], 'left' => $allowance['left'], 'declinedBefore' => $visit->patient->getAttribute('ai_scribe_declined_at') !== null,
+                'session' => $scribeRow === null ? null : ['id' => $scribeRow->id, 'status' => $scribeRow->status, 'error' => $scribeRow->error,
+                    'draft' => $scribeRow->status === 'drafted' ? app(AiScribe::class)->draftFor($scribeRow->id) : null]],
             'visit' => ['id' => $visit->id, 'ticket' => $visit->ticket, 'stage' => $visit->stage->value],
             'patient' => [
                 'name' => $visit->patient->fullName(),

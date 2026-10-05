@@ -4,6 +4,14 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.35.0] — Sprint 18A-1b: AI scribe for in-person, video/audio and chat consults
+
+### Added
+- Consultation page: AI scribe panel — the doctor asks, confirms the patient agreed (or records the decline), records, and reviews the draft; "Use draft in note" fills the consultation fields for editing and saving; suggested ICD-10 codes are added one by one. A note shows when the patient declined before.
+- Video and audio calls: the doctor asks; the patient agrees or declines on their own screen; both see "AI scribe on"; the doctor's browser records both sides of the call; nothing runs while waiting for consent.
+- Chat consults: the doctor asks in the chat, the patient agrees or declines there, then the draft is written from the chat messages (no speech-to-text; counts as one minute).
+- `scribe:purge` (daily): transcripts and drafts deleted after 30 days; accepted text stays in the consultation note.
+
 ## [0.34.0] — Sprint 18A-1a: AI scribe — providers, billing and drafting
 
 ### Added

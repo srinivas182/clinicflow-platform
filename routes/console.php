@@ -25,3 +25,4 @@ Schedule::command('packages:expire')->dailyAt('01:00')->onOneServer();
 Schedule::command('status:check')->everyMinute()->withoutOverlapping()->onOneServer();
 Schedule::command('locums:remind')->hourly()->onOneServer();
 Schedule::command('webhooks:deliver')->everyMinute()->withoutOverlapping()->onOneServer();
+Schedule::command('scribe:purge')->dailyAt('02:30')->onOneServer();

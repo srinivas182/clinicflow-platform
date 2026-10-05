@@ -75,6 +75,65 @@ class AiScribe
     }
 
     /**
+     * Video, audio or chat consult: ask the patient on their own screen. Nothing runs until they agree.
+     */
+    public function request(Consultation $consultation, string $appointmentId, int $staffId, string $source): string
+    {
+        if (! in_array($source, ['call', 'chat'], true)) {
+            throw ValidationException::withMessages(['scribe' => 'Unknown consult type.']);
+        }
+        if (! $this->allowance((string) tenant('id'))['enabled']) {
+            throw ValidationException::withMessages(['scribe' => 'The AI scribe is not part of this practice\'s package. Add it under Billing.']);
+        }
+        DB::table('scribe_sessions')->where('appointment_id', $appointmentId)->where('status', 'awaiting')->update(['status' => 'discarded', 'updated_at' => now()]);
+        $id = strtolower((string) Str::ulid());
+        DB::table('scribe_sessions')->insert(['id' => $id, 'consultation_id' => $consultation->id, 'patient_id' => $consultation->patient_id, 'staff_id' => $staffId,
+            'appointment_id' => $appointmentId, 'source' => $source, 'consent_at' => null, 'status' => 'awaiting', 'created_at' => now(), 'updated_at' => now()]);
+
+        return $id;
+    }
+
+    /**
+     * The patient's answer from their own screen.
+     */
+    public function answer(string $sessionId, string $patientId, bool $agree): void
+    {
+        $session = DB::table('scribe_sessions')->where('id', $sessionId)->where('patient_id', $patientId)->where('status', 'awaiting')->first();
+        if ($session === null) {
+            throw ValidationException::withMessages(['scribe' => 'There is no AI scribe request to answer.']);
+        }
+        DB::table('scribe_sessions')->where('id', $sessionId)->update(['status' => $agree ? 'created' : 'declined', 'consent_at' => $agree ? now() : null, 'updated_at' => now()]);
+        Patient::query()->whereKey($patientId)->update(['ai_scribe_declined_at' => $agree ? null : now()]);
+        activity('scribe')->withProperties(['session' => $sessionId, 'by' => 'patient'])->log($agree ? 'Patient agreed to the AI scribe on their own screen' : 'Patient declined the AI scribe');
+    }
+
+    /**
+     * Chat consult: draft straight from the chat messages (no speech-to-text); counts as one minute.
+     */
+    public function fromChat(string $sessionId): void
+    {
+        $session = DB::table('scribe_sessions')->where('id', $sessionId)->where('source', 'chat')->first();
+        if ($session === null || $session->status !== 'created' || $session->consent_at === null) {
+            throw ValidationException::withMessages(['scribe' => 'The patient has not agreed to the AI scribe for this chat.']);
+        }
+        $thread = DB::table('chat_threads')->where('appointment_id', $session->appointment_id)->first();
+        $messages = $thread === null ? collect() : DB::table('chat_messages')->where('chat_thread_id', $thread->id)->orderBy('id')->get(['sender', 'body']);
+        $text = $messages->map(fn ($m) => ucfirst((string) $m->sender).': '.(string) $m->body)->implode("\n");
+        if (trim($text) === '') {
+            throw ValidationException::withMessages(['scribe' => 'There are no chat messages to draft from yet.']);
+        }
+        $tenantId = (string) tenant('id');
+        if (! $this->affordable($tenantId, 1)) {
+            throw ValidationException::withMessages(['scribe' => 'Not enough AI scribe minutes or wallet balance. Top up the wallet.']);
+        }
+        $billed = $this->bill($tenantId, $sessionId, 1);
+        $patient = Patient::query()->whereKey((string) $session->patient_id)->firstOrFail();
+        DB::table('scribe_sessions')->where('id', $sessionId)->update(['status' => 'transcribed', 'minutes_billed' => 1, 'wallet_cents' => $billed['wallet_cents'],
+            'transcript' => Crypt::encryptString($this->withoutNames($patient, $text)), 'updated_at' => now()]);
+        $this->draft($sessionId);
+    }
+
+    /**
      * Transcribe, bill, and draft. $claimedSeconds (from the browser) is only used to refuse
      * recordings the practice cannot pay for before anything is sent; billing uses the provider's measured length.
      */
@@ -115,8 +174,7 @@ class AiScribe
         $seconds = min($max, max(1, $heard['seconds'] ?: $claimedSeconds));
         $billed = $this->bill($tenantId, $sessionId, (int) ceil($seconds / 60));
         $patient = Patient::query()->whereKey((string) $session->patient_id)->firstOrFail();
-        // Remove the patient's names before the text leaves for the note writer.
-        $transcript = (string) preg_replace('/\b('.implode('|', array_map(fn ($n) => preg_quote($n, '/'), array_filter(array_merge(explode(' ', (string) $patient->first_names), [(string) $patient->surname]), fn ($n) => mb_strlen($n) > 1))).')\b/iu', 'the patient', $heard['text']);
+        $transcript = $this->withoutNames($patient, $heard['text']);
         DB::table('scribe_sessions')->where('id', $sessionId)->update(['status' => 'transcribed', 'seconds' => $seconds, 'minutes_billed' => $billed['minutes'], 'wallet_cents' => $billed['wallet_cents'],
             'transcript' => Crypt::encryptString($transcript), 'speech_driver' => $speech->driver, 'updated_at' => now()]);
 
@@ -159,6 +217,14 @@ class AiScribe
         DB::table('scribe_sessions')->where('id', $sessionId)->whereIn('status', ['drafted', 'transcribed', 'failed'])
             ->update(['status' => $accepted ? 'accepted' : 'discarded', 'accepted_at' => $accepted ? now() : null, 'updated_at' => now()]);
         activity('scribe')->withProperties(['session' => $sessionId])->log($accepted ? 'AI draft accepted into the note for review and saving' : 'AI draft discarded');
+    }
+
+    /** Removes the patient's names before any text leaves for the note writer. */
+    private function withoutNames(Patient $patient, string $text): string
+    {
+        $names = array_filter(array_merge(explode(' ', (string) $patient->first_names), [(string) $patient->surname]), fn ($n) => mb_strlen($n) > 1);
+
+        return $names === [] ? $text : (string) preg_replace('/\b('.implode('|', array_map(fn ($n) => preg_quote($n, '/'), $names)).')\b/iu', 'the patient', $text);
     }
 
     private function affordable(string $tenantId, int $minutes): bool

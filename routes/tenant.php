@@ -50,6 +50,7 @@ use App\Domains\Scheduling\Http\Controllers\AppointmentController;
 use App\Domains\Scheduling\Http\Controllers\CalendarController;
 use App\Domains\Scheduling\Http\Controllers\RosterController;
 use App\Domains\Scribe\Http\ScribeController;
+use App\Domains\Scribe\Http\ScribeSessionController;
 use App\Domains\Telemedicine\Http\Controllers\ChatController;
 use App\Domains\Telemedicine\Http\Controllers\OnlineConsultController;
 use App\Domains\Telemedicine\Http\Controllers\TeleConsultController;
@@ -166,6 +167,7 @@ Route::middleware([
             Route::get('/pharmacies', [DeliveryController::class, 'portalCompare'])->name('pharmacies');
             Route::post('/care/sharing', [PortalCareController::class, 'sharing'])->name('care.sharing');
             Route::post('/care/connected', [PortalCareController::class, 'connected'])->name('care.connected');
+            Route::post('/scribe/{session}/{answer}', [ScribeSessionController::class, 'patientAnswer'])->whereIn('answer', ['agree', 'decline'])->name('scribe.answer');
             Route::post('/whatsapp', [WhatsAppController::class, 'portalOptIn'])->middleware('throttle:10,1')->name('whatsapp');
             Route::post('/results/{order}/request', [PortalResultsController::class, 'request'])->middleware('throttle:10,1')->name('results.request');
             Route::get('/results/{order}/download/{kind}', [PortalResultsController::class, 'download'])->whereIn('kind', ['report', 'lab'])->name('results.download');
@@ -318,6 +320,11 @@ Route::middleware([
         Route::get('/me/calendar/{driver}/connect', [CalendarController::class, 'connect'])->whereIn('driver', ['google', 'microsoft'])->name('calendar.connect');
         Route::put('/me/calendar', [CalendarController::class, 'update'])->name('calendar.update');
         Route::get('/settings/ai-scribe', [ScribeController::class, 'practice'])->name('ai-scribe.settings');
+        Route::post('/consultations/{consultation}/scribe/start', [ScribeSessionController::class, 'start'])->name('scribe.start');
+        Route::post('/appointments/{appointment}/scribe/request', [ScribeSessionController::class, 'requestConsent'])->name('scribe.request');
+        Route::get('/scribe/{session}', [ScribeSessionController::class, 'show'])->name('scribe.show');
+        Route::post('/scribe/{session}/audio', [ScribeSessionController::class, 'audio'])->middleware('throttle:20,1')->name('scribe.audio');
+        Route::post('/scribe/{session}/{action}', [ScribeSessionController::class, 'act'])->whereIn('action', ['chat', 'redraft', 'accept', 'discard'])->name('scribe.act');
         Route::post('/settings/ai-scribe', [ScribeController::class, 'toggle'])->name('ai-scribe.toggle');
         Route::get('/settings/api', [ApiKeysController::class, 'index'])->name('api.keys');
         Route::post('/settings/api/keys', [ApiKeysController::class, 'store'])->name('api.keys.store');
