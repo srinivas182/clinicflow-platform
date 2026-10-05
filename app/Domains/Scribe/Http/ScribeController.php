@@ -82,11 +82,11 @@ class ScribeController extends Controller
     public function saveProvider(Request $request, string $driver): RedirectResponse
     {
         abort_unless(array_key_exists($driver, AiProvider::DRIVERS), 404);
-        $data = $request->validate(['api_key' => ['nullable', 'string', 'max:300'], 'model' => ['nullable', 'string', 'max:60'], 'region' => ['nullable', 'string', 'max:40'],
+        $data = $request->validate(['api_key' => ['nullable', 'string', 'max:300'], 'model' => ['nullable', 'string', 'max:60'], 'summary_model' => ['nullable', 'string', 'max:60'], 'region' => ['nullable', 'string', 'max:40'],
             'enabled' => ['boolean'], 'cost_per_minute' => ['nullable', 'numeric', 'min:0']]);
         $p = AiProvider::query()->firstOrNew(['driver' => $driver], ['kind' => AiProvider::DRIVERS[$driver]]);
         $creds = (array) ($p->credentials ?? []);
-        foreach (['api_key', 'model', 'region'] as $k) {
+        foreach (['api_key', 'model', 'summary_model', 'region'] as $k) {
             if (filled($data[$k] ?? null)) {
                 $creds[$k] = (string) $data[$k];
             }

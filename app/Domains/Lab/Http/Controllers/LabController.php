@@ -9,6 +9,7 @@ use App\Domains\Hub\Models\HubLabOrder;
 use App\Domains\Identity\Enums\Permission;
 use App\Domains\Identity\Models\Staff;
 use App\Domains\Lab\Actions\LabCatalog;
+use App\Domains\Lab\Actions\LabExplainer;
 use App\Domains\Lab\Actions\LabWorkflow;
 use App\Domains\Lab\Models\CatalogTest;
 use App\Domains\Lab\Models\LabOrder;
@@ -132,6 +133,28 @@ class LabController extends Controller
         ]);
     }
 
+    /**
+     * Draft a plain-language explanation for the doctor to edit before releasing (AI, one minute).
+     */
+    public function explain(Request $request, LabOrder $order, LabExplainer $explainer): JsonResponse
+    {
+        $this->authorize(Permission::CONSULTS_WRITE);
+        $staff = $this->staff($request);
+        $covers = Staff::query()->whereKey($order->ordering_staff_id)->where('covering_staff_id', $staff->id)->whereDate('away_until', '>=', today())->exists();
+        abort_unless($order->ordering_staff_id === $staff->id || $covers, 403, 'Only the ordering doctor or their cover can act on these results.');
+
+        return response()->json(['text' => $explainer->draft($order, $staff)]);
+    }
+
+    /** Marks a released note as AI-assisted and reviewed by this doctor (or clears the marker). */
+    private function releaseWithMarker(Request $request, LabOrder $order, Staff $staff): LabOrder
+    {
+        $ai = $request->boolean('ai_assisted') && filled($request->input('note'));
+        $order->forceFill(['note_ai_assisted' => $ai, 'note_reviewed_by' => $ai ? $staff->id : null])->save();
+
+        return $order;
+    }
+
     public function setCover(Request $request): RedirectResponse
     {
         $this->authorize(Permission::CONSULTS_WRITE);
@@ -157,7 +180,7 @@ class LabController extends Controller
             'verify' => $lab->verify($order, $staff),
             'acknowledge' => $lab->acknowledgeCritical($order, $staff, $request->string('action')->toString()),
             'review' => $lab->review($order, $staff, $request->string('comment')->toString() ?: null),
-            'release' => $lab->release($order->reviewed_at === null ? $lab->review($order, $staff, null) : $order, $staff, $request->string('note')->toString() ?: null),
+            'release' => $this->releaseWithMarker($request, $lab->release($order->reviewed_at === null ? $lab->review($order, $staff, null) : $order, $staff, $request->string('note')->toString() ?: null), $staff),
             'discuss' => $lab->discuss($order, $staff, $request->string('note')->toString()),
             default => abort(404),
         };

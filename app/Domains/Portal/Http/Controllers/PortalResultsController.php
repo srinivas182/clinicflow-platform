@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Portal\Http\Controllers;
 
+use App\Domains\Identity\Models\Staff;
 use App\Domains\Lab\Actions\LabReleaseRules;
 use App\Domains\Lab\Models\LabOrder;
 use App\Domains\Lab\Models\LabResult;
@@ -44,6 +45,7 @@ class PortalResultsController extends Controller
                         'released' => 'Results ready', 'rejected' => 'The lab could not do this test', default => $o->status,
                     },
                     'note' => in_array($o->status, ['discuss', 'released', 'rejected'], true) ? $o->getAttribute('doctor_note') : null,
+                    'noteAi' => (bool) $o->getAttribute('note_ai_assisted') ? (string) Staff::query()->whereKey($o->getAttribute('note_reviewed_by'))->value('name') : null,
                     'comment' => $released ? $o->doctor_comment : null,
                     'results' => $released ? $o->results->map(fn (LabResult $r) => ['name' => $r->name, 'value' => $r->getAttribute('result_text') ?? $r->value, 'unit' => $r->unit, 'reference' => $r->reference, 'flag' => $r->flag])->values() : [],
                     'canRequest' => $o->status === 'verified' && $o->getAttribute('patient_requested_at') === null && $o->verified_at !== null && $o->verified_at->lte(now()->subHours($after)),

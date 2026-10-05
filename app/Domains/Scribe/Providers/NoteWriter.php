@@ -19,6 +19,34 @@ final class NoteWriter
         .'Use concise clinical English. Suggest ICD-10 codes only for conditions the doctor clearly stated. '
         .'Reply with JSON only: {"history": string, "examination": string, "assessment": string, "plan": string, "icd10": [{"code": string, "description": string}]}.';
 
+    public const EXPLAIN = 'You write short, plain-language explanations of lab results for a patient in South Africa, to be reviewed and edited by their doctor before release. '
+        .'Use simple English (about a grade 8 reading level), warm and calm, no more than 150 words. Explain what each test measures and whether the result is in the usual range. '
+        .'Do not diagnose, do not suggest treatment or medicine changes, and do not add anything that is not in the results or the doctor\'s comment. '
+        .'If the doctor gave a comment, reflect it. End with: "Please speak to your doctor if you have any questions." Reply with the explanation text only.';
+
+    /**
+     * Plain-language explanation of released lab results (draft for the doctor).
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    public static function explain(AiProvider $provider, array $payload): string
+    {
+        $response = Http::timeout(60)->withHeaders(['x-api-key' => $provider->credential('api_key'), 'anthropic-version' => '2023-06-01'])
+            ->post($provider->credential('base_url', 'https://api.anthropic.com').'/v1/messages', [
+                'model' => $provider->credential('summary_model', 'claude-haiku-4-5'), 'max_tokens' => 600, 'system' => self::EXPLAIN,
+                'messages' => [['role' => 'user', 'content' => (string) json_encode($payload, JSON_PRETTY_PRINT)]],
+            ]);
+        if (! $response->successful()) {
+            throw new RuntimeException('The explanation could not be written (Claude HTTP '.$response->status().').');
+        }
+        $text = trim((string) collect((array) $response->json('content', []))->where('type', 'text')->pluck('text')->implode(''));
+        if ($text === '') {
+            throw new RuntimeException('The explanation came back empty. Try again.');
+        }
+
+        return $text;
+    }
+
     /**
      * @return array{history: string, examination: string, assessment: string, plan: string, icd10: list<array{code: string, description: string}>}
      */
