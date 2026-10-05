@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Clinical\Http\Controllers;
 
+use App\Domains\Api\Fhir\FhirConsents;
 use App\Domains\Clinical\Actions\BreakGlass;
 use App\Domains\Clinical\Actions\ClinicianMessaging;
 use App\Domains\Clinical\Actions\Referrals;
@@ -55,6 +56,9 @@ class CareController extends Controller
             'pregnancy' => $pregnancy->summary($patient),
             'registrations' => DB::table('chronic_registrations')->where('patient_id', $patient->id)->latest('id')->get(),
             'shared' => $consent->categories($patient->getAttribute('hub_identity_id'), $this->provider()->id),
+            'connected' => DB::table('api_keys')->whereNull('revoked_at')->where('scopes', 'like', '%fhir:read%')->orderBy('name')->get()
+                ->map(fn ($k) => ['key' => (int) $k->id, 'name' => (string) $k->name, 'allowed' => app(FhirConsents::class)->allowed($patient->id, (int) $k->id)])->values(),
+            'fhirCategories' => FhirConsents::CATEGORIES,
             'specialties' => Referrals::SPECIALTIES,
             'referrals' => Referral::query()->where('patient_id', $patient->id)->latest()->get(['id', 'direction', 'other_name', 'specialty', 'status', 'urgency', 'feedback', 'created_at']),
         ]);
@@ -79,6 +83,25 @@ class CareController extends Controller
         };
 
         return back()->with('success', 'Saved.');
+    }
+
+    /**
+     * Staff record the patient's consent (e.g. a signed paper form) for a connected system, or withdraw it.
+     */
+    public function connected(Request $request, Patient $patient, FhirConsents $consents): RedirectResponse
+    {
+        $this->authorize(Permission::CONSULTS_WRITE);
+        $data = $request->validate(['key_id' => ['required', 'integer'], 'categories' => ['array'], 'categories.*' => ['string'], 'confirmed' => ['boolean']]);
+        $categories = array_values($data['categories'] ?? []);
+        if ($categories === []) {
+            $consents->revoke($patient->id, (int) $data['key_id']);
+
+            return back()->with('success', 'Sharing withdrawn.');
+        }
+        abort_unless((bool) ($data['confirmed'] ?? false), 422, 'Confirm that the patient gave this consent.');
+        $consents->grant($patient->id, (int) $data['key_id'], $categories, 'staff', (int) $request->user()?->getAuthIdentifier());
+
+        return back()->with('success', 'Patient consent recorded.');
     }
 
     public function resolveProblem(Problem $problem, ChronicCare $chronic): RedirectResponse

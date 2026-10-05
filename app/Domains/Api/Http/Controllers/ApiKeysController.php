@@ -53,6 +53,11 @@ class ApiKeysController extends Controller
         $data = $request->validate(['name' => ['required', 'string', 'max:80'], 'scopes' => ['required', 'array', 'min:1'], 'scopes.*' => ['string'],
             'allowed_ips' => ['nullable', 'string', 'max:500'], 'expires_at' => ['nullable', 'date']]);
         $ips = array_values(array_filter(array_map('trim', preg_split('/[\s,]+/', (string) ($data['allowed_ips'] ?? '')) ?: [])));
+        // Clinical-record access may only be granted by the practice owner.
+        if (in_array('fhir:read', (array) $data['scopes'], true)) {
+            $role = Membership::query()->where('tenant_id', tenant('id'))->where('user_id', $request->user()?->getAuthIdentifier())->value('role');
+            abort_unless(($role instanceof StaffRole ? $role : StaffRole::tryFrom((string) $role)) === StaffRole::Owner, 403, 'Only the practice owner can create a key with clinical-record (FHIR) access.');
+        }
         $created = $keys->create($data['name'], array_values($data['scopes']), $ips, $data['expires_at'] ?? null, (int) $request->user()?->getAuthIdentifier());
 
         // Shown once only; it is never stored in readable form.

@@ -1,5 +1,12 @@
 <?php
 
+use App\Domains\Billing\Actions\RecordPayment;
+use App\Domains\Billing\Enums\PaymentMethod;
+use App\Domains\Billing\Models\Invoice;
+use App\Domains\Clinical\Actions\CompleteConsultation;
+use App\Domains\Clinical\Actions\SaveConsultation;
+use App\Domains\Clinical\Models\Consultation;
+use App\Domains\Identity\Contracts\OtpSender;
 use App\Domains\Patients\Actions\RegisterPatient;
 use App\Domains\Patients\Enums\Channel;
 use App\Domains\Patients\Enums\ConsentGivenBy;
@@ -10,6 +17,15 @@ use App\Domains\Patients\Support\SaIdNumber;
 use App\Domains\Platform\Enums\ProviderStatus;
 use App\Domains\Platform\Enums\ProviderType;
 use App\Domains\Platform\Models\Provider;
+use App\Domains\Prescribing\Actions\RequestSigningPin;
+use App\Domains\Prescribing\Actions\SaveDraftPrescription;
+use App\Domains\Prescribing\Actions\SignPrescription;
+use App\Domains\Prescribing\Models\Medicine;
+use App\Domains\Prescribing\Models\Prescription;
+use App\Domains\Visits\Actions\CheckInPatient;
+use App\Domains\Visits\Actions\TransitionVisit;
+use App\Domains\Visits\Enums\PayerType;
+use App\Domains\Visits\Enums\VisitStage;
 use Tests\TestCase;
 
 /*
@@ -77,4 +93,52 @@ function registerTestPatient(string $first, string $idDob, ?string $scheme = nul
         guardianName: null, guardianRelationship: null, guardianCell: null, popiaConsent: true, treatmentConsent: true,
         consentGivenBy: ConsentGivenBy::Patient, maturityConfirmed: false, medicalAidScheme: $scheme,
     ));
+}
+
+/** Pharmacy / prescribing helpers shared by several test files. */
+function medicineId(string $name): int
+{
+    return (int) Medicine::query()->where('name', $name)->value('id');
+}
+
+/**
+ * Checks a patient in, takes them through triage to the doctor and returns the consultation.
+ */
+function seenByDoctor(object $t, Patient $patient, PayerType $payer): Consultation
+{
+    $visit = app(CheckInPatient::class)->handle($patient, $payer);
+    if ($payer === PayerType::Cash) {
+        app(RecordPayment::class)->handle(Invoice::query()->where('visit_id', $visit->id)->sole(), PaymentMethod::Cash, 52000);
+    }
+    app(TransitionVisit::class)->handle($visit, VisitStage::Triage);
+    app(TransitionVisit::class)->handle($visit, VisitStage::Doctor);
+    $visit->forceFill(['doctor_id' => $t->doctor->id, 'called_at' => now()])->save();
+    $consult = Consultation::create(['visit_id' => $visit->id, 'patient_id' => $patient->id, 'doctor_staff_id' => $t->doctor->id]);
+    app(SaveConsultation::class)->handle($consult, ['assessment' => 'Seen'], [['code' => 'J20.9', 'primary' => true]], 1);
+
+    return $consult->fresh();
+}
+
+/**
+ * @param  list<array{0: string, 1: int}>  $lines  [medicine name, quantity]
+ */
+function signedScript(object $t, Consultation $consult, array $lines): Prescription
+{
+    $draft = app(SaveDraftPrescription::class)->handle($consult, $t->doctor, array_map(fn (array $l) => [
+        'medicine_id' => medicineId($l[0]), 'dose' => 'As directed', 'quantity' => $l[1], 'repeats' => 0,
+    ], $lines));
+    app(RequestSigningPin::class)->handle($draft, $t->doctor);
+
+    return app(SignPrescription::class)->handle($draft, $t->doctor, app(OtpSender::class)->sent[$t->doctorUser->id]);
+}
+
+function atPharmacy(object $t, PayerType $payer, array $lines, string $id = '850101', string $cell = '0821112222'): array
+{
+    $patient = registerTestPatient('Sipho', $id, $payer === PayerType::MedicalAid ? 'Discovery Health' : null, $cell);
+    $patient->forceFill(['medical_aid_number' => $payer === PayerType::MedicalAid ? '12345678' : null])->save();
+    $consult = seenByDoctor($t, $patient, $payer);
+    $script = signedScript($t, $consult, $lines);
+    app(CompleteConsultation::class)->handle($consult);
+
+    return [$consult->visit->fresh(), $script, $patient];
 }

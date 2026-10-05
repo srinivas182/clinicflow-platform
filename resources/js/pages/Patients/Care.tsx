@@ -1,6 +1,7 @@
 import { Head, router } from "@inertiajs/react";
 import { Flash } from "@/components/Flash";
 import { Badge, Button, Card } from "@/components/ui";
+import { ConnectedSystems } from "@/components/ConnectedSystems";
 import { AppShell } from "@/layouts/AppShell";
 
 type Row = Record<string, string | number | boolean | null>;
@@ -39,6 +40,8 @@ interface Props {
     shared: string[];
     specialties: string[];
     referrals: Row[];
+    connected?: { key: number; name: string; allowed: string[] }[];
+    fhirCategories?: Record<string, string>;
 }
 
 const ask = (label: string, initial = "") =>
@@ -56,6 +59,8 @@ export default function Care({
     shared,
     specialties,
     referrals,
+    connected = [],
+    fhirCategories = {},
 }: Props) {
     const act = (action: string, data: Record<string, unknown>) =>
         router.post(`/patients/${patient.id}/care/${action}`, data as never, {
@@ -74,9 +79,17 @@ export default function Care({
             <Flash />
             <button
                 className="mb-3 text-xs text-teal-deep"
-                onClick={() => router.post(`/patients/${patient.id}/whatsapp`, { opt_in: !patient.whatsappOptIn }, { preserveScroll: true })}
+                onClick={() =>
+                    router.post(
+                        `/patients/${patient.id}/whatsapp`,
+                        { opt_in: !patient.whatsappOptIn },
+                        { preserveScroll: true },
+                    )
+                }
             >
-                {patient.whatsappOptIn ? 'WhatsApp: opted in (withdraw)' : 'Record WhatsApp opt-in'}
+                {patient.whatsappOptIn
+                    ? "WhatsApp: opted in (withdraw)"
+                    : "Record WhatsApp opt-in"}
             </button>
             <div className="grid grid-cols-2 gap-4">
                 <Card
@@ -375,6 +388,14 @@ export default function Care({
                     </ul>
                 </Card>
             </div>
+            <ConnectedSystems
+                title="Connected systems (patient consent)"
+                intro="Record what the patient agreed other systems may read (e.g. a signed consent form). Patients can change this themselves in their portal. Consultation notes are never shared."
+                systems={connected}
+                categories={fhirCategories}
+                postUrl={`/patients/${patient.id}/connected`}
+                staff
+            />
         </AppShell>
     );
 }

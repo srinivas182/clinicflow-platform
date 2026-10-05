@@ -24,6 +24,7 @@ class ApiKeys
         'prices:read' => 'Online consult prices and prepaid packages',
         'appointments:write' => 'Book, reschedule and cancel appointments',
         'patients:write' => 'Register patients (with consent obtained by your system)',
+        'fhir:read' => 'Clinical record (FHIR) — only patients who consented to this system (owner only)',
     ];
 
     /**

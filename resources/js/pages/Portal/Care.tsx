@@ -2,6 +2,7 @@ import { Head, router } from "@inertiajs/react";
 import { useState } from "react";
 import { Flash } from "@/components/Flash";
 import { Badge, Button, Card } from "@/components/ui";
+import { ConnectedSystems } from "@/components/ConnectedSystems";
 import { PortalLayout } from "@/layouts/PortalLayout";
 
 interface Props {
@@ -38,6 +39,12 @@ interface Props {
         flu: boolean;
         flags: string[];
     }[];
+    connected?: {
+        key: number;
+        name: string;
+        patients: Record<string, string[]>;
+    }[];
+    fhirCategories?: Record<string, string>;
 }
 
 export default function PortalCare({
@@ -51,6 +58,8 @@ export default function PortalCare({
     categories,
     whatsapp,
     wellness = [],
+    connected = [],
+    fhirCategories = {},
 }: Props) {
     const [chosen, setChosen] = useState<string[]>(sharing);
 
@@ -230,6 +239,22 @@ export default function PortalCare({
                     ))}
                 </Card>
             )}
+            {connected.length > 0 &&
+                Object.keys(connected[0]?.patients ?? {}).map((pid) => (
+                    <ConnectedSystems
+                        key={pid}
+                        title="Connected systems"
+                        intro="Other health systems your practice connected to. They can read only what you allow here, and every time they do, it shows below. You can stop sharing at any time. Your consultation notes are never shared."
+                        systems={connected.map((c) => ({
+                            key: c.key,
+                            name: c.name,
+                            allowed: c.patients[pid] ?? [],
+                        }))}
+                        categories={fhirCategories}
+                        postUrl="/my/care/connected"
+                        extra={{ patient_id: pid }}
+                    />
+                ))}
         </PortalLayout>
     );
 }

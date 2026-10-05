@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Portal\Http\Controllers;
 
+use App\Domains\Api\Fhir\FhirConsents;
 use App\Domains\Clinical\Care\Pregnancy;
 use App\Domains\Clinical\Care\Prevention;
 use App\Domains\Clinical\Models\MessageThread;
@@ -51,6 +52,8 @@ class PortalCareController extends Controller
             'pregnancy' => $pregnancy->summary($patient),
             'sharing' => $consent->categories($patient->getAttribute('hub_identity_id'), $provider->id),
             'categories' => ShareConsent::CATEGORIES,
+            'connected' => $this->connectedSystems(array_values($ids->map(fn ($v) => (string) $v)->all())),
+            'fhirCategories' => FhirConsents::CATEGORIES,
             // The employee's own wellness screening results (never shared with the employer).
             'wellness' => DB::table('wellness_screenings')->join('wellness_registrations', 'wellness_registrations.id', '=', 'wellness_screenings.wellness_registration_id')
                 ->join('wellness_events', 'wellness_events.id', '=', 'wellness_registrations.wellness_event_id')->whereIn('wellness_registrations.patient_id', $ids)
@@ -59,6 +62,35 @@ class PortalCareController extends Controller
                     'glucose' => $w->glucose, 'cholesterol' => $w->cholesterol, 'bmi' => $w->bmi, 'flu' => (bool) $w->flu_vaccinated, 'flags' => json_decode((string) $w->flags, true)])->values(),
             'whatsapp' => ['available' => WhatsAppRouter::enabledFor($provider->id), 'optedIn' => $patient->getAttribute('whatsapp_opt_in_at') !== null],
         ]);
+    }
+
+    /**
+     * Systems the practice has connected with clinical-record (FHIR) access, and what each patient profile has allowed.
+     *
+     * @param  list<string>  $patientIds
+     * @return list<array<string, mixed>>
+     */
+    private function connectedSystems(array $patientIds): array
+    {
+        $consents = app(FhirConsents::class);
+
+        $systems = DB::table('api_keys')->whereNull('revoked_at')->where('scopes', 'like', '%fhir:read%')->orderBy('name')->get()
+            ->map(fn ($k) => ['key' => (int) $k->id, 'name' => (string) $k->name,
+                'patients' => collect($patientIds)->mapWithKeys(fn (string $id) => [$id => $consents->allowed($id, (int) $k->id)])->all()])->values()->all();
+
+        return array_values($systems);
+    }
+
+    public function connected(Request $request, PortalSignIn $signIn, FhirConsents $consents): RedirectResponse
+    {
+        $data = $request->validate(['patient_id' => ['required', 'string'], 'key_id' => ['required', 'integer'], 'categories' => ['array'], 'categories.*' => ['string']]);
+        $mine = $signIn->profiles((string) $request->session()->get('portal_cell'))->pluck('id')->map(fn ($v) => (string) $v)->all();
+        abort_unless(in_array($data['patient_id'], $mine, true), 403);
+        $categories = array_values($data['categories'] ?? []);
+        $categories === [] ? $consents->revoke($data['patient_id'], (int) $data['key_id'])
+            : $consents->grant($data['patient_id'], (int) $data['key_id'], $categories, 'portal', null);
+
+        return back()->with('success', $categories === [] ? 'Sharing withdrawn.' : 'Sharing updated.');
     }
 
     public function sharing(Request $request, PortalSignIn $signIn, ShareConsent $consent): RedirectResponse

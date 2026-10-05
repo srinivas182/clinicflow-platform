@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Domains\Api\Fhir\FhirR4Controller;
 use App\Domains\Api\Http\Controllers\ApiKeysController;
 use App\Domains\Api\Http\Controllers\ApiV1Controller;
 use App\Domains\Billing\Http\Controllers\BillingSettingsController;
@@ -88,6 +89,16 @@ Route::middleware(['api', InitializeTenancyByDomain::class, PreventAccessFromCen
     Route::post('patients/register', [ApiV1Controller::class, 'registerPatient'])->middleware('api.key:patients:write')->name('patients.register');
 });
 
+/*
+ * FHIR R4 read API: same practice API keys, fhir:read permission, per-patient consent.
+ */
+Route::middleware(['api', InitializeTenancyByDomain::class, PreventAccessFromCentralDomains::class])->prefix('api/fhir/r4')->name('practice.fhir.')->group(function (): void {
+    Route::get('metadata', [FhirR4Controller::class, 'metadata'])->middleware('throttle:30,1')->name('metadata');
+    Route::get('Patient', [FhirR4Controller::class, 'patients'])->middleware('api.key:fhir:read')->name('patients');
+    Route::get('Patient/{id}', [FhirR4Controller::class, 'patient'])->middleware('api.key:fhir:read')->name('patient');
+    Route::get('{type}', [FhirR4Controller::class, 'search'])->whereIn('type', ['AllergyIntolerance', 'Condition', 'MedicationRequest', 'Immunization', 'Observation'])->middleware('api.key:fhir:read')->name('search');
+});
+
 Route::middleware([
     'web',
     InitializeTenancyByDomain::class,
@@ -137,6 +148,7 @@ Route::middleware([
             Route::get('/care', [PortalCareController::class, 'index'])->name('care');
             Route::get('/pharmacies', [DeliveryController::class, 'portalCompare'])->name('pharmacies');
             Route::post('/care/sharing', [PortalCareController::class, 'sharing'])->name('care.sharing');
+            Route::post('/care/connected', [PortalCareController::class, 'connected'])->name('care.connected');
             Route::post('/whatsapp', [WhatsAppController::class, 'portalOptIn'])->middleware('throttle:10,1')->name('whatsapp');
             Route::post('/results/{order}/request', [PortalResultsController::class, 'request'])->middleware('throttle:10,1')->name('results.request');
             Route::get('/results/{order}/download/{kind}', [PortalResultsController::class, 'download'])->whereIn('kind', ['report', 'lab'])->name('results.download');
@@ -320,6 +332,7 @@ Route::middleware([
         Route::get('/procurement', [ProcurementController::class, 'index'])->name('procurement.index');
         Route::post('/procurement/{action}', [ProcurementController::class, 'act'])->whereIn('action', ['supplier', 'order', 'send', 'receive', 'stock-take', 'write-off-expired'])->name('procurement.act');
         Route::get('/patients/{patient}/care', [CareController::class, 'care'])->name('care.show');
+        Route::post('/patients/{patient}/connected', [CareController::class, 'connected'])->name('care.connected');
         Route::post('/patients/{patient}/care/{action}', [CareController::class, 'careAction'])->whereIn('action', ['problem', 'immunisation', 'pregnancy', 'antenatal', 'recall-done', 'registration', 'consent-code', 'consent-confirm'])->middleware('throttle:30,1')->name('care.action');
         Route::post('/problems/{problem}/resolve', [CareController::class, 'resolveProblem'])->name('problems.resolve');
         Route::post('/chronic-registrations/{registration}/{action}', [CareController::class, 'registrationAction'])->whereIn('action', ['submit', 'approve', 'decline'])->name('registrations.act');
