@@ -17,6 +17,8 @@ use App\Domains\Identity\Contracts\OtpSender;
 use App\Domains\Identity\Enums\Permission;
 use App\Domains\Identity\Models\Staff;
 use App\Domains\Identity\Support\GatewayOtpSender;
+use App\Domains\Lab\Inbound\LabConnections;
+use App\Domains\Lab\Models\LabOrder;
 use App\Domains\Messaging\Contracts\MessageSender;
 use App\Domains\Messaging\Support\GatewayMessageSender;
 use App\Domains\Prescribing\Contracts\DrugDatabase;
@@ -51,6 +53,12 @@ class AppServiceProvider extends ServiceProvider
         OnlineConsultHooks::register();
         BranchContext::register();
         WebhookEvents::register();
+        // New in-house lab orders go to the practice's connected lab system, if one is chosen.
+        LabOrder::creating(function (LabOrder $order): void {
+            if (tenant() !== null && in_array($order->getAttribute('source') ?? 'in_house', ['in_house'], true) && $order->getAttribute('external_key_id') === null) {
+                $order->setAttribute('external_key_id', app(LabConnections::class)->outgoingKey());
+            }
+        });
         Payment::saved(function (Payment $p): void {
             if (tenant() !== null && $p->status === PaymentStatus::Succeeded && ($p->wasRecentlyCreated || $p->wasChanged('status'))) {
                 app(PrepaidPackages::class)->activatePaid($p->invoice_id);

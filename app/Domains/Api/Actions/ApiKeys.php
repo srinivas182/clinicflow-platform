@@ -26,6 +26,7 @@ class ApiKeys
         'patients:write' => 'Register patients (with consent obtained by your system)',
         'fhir:read' => 'Clinical record (FHIR) — only patients who consented to this system (owner only)',
         'lab:write' => 'Send lab results from a lab system (HL7 v2 or FHIR)',
+        'lab:orders' => 'Collect lab orders sent to this lab system (FHIR or HL7)',
     ];
 
     /**

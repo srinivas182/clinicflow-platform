@@ -4,6 +4,13 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.33.0] — Sprint 17D-2b: outgoing lab orders and test-code mapping
+
+### Added
+- Settings → API → Lab systems: choose which connected lab system receives new lab orders; new in-house orders are assigned to it automatically.
+- Lab systems collect their orders at /api/lab/v1/orders (FHIR Bundle of ServiceRequest + Patient) or /api/lab/v1/orders.hl7 (HL7 ORM^O01) and confirm receipt (POST /api/lab/v1/orders/{id}/received); new API permission lab:orders. A lab system only sees its own orders, with the demographics a lab needs (no ID number).
+- Test-code mapping per lab system (its code → your catalogue code), used both ways: incoming results are translated before matching, outgoing orders carry the lab's own codes.
+
 ## [0.32.0] — Sprint 17D-2a: incoming results from lab systems
 
 ### Added

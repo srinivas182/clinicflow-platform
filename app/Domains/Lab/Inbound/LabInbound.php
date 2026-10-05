@@ -42,7 +42,7 @@ class LabInbound
             return $this->hold($id, 'No matching order — match it to the right patient and order.');
         }
 
-        return $this->apply($id, $order, $parsed, (string) DB::table('api_keys')->where('id', $keyId)->value('name'));
+        return $this->apply($id, $order, $parsed, (string) DB::table('api_keys')->where('id', $keyId)->value('name'), $keyId);
     }
 
     /**
@@ -57,7 +57,8 @@ class LabInbound
         if ($msg === null || ! $order instanceof LabOrder) {
             throw ValidationException::withMessages(['order' => 'Choose an order for this result.']);
         }
-        $result = $this->apply($messageId, $order, (array) json_decode(Crypt::decryptString((string) $msg->parsed), true), 'connected lab (matched by staff)');
+        $result = $this->apply($messageId, $order, (array) json_decode(Crypt::decryptString((string) $msg->parsed), true), 'connected lab (matched by staff)',
+            $msg->api_key_id === null ? null : (int) $msg->api_key_id);
         DB::table('lab_inbound_messages')->where('id', $messageId)->update(['resolved_by' => $by, 'resolved_at' => now()]);
 
         return $result;
@@ -96,8 +97,9 @@ class LabInbound
      * @param  array<string, mixed>  $parsed
      * @return array{status: string, reason: ?string, id: int}
      */
-    private function apply(int $id, LabOrder $order, array $parsed, string $labName): array
+    private function apply(int $id, LabOrder $order, array $parsed, string $labName, ?int $keyId): array
     {
+        $connections = app(LabConnections::class);
         $results = (array) ($parsed['results'] ?? []);
         if (collect($results)->contains(fn ($r) => ($r['status'] ?? 'F') !== 'F')) {
             return $this->hold($id, 'Preliminary results — waiting for the final report.', $order->id);
@@ -106,7 +108,8 @@ class LabInbound
         $values = [];
         $flags = [];
         foreach ($results as $r) {
-            $code = (string) ($r['code'] ?? '');
+            // The lab system's own code, translated through the practice's mapping when one exists.
+            $code = $connections->toCatalog($keyId, (string) ($r['code'] ?? ''));
             if (! in_array($code, $ordered, true)) {
                 return $this->hold($id, "Result for {$code} ({$r['name']}) was not on this order.", $order->id);
             }

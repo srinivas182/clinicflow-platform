@@ -27,6 +27,7 @@ use App\Domains\Identity\Http\Controllers\HandoffController;
 use App\Domains\Lab\Http\Controllers\LabCatalogController;
 use App\Domains\Lab\Http\Controllers\LabController;
 use App\Domains\Lab\Inbound\LabInboundController;
+use App\Domains\Lab\Inbound\LabOrdersOutController;
 use App\Domains\Locums\Http\Controllers\LocumController;
 use App\Domains\Messaging\Http\Controllers\MessagingSettingsController;
 use App\Domains\Messaging\Http\Controllers\WhatsAppController;
@@ -93,6 +94,12 @@ Route::middleware(['api', InitializeTenancyByDomain::class, PreventAccessFromCen
 /*
  * Connected lab systems send results (HL7 v2 over HTTPS, or FHIR); lab:write permission.
  */
+Route::middleware(['api', InitializeTenancyByDomain::class, PreventAccessFromCentralDomains::class, 'api.key:lab:orders'])->prefix('api/lab/v1')->name('practice.lab-orders.')->group(function (): void {
+    Route::get('orders', [LabOrdersOutController::class, 'fhir'])->name('fhir');
+    Route::get('orders.hl7', [LabOrdersOutController::class, 'hl7'])->name('hl7');
+    Route::post('orders/{order}/received', [LabOrdersOutController::class, 'received'])->name('received');
+});
+
 Route::middleware(['api', InitializeTenancyByDomain::class, PreventAccessFromCentralDomains::class, 'api.key:lab:write'])->prefix('api/lab/v1')->name('practice.lab-inbound.')->group(function (): void {
     Route::post('hl7', [LabInboundController::class, 'hl7'])->name('hl7');
     Route::post('fhir', [LabInboundController::class, 'fhir'])->name('fhir');
@@ -313,6 +320,7 @@ Route::middleware([
         Route::post('/settings/api/keys', [ApiKeysController::class, 'store'])->name('api.keys.store');
         Route::post('/settings/api/keys/{key}/revoke', [ApiKeysController::class, 'revoke'])->name('api.keys.revoke');
         Route::post('/settings/api/webhooks/{action}', [ApiKeysController::class, 'webhook'])->whereIn('action', ['add', 'on', 'off', 'test'])->name('api.webhooks');
+        Route::post('/settings/api/lab/{action}', [ApiKeysController::class, 'lab'])->whereIn('action', ['outgoing', 'map', 'unmap'])->name('api.lab');
         Route::get('/corporate-wellness', [WellnessController::class, 'index'])->name('wellness.index');
         Route::post('/corporate-wellness/accounts', [WellnessController::class, 'saveAccount'])->name('wellness.accounts');
         Route::post('/corporate-wellness/events', [WellnessController::class, 'createEvent'])->name('wellness.events');
