@@ -13,6 +13,10 @@ interface Props {
         new_patients: number;
         takings: number;
         owed: number;
+        collection_rate?: number | null;
+        no_show_rate?: number | null;
+        avg_wait_minutes?: number | null;
+        utilisation?: number | null;
     }[];
 }
 
@@ -73,6 +77,9 @@ export default function GroupShow({ group, period, practices }: Props) {
                             <th>New patients</th>
                             <th className="text-right">Takings</th>
                             <th className="text-right">Owed</th>
+                            <th className="text-right">Collected %</th>
+                            <th className="text-right">No-shows</th>
+                            <th className="text-right">Avg wait</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -90,6 +97,27 @@ export default function GroupShow({ group, period, practices }: Props) {
                                 </td>
                                 <td className="text-right">
                                     {rand(p.owed, 2)}
+                                </td>
+                                <td className="text-right text-xs">
+                                    {p.collection_rate ?? "—"}
+                                    {p.collection_rate !== null &&
+                                    p.collection_rate !== undefined
+                                        ? "%"
+                                        : ""}
+                                </td>
+                                <td className="text-right text-xs">
+                                    {p.no_show_rate ?? "—"}
+                                    {p.no_show_rate !== null &&
+                                    p.no_show_rate !== undefined
+                                        ? "%"
+                                        : ""}
+                                </td>
+                                <td className="text-right text-xs">
+                                    {p.avg_wait_minutes ?? "—"}
+                                    {p.avg_wait_minutes !== null &&
+                                    p.avg_wait_minutes !== undefined
+                                        ? " min"
+                                        : ""}
                                 </td>
                             </tr>
                         ))}

@@ -4,6 +4,14 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.40.0] — Sprint 18C-2: analytics dashboards
+
+### Added
+- Analytics (Standard and Pro, finance access): key figures for the chosen period (this month, last month, last 90 days, or custom) with the change against the previous period — billed, collected, collection rate, owed, debtor days, appointments, no-show rate, doctor utilisation (booked vs rostered time), average wait (check-in to being called), visits, new and returning patients, online consults and lab turnaround; optional branch filter.
+- Six-month billed vs collected chart; doctor comparison (visits, appointments, no-shows, billed, utilisation); branch comparison (visits, billed).
+- Group dashboard roll-up now also shows each practice's collection rate, no-show rate and average wait — totals only, never patient records.
+- Figures use the same definitions as the group dashboard (collected = successful payments less refunds; owed = unpaid balance of non-void invoices).
+
 ## [0.39.0] — Sprint 18C-1: report builder
 
 ### Added
