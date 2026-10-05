@@ -49,6 +49,7 @@ use App\Domains\Prescribing\Http\Controllers\PrescriptionController;
 use App\Domains\Scheduling\Http\Controllers\AppointmentController;
 use App\Domains\Scheduling\Http\Controllers\CalendarController;
 use App\Domains\Scheduling\Http\Controllers\RosterController;
+use App\Domains\Scribe\Http\ScribeController;
 use App\Domains\Telemedicine\Http\Controllers\ChatController;
 use App\Domains\Telemedicine\Http\Controllers\OnlineConsultController;
 use App\Domains\Telemedicine\Http\Controllers\TeleConsultController;
@@ -316,6 +317,8 @@ Route::middleware([
         Route::get('/me/calendar', [CalendarController::class, 'show'])->name('calendar.show');
         Route::get('/me/calendar/{driver}/connect', [CalendarController::class, 'connect'])->whereIn('driver', ['google', 'microsoft'])->name('calendar.connect');
         Route::put('/me/calendar', [CalendarController::class, 'update'])->name('calendar.update');
+        Route::get('/settings/ai-scribe', [ScribeController::class, 'practice'])->name('ai-scribe.settings');
+        Route::post('/settings/ai-scribe', [ScribeController::class, 'toggle'])->name('ai-scribe.toggle');
         Route::get('/settings/api', [ApiKeysController::class, 'index'])->name('api.keys');
         Route::post('/settings/api/keys', [ApiKeysController::class, 'store'])->name('api.keys.store');
         Route::post('/settings/api/keys/{key}/revoke', [ApiKeysController::class, 'revoke'])->name('api.keys.revoke');

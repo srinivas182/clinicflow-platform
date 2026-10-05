@@ -24,6 +24,7 @@ use App\Domains\Platform\Http\Controllers\SubscriptionBillingController;
 use App\Domains\Platform\Http\Controllers\SupportController;
 use App\Domains\Scheduling\Http\Controllers\CalendarAdminController;
 use App\Domains\Scheduling\Http\Controllers\CalendarController;
+use App\Domains\Scribe\Http\ScribeController;
 use App\Domains\Telemedicine\Http\Controllers\TelemedicineAdminController;
 use App\Domains\Wallet\Http\Controllers\WalletController;
 use App\Domains\Website\Http\Controllers\FlaggedReviewsController;
@@ -91,6 +92,9 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/telemedicine', [TelemedicineAdminController::class, 'index'])->name('telemedicine.index');
             Route::get('/accounting', [AccountingAdminController::class, 'index'])->name('accounting.index');
             Route::get('/locums', [LocumController::class, 'admin'])->name('locums.index');
+            Route::get('/ai-scribe', [ScribeController::class, 'admin'])->name('ai-scribe.index');
+            Route::post('/ai-scribe/providers/{driver}', [ScribeController::class, 'saveProvider'])->whereIn('driver', ['deepgram', 'azure', 'anthropic'])->name('ai-scribe.provider');
+            Route::post('/ai-scribe/prices', [ScribeController::class, 'savePrices'])->name('ai-scribe.prices');
             Route::post('/locums/{profile}/review', [LocumController::class, 'review'])->name('locums.review');
             Route::get('/locums/documents/{document}', [LocumController::class, 'document'])->name('locums.document');
             Route::get('/support', [SupportController::class, 'admin'])->name('support.index');
