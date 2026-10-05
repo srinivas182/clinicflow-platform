@@ -1,4 +1,4 @@
-export type ProviderType = 'clinic' | 'independent_doctor' | 'pharmacy' | 'lab';
+export type ProviderType = "clinic" | "independent_doctor" | "pharmacy" | "lab";
 
 export interface SharedProvider {
     id: string;
@@ -21,6 +21,16 @@ export interface SharedProps {
         newApiKey?: string | null;
     };
     errors: Record<string, string>;
+    brand?: {
+        name: string;
+        logo: string | null;
+        primary: string;
+        accent: string;
+        supportEmail: string | null;
+        supportPhone: string | null;
+        footer: string | null;
+        poweredBy: boolean;
+    } | null;
     provider: SharedProvider | null;
     [key: string]: unknown;
 }

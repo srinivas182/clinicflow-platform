@@ -4,6 +4,17 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.37.0] — Sprint 18B-1: white-label brands and theming
+
+### Added
+- Admin → Brands: brand name, short name (sign-up link ?brand=…), logo (PNG/JPG/WebP/SVG ≤ 200 KB), main and dark colours, support email and phone, footer text, "Powered by Clinic Flow" (on by default), practice domain (practices at *.partner-domain), linked reseller for commission, active.
+- Practices that sign up through a brand link join that brand, get their address under the brand's domain, and credit the brand's reseller (unless another reseller link was used first). The super admin can move any practice to a brand; its address stays the same.
+- Branding shown to practices and patients: brand logo and name everywhere the logo appears, brand colours applied to the theme, optional "Powered by Clinic Flow".
+- Admin → AI scribe: field for the lab explanation model (default Claude Haiku 4.5).
+
+### Notes
+- Clinic Flow still bills practices; tax invoices keep naming the billing entity. The partner must point *.their-domain at Clinic Flow (certificates at deployment).
+
 ## [0.36.0] — Sprint 18A-2: plain-language lab explanations for patients
 
 ### Added

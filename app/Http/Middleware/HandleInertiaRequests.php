@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Domains\Branches\Support\BranchContext;
+use App\Domains\Platform\Branding\Brands;
 use App\Domains\Platform\Models\Provider;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -40,6 +41,9 @@ class HandleInertiaRequests extends Middleware
                 // A newly created API key, shown once (never stored readable).
                 'newApiKey' => $request->session()->get('new_api_key'),
             ],
+            // White-label: the practice's brand, or the brand from a brand sign-up link (null = Clinic Flow).
+            'brand' => app(Brands::class)->forDisplay($provider instanceof Provider ? $provider : null,
+                is_string($request->cookie(Brands::COOKIE)) ? (string) $request->cookie(Brands::COOKIE) : null),
             'provider' => $provider instanceof Provider ? [
                 'id' => $provider->id,
                 'name' => $provider->name,
