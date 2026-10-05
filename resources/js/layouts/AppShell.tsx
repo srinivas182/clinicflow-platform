@@ -1,6 +1,7 @@
 import { Link, router, usePage } from "@inertiajs/react";
 import {
     Activity,
+    BarChart3,
     Bell,
     BookOpen,
     BookText,
@@ -77,6 +78,7 @@ const nav = [
         icon: HeartPulse,
         href: "/corporate-wellness",
     },
+    { label: "Reports", icon: BarChart3, href: "/reports" },
     { label: "API", icon: KeyRound, href: "/settings/api" },
     { label: "AI scribe", icon: Sparkles, href: "/settings/ai-scribe" },
     { label: "Support", icon: LifeBuoy, href: "/support" },
