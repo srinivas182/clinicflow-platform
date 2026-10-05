@@ -1,23 +1,53 @@
-import { Head, router } from '@inertiajs/react';
-import { Siren } from 'lucide-react';
-import { Flash } from '@/components/Flash';
-import { Badge, Button, Card } from '@/components/ui';
-import { AppShell } from '@/layouts/AppShell';
-import { flagTone, type LabRow } from './Worklist';
+import { Head, router } from "@inertiajs/react";
+import { useState } from "react";
+import { scribePost } from "@/lib/scribe";
+import { Siren } from "lucide-react";
+import { Flash } from "@/components/Flash";
+import { Badge, Button, Card } from "@/components/ui";
+import { AppShell } from "@/layouts/AppShell";
+import { flagTone, type LabRow } from "./Worklist";
 
-export default function Inbox({ orders, away, doctors }: { orders: LabRow[]; away: { until: string | null; covering: number | null }; doctors: { id: number; name: string }[] }) {
-    const step = (id: string, s: string, data: Record<string, string> = {}) => router.post(`/lab-orders/${id}/${s}`, data, { preserveScroll: true });
+export default function Inbox({
+    orders,
+    away,
+    doctors,
+}: {
+    orders: LabRow[];
+    away: { until: string | null; covering: number | null };
+    doctors: { id: number; name: string }[];
+}) {
+    const [explain, setExplain] = useState<Record<string, string>>({});
+    const [explainError, setExplainError] = useState<Record<string, string>>(
+        {},
+    );
+    const step = (id: string, s: string, data: Record<string, string> = {}) =>
+        router.post(`/lab-orders/${id}/${s}`, data, { preserveScroll: true });
 
     return (
         <AppShell active="Results">
             <Head title="Results inbox" />
             <h1 className="mb-1 text-2xl font-semibold">Results inbox</h1>
-            <p className="mb-3 text-sm text-muted">Critical first, then results patients asked for. Normal results are released automatically after 48 hours; abnormal ones are escalated.</p>
+            <p className="mb-3 text-sm text-muted">
+                Critical first, then results patients asked for. Normal results
+                are released automatically after 48 hours; abnormal ones are
+                escalated.
+            </p>
             <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
                 Away until
-                <input aria-label="Away until" type="date" className="rounded border border-line px-2 py-1" defaultValue={away.until ?? ''} id="away-until" />
+                <input
+                    aria-label="Away until"
+                    type="date"
+                    className="rounded border border-line px-2 py-1"
+                    defaultValue={away.until ?? ""}
+                    id="away-until"
+                />
                 covered by
-                <select aria-label="Covering doctor" className="rounded border border-line px-2 py-1" defaultValue={away.covering ?? ''} id="covering">
+                <select
+                    aria-label="Covering doctor"
+                    className="rounded border border-line px-2 py-1"
+                    defaultValue={away.covering ?? ""}
+                    id="covering"
+                >
                     <option value="">Nobody</option>
                     {doctors.map((d) => (
                         <option key={d.id} value={d.id}>
@@ -29,9 +59,19 @@ export default function Inbox({ orders, away, doctors }: { orders: LabRow[]; awa
                     size="sm"
                     variant="secondary"
                     onClick={() =>
-                        router.put('/results/cover', {
-                            away_until: (document.getElementById('away-until') as HTMLInputElement).value || null,
-                            covering_staff_id: (document.getElementById('covering') as HTMLSelectElement).value || null,
+                        router.put("/results/cover", {
+                            away_until:
+                                (
+                                    document.getElementById(
+                                        "away-until",
+                                    ) as HTMLInputElement
+                                ).value || null,
+                            covering_staff_id:
+                                (
+                                    document.getElementById(
+                                        "covering",
+                                    ) as HTMLSelectElement
+                                ).value || null,
                         })
                     }
                 >
@@ -40,19 +80,36 @@ export default function Inbox({ orders, away, doctors }: { orders: LabRow[]; awa
             </div>
             <Flash />
             <div className="flex flex-col gap-3">
-                {orders.length === 0 && <p className="text-sm text-muted">Nothing waiting for review.</p>}
+                {orders.length === 0 && (
+                    <p className="text-sm text-muted">
+                        Nothing waiting for review.
+                    </p>
+                )}
                 {orders.map((o) => (
                     <Card
                         key={o.id}
                         title={o.patient}
                         aside={
                             <span className="flex gap-1">
-                                {o.critical && <Badge tone="danger" icon={<Siren className="size-3" />}>Critical</Badge>}
-                                {o.requested && <Badge tone="warning">Patient asked</Badge>}
-                                {o.escalated && <Badge tone="danger">Escalated</Badge>}
+                                {o.critical && (
+                                    <Badge
+                                        tone="danger"
+                                        icon={<Siren className="size-3" />}
+                                    >
+                                        Critical
+                                    </Badge>
+                                )}
+                                {o.requested && (
+                                    <Badge tone="warning">Patient asked</Badge>
+                                )}
+                                {o.escalated && (
+                                    <Badge tone="danger">Escalated</Badge>
+                                )}
                                 {o.covering && <Badge>Covering</Badge>}
                                 <Badge>{o.classification}</Badge>
-                                {o.waitingHours !== null && <Badge>{o.waitingHours} h</Badge>}
+                                {o.waitingHours !== null && (
+                                    <Badge>{o.waitingHours} h</Badge>
+                                )}
                             </span>
                         }
                     >
@@ -63,25 +120,90 @@ export default function Inbox({ orders, away, doctors }: { orders: LabRow[]; awa
                                     <Badge tone={flagTone(r.flag)}>
                                         {r.result_text ?? r.value} {r.unit}
                                     </Badge>
-                                    <span className="w-24 text-xs text-muted">{r.reference}</span>
+                                    <span className="w-24 text-xs text-muted">
+                                        {r.reference}
+                                    </span>
                                 </li>
                             ))}
                         </ul>
-                        {o.status === 'discuss' && <p className="mt-2 text-xs text-muted">Held for discussion: {o.note}</p>}
+                        {explainError[o.id] && (
+                            <p className="mt-2 text-xs text-status-danger">
+                                {explainError[o.id]}
+                            </p>
+                        )}
+                        {explain[o.id] !== undefined && (
+                            <div className="mt-2 rounded-lg border border-line p-2 text-sm">
+                                <p className="mb-1 text-xs text-status-warning">
+                                    AI draft — edit before releasing. The
+                                    patient will see it marked as explained with
+                                    AI help and reviewed by you.
+                                </p>
+                                <textarea
+                                    aria-label="Explanation for the patient"
+                                    className="min-h-28 w-full rounded border border-line px-2 py-1"
+                                    value={explain[o.id]}
+                                    onChange={(e) =>
+                                        setExplain({
+                                            ...explain,
+                                            [o.id]: e.target.value,
+                                        })
+                                    }
+                                />
+                                <div className="mt-1 flex gap-2">
+                                    <Button
+                                        size="sm"
+                                        disabled={!explain[o.id]?.trim()}
+                                        onClick={() =>
+                                            step(o.id, "release", {
+                                                note: explain[o.id] ?? "",
+                                                ai_assisted: "1",
+                                            })
+                                        }
+                                    >
+                                        Release with this explanation
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => {
+                                            const next = { ...explain };
+                                            delete next[o.id];
+                                            setExplain(next);
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                        {o.status === "discuss" && (
+                            <p className="mt-2 text-xs text-muted">
+                                Held for discussion: {o.note}
+                            </p>
+                        )}
                         <div className="mt-3 flex flex-wrap gap-2">
                             {o.critical && !o.acknowledged && (
                                 <Button
                                     size="sm"
                                     variant="danger"
                                     onClick={() => {
-                                        const action = window.prompt('What did you do about the critical result?');
-                                        if (action) step(o.id, 'acknowledge', { action });
+                                        const action = window.prompt(
+                                            "What did you do about the critical result?",
+                                        );
+                                        if (action)
+                                            step(o.id, "acknowledge", {
+                                                action,
+                                            });
                                     }}
                                 >
                                     Acknowledge critical
                                 </Button>
                             )}
-                            <Button size="sm" disabled={o.critical && !o.acknowledged} onClick={() => step(o.id, 'release')}>
+                            <Button
+                                size="sm"
+                                disabled={o.critical && !o.acknowledged}
+                                onClick={() => step(o.id, "release")}
+                            >
                                 Release
                             </Button>
                             <Button
@@ -89,18 +211,53 @@ export default function Inbox({ orders, away, doctors }: { orders: LabRow[]; awa
                                 variant="secondary"
                                 disabled={o.critical && !o.acknowledged}
                                 onClick={() => {
-                                    const note = window.prompt('Note for the patient');
-                                    if (note) step(o.id, 'release', { note });
+                                    const note = window.prompt(
+                                        "Note for the patient",
+                                    );
+                                    if (note) step(o.id, "release", { note });
                                 }}
                             >
                                 Release with note
                             </Button>
+                            {!o.critical && (
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() =>
+                                        scribePost(
+                                            `/lab-orders/${o.id}/explain`,
+                                        )
+                                            .then((r) =>
+                                                setExplain({
+                                                    ...explain,
+                                                    [o.id]: (
+                                                        r as unknown as {
+                                                            text: string;
+                                                        }
+                                                    ).text,
+                                                }),
+                                            )
+                                            .catch((e) =>
+                                                setExplainError({
+                                                    ...explainError,
+                                                    [o.id]: (e as Error)
+                                                        .message,
+                                                }),
+                                            )
+                                    }
+                                >
+                                    Draft explanation (AI)
+                                </Button>
+                            )}
                             <Button
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => {
-                                    const note = window.prompt('Message to the patient (values stay hidden)', 'Please book a follow-up so we can discuss your results.');
-                                    if (note) step(o.id, 'discuss', { note });
+                                    const note = window.prompt(
+                                        "Message to the patient (values stay hidden)",
+                                        "Please book a follow-up so we can discuss your results.",
+                                    );
+                                    if (note) step(o.id, "discuss", { note });
                                 }}
                             >
                                 Discuss in person

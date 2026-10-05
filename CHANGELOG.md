@@ -4,6 +4,13 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.36.0] — Sprint 18A-2: plain-language lab explanations for patients
+
+### Added
+- Results inbox: "Draft explanation (AI)" writes a short plain-language explanation (Claude Haiku 4.5 by default; super admin sets the model) from the results, usual ranges, flags and the doctor's own comment — only the patient's age band and sex are sent, never their name or ID.
+- The doctor edits the draft and releases it as the release note; the patient sees it marked "Explained with AI help, reviewed by Dr …".
+- Never for critical results; only when the doctor chooses; part of the AI add-on; counts as one AI minute (included minutes first, then the wallet); nothing charged if drafting fails.
+
 ## [0.35.0] — Sprint 18A-1b: AI scribe for in-person, video/audio and chat consults
 
 ### Added

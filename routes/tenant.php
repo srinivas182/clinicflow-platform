@@ -270,6 +270,7 @@ Route::middleware([
         Route::get('/lab/unmatched', [LabInboundController::class, 'queue'])->name('lab.unmatched');
         Route::post('/lab/unmatched/{message}/{action}', [LabInboundController::class, 'act'])->whereIn('action', ['match', 'reject'])->name('lab.unmatched.act');
         Route::get('/results', [LabController::class, 'inbox'])->name('lab.inbox');
+        Route::post('/lab-orders/{order}/explain', [LabController::class, 'explain'])->middleware('throttle:20,1')->name('lab.explain');
         Route::post('/lab-orders/{order}/{step}', [LabController::class, 'step'])->whereIn('step', ['collect', 'assign', 'results', 'verify', 'acknowledge', 'review', 'release', 'discuss'])->name('lab.step');
         Route::post('/visits/{visit}/network-lab-orders', [LabController::class, 'networkOrder'])->name('lab.network.order');
         Route::get('/reference/labs', [LabController::class, 'labs'])->name('reference.labs');

@@ -227,6 +227,22 @@ class AiScribe
         return $names === [] ? $text : (string) preg_replace('/\b('.implode('|', array_map(fn ($n) => preg_quote($n, '/'), $names)).')\b/iu', 'the patient', $text);
     }
 
+    /** For other AI features (e.g. lab explanations): can this practice pay for $minutes? */
+    public function canAfford(string $tenantId, int $minutes): bool
+    {
+        return $this->allowance($tenantId)['enabled'] && $this->affordable($tenantId, $minutes);
+    }
+
+    /**
+     * Charges $minutes of AI use (included minutes first, then the wallet) under $reference.
+     *
+     * @return array{minutes: int, wallet_cents: int}
+     */
+    public function chargeMinutes(string $tenantId, string $reference, int $minutes): array
+    {
+        return $this->bill($tenantId, $reference, $minutes);
+    }
+
     private function affordable(string $tenantId, int $minutes): bool
     {
         $left = $this->allowance($tenantId)['left'];
