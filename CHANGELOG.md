@@ -4,6 +4,17 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.31.0] — Sprint 17D-1: FHIR R4 read API with per-patient consent
+
+### Added
+- FHIR R4 read API at /api/fhir/r4 (application/fhir+json): CapabilityStatement (metadata), Patient (consented patients, and by id), AllergyIntolerance, Condition (ICD-10 coded), MedicationRequest (signed prescriptions, NAPPI coded), Immunization, Observation (released lab results only, LOINC coded where available); OperationOutcome errors.
+- New API permission fhir:read, which only the practice owner can grant.
+- Per-patient, per-system consent with chosen categories (allergies, problem list, medicines, immunisations, released lab results), optional expiry, withdrawal at any time; patients manage it on "My care" in the portal, staff record it (confirmed) on the patient's care page. Clinical notes are never available.
+- Every FHIR read is shown to the patient on "My care".
+
+### Changed
+- Shared test helpers moved into tests/Pest.php so any subset of tests can run on its own (locally and in each CI part).
+
 ## [0.30.0] — Sprint 17C-2: API write endpoints and signed webhooks
 
 ### Added
