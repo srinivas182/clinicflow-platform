@@ -4,6 +4,15 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.39.0] — Sprint 18C-1: report builder
+
+### Added
+- Reports: build reports from predefined data sets — visits, appointments, invoices, payments, medical aid claims, lab orders and prescriptions — with a date range (up to two years), up to two groupings (day, week, month, doctor, branch, payer, status and more), totals (counts, money in rands, no-shows, lab turnaround) and filters; table and bar chart.
+- Every grouping, filter and total is a fixed, whitelisted expression; user input never becomes SQL. Reports show totals only (no patient names).
+- Each data set follows its existing permission (money data sets need finance access).
+- Export to CSV (opens in Excel) or PDF; every export is recorded in the audit log.
+- Saved and scheduled reports (Clinic Standard and Pro): weekly (Mondays, previous 7 days) or monthly (1st, previous month) emails of the totals, only to staff who still have the data set's permission (`reports:send` daily at 07:00).
+
 ## [0.38.0] — Sprint 18B-2: brand senders and partner portal
 
 ### Added
