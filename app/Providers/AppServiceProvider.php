@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domains\Api\Webhooks\WebhookEvents;
 use App\Domains\Billing\Contracts\PaymentGateway;
 use App\Domains\Billing\Enums\PaymentStatus;
 use App\Domains\Billing\Gateways\GatewayFactory;
@@ -49,6 +50,7 @@ class AppServiceProvider extends ServiceProvider
         LedgerPoster::register();
         OnlineConsultHooks::register();
         BranchContext::register();
+        WebhookEvents::register();
         Payment::saved(function (Payment $p): void {
             if (tenant() !== null && $p->status === PaymentStatus::Succeeded && ($p->wasRecentlyCreated || $p->wasChanged('status'))) {
                 app(PrepaidPackages::class)->activatePaid($p->invoice_id);

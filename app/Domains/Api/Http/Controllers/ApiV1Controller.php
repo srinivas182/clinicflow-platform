@@ -4,11 +4,20 @@ declare(strict_types=1);
 
 namespace App\Domains\Api\Http\Controllers;
 
+use App\Domains\Api\Webhooks\Webhooks;
 use App\Domains\Billing\Models\Invoice;
 use App\Domains\Identity\Models\Staff;
+use App\Domains\Patients\Actions\RegisterPatient;
+use App\Domains\Patients\Enums\Channel;
+use App\Domains\Patients\Enums\ConsentGivenBy;
+use App\Domains\Patients\Enums\IdType;
 use App\Domains\Patients\Models\Patient;
+use App\Domains\Patients\Support\RegistrationData;
 use App\Domains\Patients\Support\SaIdNumber;
 use App\Domains\Scheduling\Actions\AvailableSlots;
+use App\Domains\Scheduling\Actions\BookAppointment;
+use App\Domains\Scheduling\Actions\CancelAppointment;
+use App\Domains\Scheduling\Enums\AppointmentStatus;
 use App\Domains\Scheduling\Models\Appointment;
 use App\Http\Controllers\Controller;
 use Carbon\CarbonImmutable;
@@ -90,6 +99,77 @@ class ApiV1Controller extends Controller
         ]]);
     }
 
+    // ---------------- write ----------------
+
+    public function book(Request $request, BookAppointment $book): JsonResponse
+    {
+        $data = $request->validate(['patient_id' => ['required', 'string', 'size:26'], 'staff_id' => ['required', 'integer'], 'starts_at' => ['required', 'date']]);
+        $appointment = $book->handle(Patient::query()->whereKey((string) $data['patient_id'])->firstOrFail(), Staff::query()->whereKey((int) $data['staff_id'])->firstOrFail(), CarbonImmutable::parse($data['starts_at']));
+
+        return response()->json(['data' => $this->appointmentJson($appointment)], 201);
+    }
+
+    /**
+     * Reschedule = book the new time and cancel the old one, together; nothing changes if the new time is not free.
+     */
+    public function reschedule(Request $request, string $appointment, BookAppointment $book, CancelAppointment $cancel): JsonResponse
+    {
+        $data = $request->validate(['starts_at' => ['required', 'date'], 'staff_id' => ['nullable', 'integer']]);
+        $old = Appointment::query()->whereKey($appointment)->firstOrFail();
+        abort_unless($old->status === AppointmentStatus::Booked, 422, 'Only booked appointments can be rescheduled.');
+        $new = DB::transaction(function () use ($old, $data, $book, $cancel): Appointment {
+            $new = $book->handle($old->patient, isset($data['staff_id']) ? Staff::query()->whereKey((int) $data['staff_id'])->firstOrFail() : $old->staff, CarbonImmutable::parse($data['starts_at']), $old->consult_type, $old->reason);
+            $cancel->handle($old, 'Rescheduled through the practice API');
+
+            return $new;
+        });
+
+        return response()->json(['data' => $this->appointmentJson($new) + ['replaces' => $old->id]]);
+    }
+
+    public function cancel(Request $request, string $appointment, CancelAppointment $cancel): JsonResponse
+    {
+        $data = $request->validate(['reason' => ['required', 'string', 'max:255']]);
+        $a = Appointment::query()->whereKey($appointment)->firstOrFail();
+        abort_unless($a->status === AppointmentStatus::Booked, 422, 'Only booked appointments can be cancelled.');
+
+        return response()->json(['data' => $this->appointmentJson($cancel->handle($a, $data['reason']))]);
+    }
+
+    /**
+     * Registers a patient. The calling system must state that it obtained the patient's POPIA and treatment consent, and how.
+     */
+    public function registerPatient(Request $request, RegisterPatient $register): JsonResponse
+    {
+        $data = $request->validate([
+            'first_names' => ['required', 'string', 'max:100'], 'surname' => ['required', 'string', 'max:100'], 'id_number' => ['nullable', 'digits:13'],
+            'date_of_birth' => ['required_without:id_number', 'nullable', 'date_format:Y-m-d', 'before:today'], 'cell' => ['required', 'regex:/^0[6-8]\d{8}$/'], 'email' => ['nullable', 'email'],
+            'consent' => ['required', 'array'], 'consent.popia' => ['required', 'accepted'], 'consent.treatment' => ['required', 'accepted'],
+            'consent.method' => ['required', 'in:online_form,paper_form,in_person'], 'consent.obtained_at' => ['required', 'date', 'before_or_equal:now'],
+        ], ['consent.popia.accepted' => 'The patient\'s POPIA consent is required.', 'consent.treatment.accepted' => 'The patient\'s treatment consent is required.']);
+        $patient = $register->handle(new RegistrationData(
+            firstNames: trim($data['first_names']), surname: trim($data['surname']),
+            idType: isset($data['id_number']) ? IdType::SaId : IdType::None, idNumber: $data['id_number'] ?? null, passportCountry: null,
+            dateOfBirth: isset($data['id_number']) ? null : CarbonImmutable::parse((string) $data['date_of_birth']),
+            cell: $data['cell'], noCell: false, email: $data['email'] ?? null, preferredLanguage: 'en', preferredChannel: Channel::Sms, address: null,
+            guardianName: null, guardianRelationship: null, guardianCell: null, popiaConsent: true, treatmentConsent: true,
+            consentGivenBy: ConsentGivenBy::Patient, maturityConfirmed: false, medicalAidScheme: null,
+        ));
+        activity('api')->performedOn($patient)->withProperties(['consent_method' => $data['consent']['method'], 'consent_obtained_at' => $data['consent']['obtained_at'],
+            'api_key' => $request->attributes->get('api_key_id')])->log('Patient registered through the API with consent stated by the integrator');
+
+        return response()->json(['data' => ['id' => $patient->id, 'first_names' => $patient->first_names, 'surname' => $patient->surname]], 201);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function appointmentJson(Appointment $a): array
+    {
+        return ['id' => $a->id, 'patient_id' => $a->patient_id, 'staff_id' => $a->staff_id, 'starts_at' => $a->starts_at->toIso8601String(),
+            'ends_at' => $a->ends_at->toIso8601String(), 'status' => $a->status->value];
+    }
+
     /**
      * OpenAPI 3.1 description of this API (public, no key needed).
      */
@@ -110,7 +190,12 @@ class ApiV1Controller extends Controller
                 '/patients' => $get('Find a patient by exact cell or ID number', 'patients:read', [['cell', false, 'string', '0821234567'], ['id_number', false, 'string', '13 digits']]),
                 '/invoices' => $get('Invoices in a date range (max 92 days)', 'invoices:read', [['from', true, 'string', 'YYYY-MM-DD'], ['to', true, 'string', 'YYYY-MM-DD'], ['status', false, 'string', 'e.g. open, paid']]),
                 '/prices' => $get('Online consult prices and prepaid packages', 'prices:read', []),
+                '/appointments/book' => ['post' => ['summary' => 'Book a free slot (patient_id, staff_id, starts_at)', 'x-scope' => 'appointments:write', 'security' => [['bearer' => []]], 'responses' => ['201' => ['description' => 'Booked'], '422' => ['description' => 'Time not free or invalid']]]],
+                '/appointments/{id}/reschedule' => ['post' => ['summary' => 'Move to a new free time (starts_at, optional staff_id)', 'x-scope' => 'appointments:write', 'security' => [['bearer' => []]], 'responses' => ['200' => ['description' => 'Rescheduled']]]],
+                '/appointments/{id}/cancel' => ['post' => ['summary' => 'Cancel (reason)', 'x-scope' => 'appointments:write', 'security' => [['bearer' => []]], 'responses' => ['200' => ['description' => 'Cancelled']]]],
+                '/patients/register' => ['post' => ['summary' => 'Register a patient; consent.popia, consent.treatment, consent.method (online_form|paper_form|in_person) and consent.obtained_at are required', 'x-scope' => 'patients:write', 'security' => [['bearer' => []]], 'responses' => ['201' => ['description' => 'Registered']]]],
             ],
+            'x-webhooks' => ['signature' => 'X-ClinicFlow-Signature: t=<unix time>,v1=<hex HMAC-SHA256 of "t.body" using the endpoint secret>', 'events' => array_keys(Webhooks::EVENTS)],
         ]);
     }
 }

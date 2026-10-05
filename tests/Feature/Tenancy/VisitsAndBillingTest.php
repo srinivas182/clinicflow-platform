@@ -11,12 +11,6 @@ use App\Domains\Billing\Enums\PaymentStatus;
 use App\Domains\Billing\Models\Invoice;
 use App\Domains\Identity\Actions\AddStaffMember;
 use App\Domains\Identity\Enums\StaffRole;
-use App\Domains\Patients\Actions\RegisterPatient;
-use App\Domains\Patients\Enums\Channel;
-use App\Domains\Patients\Enums\ConsentGivenBy;
-use App\Domains\Patients\Enums\IdType;
-use App\Domains\Patients\Models\Patient;
-use App\Domains\Patients\Support\RegistrationData;
 use App\Domains\Platform\Enums\ProviderType;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\Setting;
@@ -37,16 +31,6 @@ use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Validation\ValidationException;
 
 uses(DatabaseMigrations::class);
-
-function registerTestPatient(string $first, string $idDob, ?string $scheme = null, string $cell = '0825550147'): Patient
-{
-    return app(RegisterPatient::class)->handle(new RegistrationData(
-        firstNames: $first, surname: 'Test', idType: IdType::SaId, idNumber: saId($idDob), passportCountry: null, dateOfBirth: null,
-        cell: $cell, noCell: false, email: null, preferredLanguage: 'en', preferredChannel: Channel::Sms, address: null,
-        guardianName: null, guardianRelationship: null, guardianCell: null, popiaConsent: true, treatmentConsent: true,
-        consentGivenBy: ConsentGivenBy::Patient, maturityConfirmed: false, medicalAidScheme: $scheme,
-    ));
-}
 
 beforeEach(function (): void {
     if (config('database.default') !== 'mysql') {

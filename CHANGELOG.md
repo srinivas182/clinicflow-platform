@@ -4,6 +4,14 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.30.0] — Sprint 17C-2: API write endpoints and signed webhooks
+
+### Added
+- API write endpoints: book a free slot, reschedule (new time booked and old one cancelled together; nothing changes if the new time is not free), cancel with a reason — all through the same booking rules as the front desk.
+- Patient registration through the API requires the integrator to state the patient's POPIA and treatment consent, how it was obtained (online form, paper form, in person) and when; recorded in the audit log with the key used.
+- Webhooks (Settings → API): public https:// addresses only (localhost, private, reserved and internal addresses refused, checked again before every delivery; no redirects followed); events appointment.booked, appointment.cancelled, appointment.checked_in, invoice.paid, patient.registered and a test event; payloads carry IDs and status only.
+- Signed deliveries: X-ClinicFlow-Signature t=<time>,v1=<HMAC-SHA256 of "time.body">; retries after 1, 5, 30, 120, 360 and 720 minutes; delivery log; an address that fails 5 deliveries in a row is switched off and the owner is emailed. `webhooks:deliver` runs every minute.
+
 ## [0.29.0] — Sprint 17C-1: public API keys and read endpoints
 
 ### Added

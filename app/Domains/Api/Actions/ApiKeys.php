@@ -22,6 +22,8 @@ class ApiKeys
         'patients:read' => 'Patient lookup by cell or ID number (demographics only)',
         'invoices:read' => 'Invoices (status and totals)',
         'prices:read' => 'Online consult prices and prepaid packages',
+        'appointments:write' => 'Book, reschedule and cancel appointments',
+        'patients:write' => 'Register patients (with consent obtained by your system)',
     ];
 
     /**

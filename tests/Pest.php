@@ -1,5 +1,11 @@
 <?php
 
+use App\Domains\Patients\Actions\RegisterPatient;
+use App\Domains\Patients\Enums\Channel;
+use App\Domains\Patients\Enums\ConsentGivenBy;
+use App\Domains\Patients\Enums\IdType;
+use App\Domains\Patients\Models\Patient;
+use App\Domains\Patients\Support\RegistrationData;
 use App\Domains\Patients\Support\SaIdNumber;
 use App\Domains\Platform\Enums\ProviderStatus;
 use App\Domains\Platform\Enums\ProviderType;
@@ -60,4 +66,15 @@ function patientPayload(array $overrides = []): array
         'medical_aid_scheme' => 'Discovery Health',
         'medical_aid_number' => 'DH412778901',
     ], $overrides);
+}
+
+/** Registers a test patient (shared by many test files, so it lives here). */
+function registerTestPatient(string $first, string $idDob, ?string $scheme = null, string $cell = '0825550147'): Patient
+{
+    return app(RegisterPatient::class)->handle(new RegistrationData(
+        firstNames: $first, surname: 'Test', idType: IdType::SaId, idNumber: saId($idDob), passportCountry: null, dateOfBirth: null,
+        cell: $cell, noCell: false, email: null, preferredLanguage: 'en', preferredChannel: Channel::Sms, address: null,
+        guardianName: null, guardianRelationship: null, guardianCell: null, popiaConsent: true, treatmentConsent: true,
+        consentGivenBy: ConsentGivenBy::Patient, maturityConfirmed: false, medicalAidScheme: $scheme,
+    ));
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Api\Http\Controllers;
 
 use App\Domains\Api\Actions\ApiKeys;
+use App\Domains\Api\Webhooks\Webhooks;
 use App\Domains\Identity\Enums\Permission;
 use App\Domains\Identity\Enums\StaffRole;
 use App\Domains\Identity\Models\Membership;
@@ -35,6 +36,12 @@ class ApiKeysController extends Controller
                 'ips' => $k->allowed_ips === null ? [] : json_decode((string) $k->allowed_ips, true), 'expires' => $k->expires_at, 'lastUsed' => $k->last_used_at, 'revoked' => $k->revoked_at !== null])->values(),
             'requests' => DB::table('api_requests')->join('api_keys', 'api_keys.id', '=', 'api_requests.api_key_id')->orderByDesc('api_requests.id')->limit(50)
                 ->get(['api_requests.*', 'api_keys.name'])->map(fn ($r) => ['key' => $r->name, 'method' => $r->method, 'path' => $r->path, 'status' => $r->status, 'ip' => $r->ip, 'at' => $r->created_at])->values(),
+            'events' => Webhooks::EVENTS,
+            'endpoints' => DB::table('webhook_endpoints')->orderByDesc('id')->get()->map(fn ($e) => ['id' => $e->id, 'url' => $e->url, 'events' => json_decode((string) $e->events, true),
+                'active' => (bool) $e->active, 'failures' => (int) $e->consecutive_failures, 'disabledAt' => $e->disabled_at])->values(),
+            'deliveries' => DB::table('webhook_deliveries')->join('webhook_endpoints', 'webhook_endpoints.id', '=', 'webhook_deliveries.webhook_endpoint_id')->orderByDesc('webhook_deliveries.id')->limit(50)
+                ->get(['webhook_deliveries.id', 'webhook_deliveries.event', 'webhook_deliveries.status', 'webhook_deliveries.attempts', 'webhook_deliveries.response_status', 'webhook_deliveries.last_error', 'webhook_deliveries.created_at', 'webhook_endpoints.url'])
+                ->map(fn ($d) => ['id' => $d->id, 'event' => $d->event, 'status' => $d->status, 'attempts' => (int) $d->attempts, 'response' => $d->response_status, 'error' => $d->last_error, 'at' => $d->created_at, 'url' => $d->url])->values(),
             'docs' => url('/api/v1/openapi.json'),
             'base' => url('/api/v1'),
         ]);
@@ -58,6 +65,29 @@ class ApiKeysController extends Controller
         $keys->revoke($key);
 
         return back()->with('success', 'API key revoked.');
+    }
+
+    public function webhook(Request $request, string $action, Webhooks $webhooks): RedirectResponse
+    {
+        $this->authorizeKeyAdmin($request);
+        if ($action === 'add') {
+            $data = $request->validate(['url' => ['required', 'url', 'max:500'], 'events' => ['required', 'array', 'min:1'], 'events.*' => ['string']]);
+            $created = $webhooks->addEndpoint($data['url'], array_values($data['events']), (int) $request->user()?->getAuthIdentifier());
+
+            return back()->with('success', 'Webhook added. Copy the signing secret now — it will not be shown again.')->with('new_api_key', $created['secret']);
+        }
+        $id = $request->integer('endpoint_id');
+        abort_unless(DB::table('webhook_endpoints')->where('id', $id)->exists(), 404);
+        match ($action) {
+            'on' => $webhooks->setActive($id, true),
+            'off' => $webhooks->setActive($id, false),
+            'test' => DB::table('webhook_endpoints')->where('id', $id)->where('active', true)->exists()
+                ? $webhooks->dispatch('webhook.test', ['message' => 'Test from Clinic Flow'])
+                : abort(422, 'Switch the webhook on first.'),
+            default => abort(404),
+        };
+
+        return back()->with('success', $action === 'test' ? 'Test queued; it is sent within a minute.' : 'Webhook updated.');
     }
 
     private function authorizeKeyAdmin(Request $request): void
