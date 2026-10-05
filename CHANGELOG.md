@@ -4,6 +4,19 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.41.0] — Sprint S1a: shared file storage chosen by the super admin
+
+### Added
+- Admin → Storage: storage targets — this server's disk, Amazon S3 (e.g. Cape Town af-south-1) or any S3-compatible service (Google Cloud Storage, MinIO, Cloudflare R2, Wasabi, DigitalOcean Spaces, Backblaze B2). Keys stored encrypted; HTTPS endpoints only; folders cannot escape their root.
+- Connection test (write, read back, delete a probe file) required before a target can be activated; one active target for the whole platform; switching is logged.
+- Every file — uploads, generated documents and invoices, prescriptions, lab reports, network lab reports, website media, locum documents and message attachments — now goes through one "files" disk that follows the active target. Each practice keeps its own folder (per-practice prefix on S3).
+- `storage:copy-to-active {target} [--dry-run]`: copies existing local files into the target, each practice into its own folder, verifying every file by size and SHA-256; re-runnable, never deletes.
+- Buckets stay private; files are still served only through Clinic Flow's permission checks; encryption at rest on by default.
+
+### Notes
+- Default remains this server's disk (single server). Switch to S3-compatible storage before running more than one server.
+- Adds league/flysystem-aws-s3-v3 (installed by CI).
+
 ## [0.40.0] — Sprint 18C-2: analytics dashboards
 
 ### Added

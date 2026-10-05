@@ -8,6 +8,7 @@ use App\Domains\Identity\Enums\Permission;
 use App\Domains\Locums\Actions\LocumMarketplace;
 use App\Domains\Locums\Actions\LocumShiftLifecycle;
 use App\Domains\Platform\Models\Provider;
+use App\Domains\Platform\Storage\FileStore;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Database\ConnectionInterface;
@@ -119,10 +120,10 @@ class LocumController extends Controller
     public function document(int $document): HttpResponse
     {
         $doc = $this->db()->table('locum_documents')->where('id', $document)->first();
-        abort_if($doc === null || ! Storage::disk('local')->exists((string) $doc->path), 404);
+        abort_if($doc === null || ! Storage::disk(FileStore::DISK)->exists((string) $doc->path), 404);
         activity('locums')->withProperties(['document' => $document])->log('Locum document viewed');
 
-        return response((string) Storage::disk('local')->get((string) $doc->path), 200, ['Content-Type' => (string) Storage::disk('local')->mimeType((string) $doc->path), 'Content-Disposition' => 'inline; filename="'.addslashes((string) $doc->filename).'"']);
+        return response((string) Storage::disk(FileStore::DISK)->get((string) $doc->path), 200, ['Content-Type' => (string) Storage::disk(FileStore::DISK)->mimeType((string) $doc->path), 'Content-Disposition' => 'inline; filename="'.addslashes((string) $doc->filename).'"']);
     }
 
     // ---------------- practice (provider domain) ----------------

@@ -9,6 +9,7 @@ use App\Domains\Documents\Models\IssuedDocument;
 use App\Domains\Documents\Support\DefaultTemplates;
 use App\Domains\Documents\Support\DocumentType;
 use App\Domains\Documents\Support\TemplateRenderer;
+use App\Domains\Platform\Storage\FileStore;
 use App\Models\User;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -63,7 +64,7 @@ class RenderDocument
         $key = (string) $subject->getKey();
         $path = "documents/{$type->value}/".now()->format('Y/m')."/{$key}-v{$template->version}-".now()->format('His').'.pdf';
 
-        Storage::disk('local')->put($path, $pdf);
+        Storage::disk(FileStore::DISK)->put($path, $pdf);
 
         $issued = IssuedDocument::create([
             'type' => $type->value,

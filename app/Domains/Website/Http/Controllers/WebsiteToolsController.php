@@ -9,6 +9,7 @@ use App\Domains\Identity\Models\Staff;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\Setting;
 use App\Domains\Platform\Models\SitePage;
+use App\Domains\Platform\Storage\FileStore;
 use App\Domains\Scheduling\Actions\AvailableSlots;
 use App\Domains\Website\Actions\Feedback;
 use App\Domains\Website\Actions\MediaLibrary;
@@ -77,9 +78,9 @@ class WebsiteToolsController extends Controller
     public function serveMedia(Media $media, string $size = 'large'): HttpResponse
     {
         $path = $media->path($size === 'thumb' ? 'thumb' : 'large');
-        abort_unless(Storage::disk('local')->exists($path), 404);
+        abort_unless(Storage::disk(FileStore::DISK)->exists($path), 404);
 
-        return response((string) Storage::disk('local')->get($path), 200, ['Content-Type' => $media->mime, 'Cache-Control' => 'public, max-age=604800', 'X-Content-Type-Options' => 'nosniff']);
+        return response((string) Storage::disk(FileStore::DISK)->get($path), 200, ['Content-Type' => $media->mime, 'Cache-Control' => 'public, max-age=604800', 'X-Content-Type-Options' => 'nosniff']);
     }
 
     // ---------------- feedback ----------------

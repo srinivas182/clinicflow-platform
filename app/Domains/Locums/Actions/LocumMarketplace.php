@@ -8,6 +8,7 @@ use App\Domains\Identity\Actions\AddStaffMember;
 use App\Domains\Identity\Enums\StaffRole;
 use App\Domains\Identity\Models\Membership;
 use App\Domains\Platform\Models\Provider;
+use App\Domains\Platform\Storage\FileStore;
 use App\Domains\Scheduling\Models\RosterSession;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -72,7 +73,7 @@ class LocumMarketplace
         if (! in_array($file->getMimeType(), ['application/pdf', 'image/jpeg', 'image/png'], true) || $file->getSize() > 10 * 1024 * 1024) {
             throw ValidationException::withMessages(['file' => 'Upload a PDF, JPG or PNG up to 10 MB.']);
         }
-        $path = $file->store("locums/{$profileId}", 'local');
+        $path = $file->store("locums/{$profileId}", FileStore::DISK);
         $this->db()->table('locum_documents')->insert(['locum_profile_id' => $profileId, 'kind' => $kind, 'path' => (string) $path,
             'filename' => mb_substr($file->getClientOriginalName(), 0, 200), 'expires_on' => $expiresOn, 'created_at' => now(), 'updated_at' => now()]);
     }

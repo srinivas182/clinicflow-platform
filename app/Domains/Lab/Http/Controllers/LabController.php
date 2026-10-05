@@ -20,6 +20,7 @@ use App\Domains\Platform\Enums\ProviderStatus;
 use App\Domains\Platform\Enums\ProviderType;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\Setting;
+use App\Domains\Platform\Storage\FileStore;
 use App\Domains\Visits\Models\Visit;
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -264,7 +265,7 @@ class LabController extends Controller
         $file = $request->file('report');
         abort_unless($file instanceof UploadedFile, 422);
 
-        return $file->storeAs('lab-reports', $order->id.'.pdf', 'local') ?: null;
+        return $file->storeAs('lab-reports', $order->id.'.pdf', FileStore::DISK) ?: null;
     }
 
     private function staff(Request $request): Staff

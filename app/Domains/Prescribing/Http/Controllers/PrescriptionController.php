@@ -8,6 +8,7 @@ use App\Domains\Clinical\Models\Consultation;
 use App\Domains\Documents\Models\IssuedDocument;
 use App\Domains\Identity\Enums\Permission;
 use App\Domains\Identity\Models\Staff;
+use App\Domains\Platform\Storage\FileStore;
 use App\Domains\Prescribing\Actions\AmendPrescription;
 use App\Domains\Prescribing\Actions\RequestSigningPin;
 use App\Domains\Prescribing\Actions\SaveDraftPrescription;
@@ -77,7 +78,7 @@ class PrescriptionController extends Controller
         $document = $prescription->issued_document_id === null ? null : IssuedDocument::query()->find($prescription->issued_document_id);
         abort_if($document === null, 404);
 
-        return response((string) Storage::disk('local')->get($document->file_path), 200, [
+        return response((string) Storage::disk(FileStore::DISK)->get($document->file_path), 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => "inline; filename=\"script-v{$prescription->version}.pdf\"",
         ]);

@@ -10,6 +10,7 @@ use App\Domains\Lab\Models\LabOrder;
 use App\Domains\Lab\Models\LabResult;
 use App\Domains\Lab\Support\LabReportPdf;
 use App\Domains\Platform\Models\Provider;
+use App\Domains\Platform\Storage\FileStore;
 use App\Domains\Portal\Actions\PortalSignIn;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -73,9 +74,9 @@ class PortalResultsController extends Controller
 
         if ($kind === 'lab') {
             $path = (string) $order->getAttribute('report_path');
-            abort_if($path === '' || ! Storage::disk('local')->exists($path), 404);
+            abort_if($path === '' || ! Storage::disk(FileStore::DISK)->exists($path), 404);
 
-            return response((string) Storage::disk('local')->get($path), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="lab-report.pdf"']);
+            return response((string) Storage::disk(FileStore::DISK)->get($path), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="lab-report.pdf"']);
         }
 
         return response(LabReportPdf::render($order, $this->providerName()), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'attachment; filename="results.pdf"']);

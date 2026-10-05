@@ -30,6 +30,18 @@ return [
 
     'disks' => [
 
+        /*
+         * Clinic Flow file storage. Replaced at boot by the super admin's active storage
+         * (App\Domains\Platform\Storage\FileStore); defaults to the same folders as "local".
+         */
+        'files' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private'),
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),

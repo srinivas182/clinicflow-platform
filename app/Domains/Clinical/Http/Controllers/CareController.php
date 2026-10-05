@@ -22,6 +22,7 @@ use App\Domains\Identity\Enums\Permission;
 use App\Domains\Identity\Models\Staff;
 use App\Domains\Patients\Models\Patient;
 use App\Domains\Platform\Models\Provider;
+use App\Domains\Platform\Storage\FileStore;
 use App\Domains\Prescribing\Models\Prescription;
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -185,7 +186,7 @@ class CareController extends Controller
     {
         $this->authorize(Permission::CONSULTS_WRITE);
         $data = $request->validate(['body' => ['required', 'string', 'max:5000'], 'visible_to_patient' => ['boolean'], 'corrects_id' => ['nullable', 'integer'], 'attachment' => ['nullable', 'file', 'mimetypes:application/pdf,image/jpeg,image/png', 'max:10240']]);
-        $path = $request->hasFile('attachment') && $request->file('attachment') instanceof UploadedFile ? ($request->file('attachment')->store('message-attachments', 'local') ?: null) : null;
+        $path = $request->hasFile('attachment') && $request->file('attachment') instanceof UploadedFile ? ($request->file('attachment')->store('message-attachments', FileStore::DISK) ?: null) : null;
         $messaging->post($thread, $this->staff($request), $data['body'], $path, (bool) ($data['visible_to_patient'] ?? false), isset($data['corrects_id']) ? (int) $data['corrects_id'] : null);
 
         return back();

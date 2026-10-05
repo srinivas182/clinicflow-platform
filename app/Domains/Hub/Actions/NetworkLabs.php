@@ -23,6 +23,7 @@ use App\Domains\Platform\Enums\ProviderStatus;
 use App\Domains\Platform\Enums\ProviderType;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\Setting;
+use App\Domains\Platform\Storage\FileStore;
 use App\Domains\Visits\Enums\PayerType;
 use App\Domains\Visits\Models\Visit;
 use Illuminate\Support\Facades\Crypt;
@@ -161,7 +162,7 @@ class NetworkLabs
     public function deliverResults(LabOrder $labOrder): LabOrder
     {
         $hub = HubLabOrder::query()->where('id', (string) $labOrder->getAttribute('hub_order_id'))->firstOrFail();
-        $pdf = $labOrder->getAttribute('report_path') !== null ? Storage::disk('local')->get((string) $labOrder->getAttribute('report_path')) : null;
+        $pdf = $labOrder->getAttribute('report_path') !== null ? Storage::disk(FileStore::DISK)->get((string) $labOrder->getAttribute('report_path')) : null;
         $payload = [
             'classification' => $labOrder->getAttribute('classification'), 'has_critical' => $labOrder->has_critical, 'verified_at' => now()->toIso8601String(),
             'barcode' => $labOrder->sample_barcode,
@@ -183,7 +184,7 @@ class NetworkLabs
             $path = null;
             if (is_string($data['pdf'] ?? null)) {
                 $path = 'lab-reports/'.$order->id.'.pdf';
-                Storage::disk('local')->put($path, (string) base64_decode($data['pdf']));
+                Storage::disk(FileStore::DISK)->put($path, (string) base64_decode($data['pdf']));
             }
             $order->forceFill([
                 'status' => 'verified', 'verified_at' => now(), 'classification' => $data['classification'], 'has_critical' => (bool) $data['has_critical'],

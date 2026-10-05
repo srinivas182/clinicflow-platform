@@ -21,6 +21,7 @@ use App\Domains\Platform\Http\Controllers\PublicSiteController;
 use App\Domains\Platform\Http\Controllers\ResellerController;
 use App\Domains\Platform\Http\Controllers\SignupController;
 use App\Domains\Platform\Http\Controllers\StatusController;
+use App\Domains\Platform\Http\Controllers\StorageController;
 use App\Domains\Platform\Http\Controllers\SubscriptionBillingController;
 use App\Domains\Platform\Http\Controllers\SupportController;
 use App\Domains\Scheduling\Http\Controllers\CalendarAdminController;
@@ -95,6 +96,9 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/locums', [LocumController::class, 'admin'])->name('locums.index');
             Route::get('/ai-scribe', [ScribeController::class, 'admin'])->name('ai-scribe.index');
             Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
+            Route::get('/storage', [StorageController::class, 'index'])->name('storage.index');
+            Route::post('/storage', [StorageController::class, 'save'])->name('storage.save');
+            Route::post('/storage/{target}/{action}', [StorageController::class, 'act'])->whereIn('action', ['test', 'activate'])->name('storage.act');
             Route::post('/brands', [BrandController::class, 'save'])->name('brands.save');
             Route::post('/brands/assign', [BrandController::class, 'assign'])->name('brands.assign');
             Route::post('/brands/{brand}/senders/{action}', [BrandController::class, 'senders'])->whereIn('action', ['email', 'verify', 'sms'])->name('brands.senders');
