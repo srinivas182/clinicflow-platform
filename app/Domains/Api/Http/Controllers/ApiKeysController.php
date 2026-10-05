@@ -9,6 +9,7 @@ use App\Domains\Api\Webhooks\Webhooks;
 use App\Domains\Identity\Enums\Permission;
 use App\Domains\Identity\Enums\StaffRole;
 use App\Domains\Identity\Models\Membership;
+use App\Domains\Lab\Inbound\LabConnections;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\Subscription;
 use App\Http\Controllers\Controller;
@@ -42,6 +43,13 @@ class ApiKeysController extends Controller
             'deliveries' => DB::table('webhook_deliveries')->join('webhook_endpoints', 'webhook_endpoints.id', '=', 'webhook_deliveries.webhook_endpoint_id')->orderByDesc('webhook_deliveries.id')->limit(50)
                 ->get(['webhook_deliveries.id', 'webhook_deliveries.event', 'webhook_deliveries.status', 'webhook_deliveries.attempts', 'webhook_deliveries.response_status', 'webhook_deliveries.last_error', 'webhook_deliveries.created_at', 'webhook_endpoints.url'])
                 ->map(fn ($d) => ['id' => $d->id, 'event' => $d->event, 'status' => $d->status, 'attempts' => (int) $d->attempts, 'response' => $d->response_status, 'error' => $d->last_error, 'at' => $d->created_at, 'url' => $d->url])->values(),
+            'lab' => [
+                'outgoingKey' => app(LabConnections::class)->outgoingKey(),
+                'systems' => DB::table('api_keys')->whereNull('revoked_at')->where(fn ($q) => $q->where('scopes', 'like', '%lab:orders%')->orWhere('scopes', 'like', '%lab:write%'))
+                    ->orderBy('name')->get(['id', 'name', 'scopes'])->map(fn ($k) => ['id' => $k->id, 'name' => $k->name, 'orders' => str_contains((string) $k->scopes, 'lab:orders')])->values(),
+                'maps' => DB::table('lab_code_maps')->join('api_keys', 'api_keys.id', '=', 'lab_code_maps.api_key_id')->orderBy('api_keys.name')->orderBy('lab_code_maps.external_code')
+                    ->get(['lab_code_maps.id', 'lab_code_maps.external_code', 'lab_code_maps.test_code', 'api_keys.name as system'])->values(),
+            ],
             'docs' => url('/api/v1/openapi.json'),
             'base' => url('/api/v1'),
         ]);
@@ -93,6 +101,19 @@ class ApiKeysController extends Controller
         };
 
         return back()->with('success', $action === 'test' ? 'Test queued; it is sent within a minute.' : 'Webhook updated.');
+    }
+
+    public function lab(Request $request, string $action, LabConnections $connections): RedirectResponse
+    {
+        $this->authorizeKeyAdmin($request);
+        match ($action) {
+            'outgoing' => $connections->setOutgoingKey($request->filled('key_id') ? $request->integer('key_id') : null),
+            'map' => $connections->map($request->integer('key_id'), $request->string('external_code')->toString(), $request->string('test_code')->toString()),
+            'unmap' => $connections->unmap($request->integer('map_id')),
+            default => abort(404),
+        };
+
+        return back()->with('success', 'Lab connection updated.');
     }
 
     private function authorizeKeyAdmin(Request $request): void

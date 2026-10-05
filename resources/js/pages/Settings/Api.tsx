@@ -45,6 +45,16 @@ interface Props {
         at: string;
         url: string;
     }[];
+    lab?: {
+        outgoingKey: number | null;
+        systems: { id: number; name: string; orders: boolean }[];
+        maps: {
+            id: number;
+            external_code: string;
+            test_code: string;
+            system: string;
+        }[];
+    };
 }
 
 export default function ApiSettings({
@@ -57,6 +67,7 @@ export default function ApiSettings({
     events,
     endpoints,
     deliveries,
+    lab,
 }: Props) {
     const { flash } = usePage<{ flash: { newApiKey?: string | null } }>().props;
     const form = useForm({
@@ -392,6 +403,102 @@ export default function ApiSettings({
                     </table>
                 )}
             </Card>
+            {lab && lab.systems.length > 0 && (
+                <Card title="Lab systems" className="mt-4">
+                    <label className="mb-3 flex items-center gap-2 text-sm">
+                        Send new lab orders to:
+                        <select
+                            aria-label="Lab system for orders"
+                            className="rounded-md border border-line px-2 py-1 text-sm"
+                            value={lab.outgoingKey ?? ""}
+                            onChange={(e) =>
+                                router.post(
+                                    "/settings/api/lab/outgoing",
+                                    { key_id: e.target.value || null },
+                                    { preserveScroll: true },
+                                )
+                            }
+                        >
+                            <option value="">
+                                No lab system (orders stay in Clinic Flow)
+                            </option>
+                            {lab.systems
+                                .filter((x) => x.orders)
+                                .map((x) => (
+                                    <option key={x.id} value={x.id}>
+                                        {x.name}
+                                    </option>
+                                ))}
+                        </select>
+                    </label>
+                    <p className="mb-1 text-sm font-medium">
+                        Test-code mapping
+                    </p>
+                    <p className="mb-2 text-xs text-muted">
+                        Match each lab system&apos;s own test codes to your
+                        catalogue once; incoming results and outgoing orders are
+                        then translated automatically.
+                    </p>
+                    {lab.maps.map((m) => (
+                        <p
+                            key={m.id}
+                            className="flex items-center gap-2 text-sm"
+                        >
+                            {m.system}:{" "}
+                            <span className="font-mono">{m.external_code}</span>{" "}
+                            → <span className="font-mono">{m.test_code}</span>
+                            <button
+                                className="text-xs text-status-danger"
+                                onClick={() =>
+                                    router.post(
+                                        "/settings/api/lab/unmap",
+                                        { map_id: m.id },
+                                        { preserveScroll: true },
+                                    )
+                                }
+                            >
+                                remove
+                            </button>
+                        </p>
+                    ))}
+                    <Button
+                        className="mt-2"
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => {
+                            const names = lab.systems
+                                .map((x, i) => `${i + 1}. ${x.name}`)
+                                .join("\n");
+                            const pick =
+                                Number(
+                                    window.prompt(
+                                        `Which lab system?\n${names}`,
+                                        "1",
+                                    ),
+                                ) - 1;
+                            const system = lab.systems[pick];
+                            const external = window.prompt(
+                                "Lab system test code",
+                            );
+                            const code = window.prompt(
+                                "Your catalogue test code",
+                            );
+                            if (system && external && code)
+                                router.post(
+                                    "/settings/api/lab/map",
+                                    {
+                                        key_id: system.id,
+                                        external_code: external,
+                                        test_code: code,
+                                    },
+                                    { preserveScroll: true },
+                                );
+                        }}
+                    >
+                        Add mapping
+                    </Button>
+                </Card>
+            )}
         </AppShell>
     );
 }

@@ -5,6 +5,7 @@ use App\Domains\Identity\Actions\AddStaffMember;
 use App\Domains\Identity\Enums\StaffRole;
 use App\Domains\Identity\Models\Staff;
 use App\Domains\Lab\Actions\LabWorkflow;
+use App\Domains\Lab\Inbound\LabConnections;
 use App\Domains\Lab\Models\LabOrder;
 use App\Domains\Messaging\Contracts\MessageSender;
 use App\Domains\Messaging\Support\LogMessageSender;
@@ -19,6 +20,7 @@ use Database\Seeders\ClinicalReferenceSeeder;
 use Database\Seeders\PackageSeeder;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 uses(DatabaseMigrations::class);
 
@@ -112,4 +114,48 @@ it('accepts FHIR DiagnosticReports matched by sample barcode', function (): void
     ]];
     $this->withHeaders(['Authorization' => "Bearer {$this->key}"])->postJson("{$this->base}/fhir", $bundle)->assertStatus(201)->assertJsonPath('issue.0.diagnostics', 'Results applied');
     $this->clinic->run(fn () => expect(LabOrder::query()->findOrFail($this->order->id)->status)->toBe('verified'));
+});
+
+it('translates a lab system\'s own test codes through the mapping before filing results', function (): void {
+    $keyId = $this->clinic->run(function (): int {
+        $id = (int) DB::table('api_keys')->where('name', 'Precise LIS')->value('id');
+        $c = app(LabConnections::class);
+        $c->map($id, 'gluc', 'GLU');
+        $c->map($id, 'POT', 'K');
+
+        return $id;
+    });
+    expect($keyId)->toBeGreaterThan(0);
+    $this->call('POST', "{$this->base}/hl7", [], [], [], ['HTTP_AUTHORIZATION' => "Bearer {$this->key}", 'CONTENT_TYPE' => 'x-application/hl7-v2+er7'],
+        oru('MAP1', $this->order->id, [['GLUC', '5.0', 'mmol/L', '', 'F'], ['POT', '4.1', 'mmol/L', '', 'F']]))->assertSee('Results applied', false);
+    $this->clinic->run(fn () => expect(LabOrder::query()->findOrFail($this->order->id)->status)->toBe('verified'));
+});
+
+it('sends new orders only to the chosen lab system, in its own codes, until it confirms receipt', function (): void {
+    [$ordersKey, $otherKey, $newOrderId] = $this->clinic->run(function (): array {
+        $keys = app(ApiKeys::class);
+        $orders = $keys->create('Precise orders', ['lab:orders'], [], null, 1);
+        $other = $keys->create('Other lab', ['lab:orders'], [], null, 1);
+        $c = app(LabConnections::class);
+        expect(fn () => $c->setOutgoingKey((int) DB::table('api_keys')->where('name', 'Website')->value('id')))->toThrow(ValidationException::class);
+        $c->setOutgoingKey($orders['id']);
+        $c->map($orders['id'], 'GLUC', 'GLU');
+        tenancy()->initialize($this->clinic);
+        $order = app(LabWorkflow::class)->order(seenByDoctor($this, registerTestPatient('Sipho', '850101', null, '0821112222'), PayerType::Cash)->visit, $this->doctor, ['GLU']);
+
+        return [$orders['key'], $other['key'], $order->id];
+    });
+    tenancy()->end();
+
+    $bundle = $this->withHeaders(['Authorization' => "Bearer {$ordersKey}"])->getJson("{$this->base}/orders")->assertOk()->json();
+    expect($bundle['total'])->toBe(1)->and($bundle['entry'][1]['resource']['id'])->toBe($newOrderId)
+        ->and($bundle['entry'][1]['resource']['code']['coding'][0]['code'])->toBe('GLUC')
+        ->and(json_encode($bundle))->not->toContain('id_number');
+    $this->withHeaders(['Authorization' => "Bearer {$ordersKey}"])->get("{$this->base}/orders.hl7")->assertOk()->assertSee('ORM^O01', false)->assertSee('|GLUC^', false);
+    $this->withHeaders(['Authorization' => "Bearer {$otherKey}"])->getJson("{$this->base}/orders")->assertOk()->assertJsonPath('total', 0);
+    $this->withHeaders(['Authorization' => "Bearer {$this->key}"])->getJson("{$this->base}/orders")->assertForbidden();
+
+    $this->withHeaders(['Authorization' => "Bearer {$otherKey}"])->postJson("{$this->base}/orders/{$newOrderId}/received")->assertNotFound();
+    $this->withHeaders(['Authorization' => "Bearer {$ordersKey}"])->postJson("{$this->base}/orders/{$newOrderId}/received")->assertOk();
+    $this->withHeaders(['Authorization' => "Bearer {$ordersKey}"])->getJson("{$this->base}/orders")->assertJsonPath('total', 0);
 });
