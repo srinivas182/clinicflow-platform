@@ -22,6 +22,7 @@ use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Http\Client\Request as HttpRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 uses(DatabaseMigrations::class);
@@ -138,4 +139,68 @@ it('lets the super admin keep one active provider per kind and set prices, and p
     $this->actingAs($owner)->post('http://sunrise.clinicflow.test/settings/ai-scribe', ['enabled' => false])->assertSessionHasNoErrors();
     expect(Subscription::query()->find($this->sub->id)->addons)->not->toContain('ai_scribe');
     $this->actingAs($owner)->get('http://sunrise.clinicflow.test/settings/ai-scribe')->assertInertia(fn ($p) => $p->component('Settings/AiScribe')->where('offered', true)->where('on', false));
+});
+
+it('waits for the patient to agree on their own screen during a call, and only they can answer', function (): void {
+    [$session, $other] = $this->clinic->run(function (): array {
+        $scribe = app(AiScribe::class);
+        $id = $scribe->request($this->consultation, strtolower((string) Str::ulid()), $this->doctorUser->id, 'call');
+        fakeAi(60);
+        expect(fn () => $scribe->process($id, 'audio', 'audio/webm', 60))->toThrow(ValidationException::class);
+        Http::assertNothingSent();
+
+        return [$id, registerTestPatient('Sipho', '850101', null, '0821112222')->id];
+    });
+    expect($other)->not->toBeEmpty();
+
+    $this->withSession(['portal_cell' => '0821112222'])->postJson("http://sunrise.clinicflow.test/my/scribe/{$session}/agree")->assertForbidden();
+    $this->withSession(['portal_cell' => '0825550147'])->postJson("http://sunrise.clinicflow.test/my/scribe/{$session}/agree")->assertOk()->assertJsonPath('status', 'created');
+
+    $this->clinic->run(function () use ($session): void {
+        expect(DB::table('scribe_sessions')->where('id', $session)->value('consent_at'))->not->toBeNull();
+        app(AiScribe::class)->process($session, 'audio', 'audio/webm', 60);
+        expect(DB::table('scribe_sessions')->where('id', $session)->value('status'))->toBe('drafted');
+
+        $declined = app(AiScribe::class)->request($this->consultation, strtolower((string) Str::ulid()), $this->doctorUser->id, 'call');
+        app(AiScribe::class)->answer($declined, $this->consultation->patient_id, false);
+        expect(DB::table('scribe_sessions')->where('id', $declined)->value('status'))->toBe('declined')
+            ->and(DB::table('patients')->where('id', $this->consultation->patient_id)->value('ai_scribe_declined_at'))->not->toBeNull();
+    });
+});
+
+it('drafts a chat consult from the messages after the patient agrees, charging one minute', function (): void {
+    $this->clinic->run(function (): void {
+        $appointment = strtolower((string) Str::ulid());
+        $thread = DB::table('chat_threads')->insertGetId(['appointment_id' => null, 'patient_id' => $this->consultation->patient_id, 'doctor_staff_id' => $this->doctorUser->id,
+            'kind' => 'consult', 'opens_at' => now()->subHour(), 'closes_at' => now()->addHour(), 'created_at' => now(), 'updated_at' => now()]);
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        DB::table('chat_threads')->where('id', $thread)->update(['appointment_id' => $appointment]);
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        foreach ([['patient', 'Hi doctor, Thandi here. I have had a sore throat for two days.'], ['doctor', 'Any fever?'], ['patient', 'No fever.']] as [$sender, $body]) {
+            DB::table('chat_messages')->insert(['chat_thread_id' => $thread, 'sender' => $sender, 'body' => $body, 'created_at' => now()]);
+        }
+        $scribe = app(AiScribe::class);
+        $session = $scribe->request($this->consultation, $appointment, $this->doctorUser->id, 'chat');
+        fakeAi(60);
+        expect(fn () => $scribe->fromChat($session))->toThrow(ValidationException::class);
+        $scribe->answer($session, $this->consultation->patient_id, true);
+        $scribe->fromChat($session);
+
+        expect(DB::table('scribe_sessions')->where('id', $session)->value('status'))->toBe('drafted')
+            ->and($scribe->allowance($this->clinic->id)['used'])->toBe(1);
+        Http::assertSent(fn (HttpRequest $r) => str_contains($r->url(), 'anthropic') && str_contains($r->body(), 'sore throat') && ! str_contains($r->body(), 'Thandi'));
+        Http::assertNotSent(fn (HttpRequest $r) => str_contains($r->url(), 'deepgram'));
+    });
+});
+
+it('deletes transcripts and drafts after 30 days', function (): void {
+    $this->clinic->run(function (): void {
+        fakeAi(60);
+        $scribe = app(AiScribe::class);
+        $session = $scribe->start($this->consultation, $this->doctorUser->id, true);
+        $scribe->process($session, 'audio', 'audio/webm', 60);
+        DB::table('scribe_sessions')->where('id', $session)->update(['created_at' => now()->subDays(31)]);
+    });
+    $this->artisan('scribe:purge')->assertSuccessful();
+    $this->clinic->run(fn () => expect(DB::table('scribe_sessions')->whereNotNull('transcript')->orWhereNotNull('draft')->count())->toBe(0));
 });

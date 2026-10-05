@@ -22,6 +22,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -107,7 +108,10 @@ class TeleConsultController extends Controller
         $pending = $session->getAttribute('pending_extension_payment');
         $token = $pending === null ? null : Payment::query()->whereKey($pending)->value('checkout_token');
 
+        $scribe = DB::table('scribe_sessions')->where('appointment_id', $appointment->id)->latest('created_at')->first(['id', 'status']);
+
         return response()->json([
+            'scribe' => $scribe === null ? null : ['id' => $scribe->id, 'status' => $scribe->status],
             'endsAt' => $appointment->fresh()?->ends_at->toIso8601String(),
             'extensionPayUrl' => $token === null ? null : url('/pay/'.$token),
             'ended' => $session->ended_at !== null,

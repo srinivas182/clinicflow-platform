@@ -7,12 +7,14 @@ namespace App\Domains\Telemedicine\Http\Controllers;
 use App\Domains\Identity\Enums\Permission;
 use App\Domains\Identity\Models\Staff;
 use App\Domains\Portal\Actions\PortalSignIn;
+use App\Domains\Scribe\Actions\AiScribe;
 use App\Domains\Telemedicine\Models\ChatMessage;
 use App\Domains\Telemedicine\Models\ChatThread;
 use App\Domains\Telemedicine\Models\TeleSession;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -79,6 +81,11 @@ class ChatController extends Controller
             ],
             'me' => $me,
             'postUrl' => $postUrl,
+            'scribe' => $thread->appointment_id === null ? null : [
+                'appointmentId' => $thread->appointment_id,
+                'session' => DB::table('scribe_sessions')->where('appointment_id', $thread->appointment_id)->latest('created_at')->first(['id', 'status']),
+                'enabled' => app(AiScribe::class)->allowance((string) tenant('id'))['enabled'],
+            ],
             'messages' => $thread->messages()->orderBy('id')->get()->map(fn (ChatMessage $m) => ['id' => $m->id, 'sender' => $m->sender, 'body' => $m->body, 'at' => $m->created_at->format('H:i')])->values(),
         ]);
     }
