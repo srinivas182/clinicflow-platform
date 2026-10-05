@@ -97,6 +97,7 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
             Route::post('/brands', [BrandController::class, 'save'])->name('brands.save');
             Route::post('/brands/assign', [BrandController::class, 'assign'])->name('brands.assign');
+            Route::post('/brands/{brand}/senders/{action}', [BrandController::class, 'senders'])->whereIn('action', ['email', 'verify', 'sms'])->name('brands.senders');
             Route::post('/ai-scribe/providers/{driver}', [ScribeController::class, 'saveProvider'])->whereIn('driver', ['deepgram', 'azure', 'anthropic'])->name('ai-scribe.provider');
             Route::post('/ai-scribe/prices', [ScribeController::class, 'savePrices'])->name('ai-scribe.prices');
             Route::post('/locums/{profile}/review', [LocumController::class, 'review'])->name('locums.review');

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Platform\Branding;
 
 use App\Domains\Platform\Models\Provider;
+use App\Domains\Platform\Support\DnsResolver;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,6 +30,9 @@ class BrandController extends Controller
                 'practiceDomain' => $b->practice_domain, 'resellerId' => $b->reseller_id, 'active' => (bool) $b->active,
                 'signupLink' => rtrim((string) config('app.url'), '/').'/?brand='.$b->slug,
                 'practices' => Provider::query()->where('brand_id', $b->id)->count(),
+                'emailFrom' => $b->email_from, 'emailVerified' => $b->email_verified_at !== null,
+                'emailRecords' => $b->email_from === null ? null : app(Brands::class)->emailRecords((int) $b->id),
+                'smsSender' => $b->sms_sender, 'smsApproved' => (bool) $b->sms_sender_approved,
             ])->values(),
             'resellers' => $central->table('resellers')->orderBy('name')->get(['id', 'name']),
             'providers' => Provider::query()->orderBy('name')->limit(500)->get()->map(fn ($p) => ['id' => (string) $p->getKey(), 'name' => (string) $p->getAttribute('name'), 'brandId' => $p->getAttribute('brand_id')])->values(),
@@ -52,6 +56,23 @@ class BrandController extends Controller
         ], $logo instanceof UploadedFile ? $logo : null);
 
         return back()->with('success', 'Brand saved.');
+    }
+
+    public function senders(Request $request, int $brand, string $action, Brands $brands, DnsResolver $dns): RedirectResponse
+    {
+        if ($action === 'email') {
+            $brands->setEmailFrom($brand, $request->string('email_from')->toString());
+
+            return back()->with('success', 'Add the two DNS records shown, then press Verify.');
+        }
+        if ($action === 'verify') {
+            return $brands->verifyEmail($brand, $dns)
+                ? back()->with('success', 'Email domain verified. Practices of this brand now send from it.')
+                : back()->with('error', 'The DNS records were not found yet. DNS changes can take a few hours.');
+        }
+        $brands->setSmsSender($brand, $request->string('sms_sender')->toString() ?: null, $request->boolean('approved'));
+
+        return back()->with('success', 'SMS sender saved.');
     }
 
     public function assign(Request $request, Brands $brands): RedirectResponse

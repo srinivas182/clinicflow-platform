@@ -4,6 +4,13 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.38.0] — Sprint 18B-2: brand senders and partner portal
+
+### Added
+- Brand email sender: a "from" address on the brand's own domain, used for that brand's practices only after DNS verification (ownership TXT record at _clinicflow.<domain> and the email supplier's SPF include). Until verified, emails use the Clinic Flow address with the practice's name.
+- Brand SMS sender name (3–11 letters/numbers), used only once the super admin confirms it is registered and approved with the SMS supplier.
+- Partner portal: resellers linked to a brand see the brand's sign-up link, its practices, sign-ups this month and AI minutes this month, alongside their commission statements.
+
 ## [0.37.0] — Sprint 18B-1: white-label brands and theming
 
 ### Added

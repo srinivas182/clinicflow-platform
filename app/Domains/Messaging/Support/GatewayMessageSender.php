@@ -24,6 +24,11 @@ class GatewayMessageSender implements MessageSender
 
     public ?string $replyTo = null;
 
+    /** White-label: a verified brand email address and an approved SMS sender name. */
+    public ?string $fromEmail = null;
+
+    public ?string $smsSender = null;
+
     public function send(string $channel, string $recipient, ?string $subject, string $body): bool
     {
         $provider = MessagingProvider::activeFor($channel);
@@ -38,8 +43,8 @@ class GatewayMessageSender implements MessageSender
                 $status = 'suppressed';
             } else {
                 $result = $channel === 'sms'
-                    ? SmsGateway::send($provider, $recipient, $body)
-                    : EmailGateway::send($provider, $recipient, (string) ($subject ?? $this->fromName), $body, $this->fromName, $this->replyTo);
+                    ? SmsGateway::send($provider, $recipient, $body, $this->smsSender)
+                    : EmailGateway::send($provider, $recipient, (string) ($subject ?? $this->fromName), $body, $this->fromName, $this->replyTo, $this->fromEmail);
                 $ok = $result['ok'];
                 $status = $ok ? 'sent' : 'failed';
                 if (! $ok) {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Platform\Branding;
 
 use App\Domains\Platform\Models\Provider;
+use App\Domains\Platform\Support\DnsResolver;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -64,6 +65,80 @@ class Brands
         $this->db()->table('brands')->where('id', $id)->update($row);
 
         return $id;
+    }
+
+    /**
+     * Sets the brand's email "from" address; it is used only after the DNS records are verified.
+     *
+     * @return array{ownership: array{host: string, value: string}, spf: string}
+     */
+    public function setEmailFrom(int $brandId, string $email): array
+    {
+        $email = strtolower(trim($email));
+        $brand = $this->db()->table('brands')->where('id', $brandId)->first();
+        if ($brand === null || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            throw ValidationException::withMessages(['email_from' => 'Enter a valid email address on the brand\'s own domain.']);
+        }
+        $domain = substr($email, (int) strrpos($email, '@') + 1);
+        if (in_array($domain, [config('clinicflow.provider_domain'), 'gmail.com', 'outlook.com', 'yahoo.com'], true)) {
+            throw ValidationException::withMessages(['email_from' => 'Use an address on the brand\'s own domain.']);
+        }
+        $token = 'cf-'.bin2hex(random_bytes(12));
+        $this->db()->table('brands')->where('id', $brandId)->update(['email_from' => $email, 'email_token' => $token, 'email_verified_at' => null, 'updated_at' => now()]);
+
+        return $this->emailRecords($brandId);
+    }
+
+    /**
+     * @return array{ownership: array{host: string, value: string}, spf: string}
+     */
+    public function emailRecords(int $brandId): array
+    {
+        $brand = $this->db()->table('brands')->where('id', $brandId)->first();
+        $domain = $brand?->email_from === null ? '' : substr((string) $brand->email_from, (int) strrpos((string) $brand->email_from, '@') + 1);
+
+        return ['ownership' => ['host' => '_clinicflow.'.$domain, 'value' => $brand === null ? '' : (string) $brand->email_token], 'spf' => (string) config('clinicflow.email.spf_include', 'include:spf.clinicflow.co.za')];
+    }
+
+    /** Checks the ownership TXT record and that the domain's SPF record includes the email supplier. */
+    public function verifyEmail(int $brandId, DnsResolver $dns): bool
+    {
+        $brand = $this->db()->table('brands')->where('id', $brandId)->first();
+        if ($brand === null || $brand->email_from === null || $brand->email_token === null) {
+            throw ValidationException::withMessages(['email_from' => 'Set the email address first.']);
+        }
+        $records = $this->emailRecords($brandId);
+        $domain = substr((string) $brand->email_from, (int) strrpos((string) $brand->email_from, '@') + 1);
+        $owns = in_array($records['ownership']['value'], array_map('trim', $dns->txt($records['ownership']['host'])), true);
+        $spf = collect($dns->txt($domain))->contains(fn ($t) => str_starts_with(trim((string) $t), 'v=spf1') && str_contains((string) $t, $records['spf']));
+        $ok = $owns && $spf;
+        $this->db()->table('brands')->where('id', $brandId)->update(['email_verified_at' => $ok ? now() : null, 'updated_at' => now()]);
+
+        return $ok;
+    }
+
+    /** SMS sender name: used only once the super admin confirms it is registered with the SMS supplier. */
+    public function setSmsSender(int $brandId, ?string $sender, bool $approved): void
+    {
+        $sender = $sender === null || trim($sender) === '' ? null : trim($sender);
+        if ($sender !== null && preg_match('/^[A-Za-z0-9 ]{3,11}$/', $sender) !== 1) {
+            throw ValidationException::withMessages(['sms_sender' => 'Use 3–11 letters, numbers or spaces.']);
+        }
+        $this->db()->table('brands')->where('id', $brandId)->update(['sms_sender' => $sender, 'sms_sender_approved' => $sender !== null && $approved, 'updated_at' => now()]);
+    }
+
+    /**
+     * Sender details a practice's messages should use (only verified/approved values).
+     *
+     * @return array{email: ?string, sms: ?string}
+     */
+    public function senderFor(?Provider $provider): array
+    {
+        $id = $provider?->getAttribute('brand_id');
+        $brand = $id === null ? null : $this->db()->table('brands')->where('id', (int) $id)->where('active', true)->first();
+
+        return ['email' => $brand !== null && $brand->email_verified_at !== null ? (string) $brand->email_from : null,
+            'sms' => $brand !== null && (bool) $brand->sms_sender_approved && $brand->sms_sender !== null ? (string) $brand->sms_sender : null];
     }
 
     public function assign(string $providerId, ?int $brandId): void

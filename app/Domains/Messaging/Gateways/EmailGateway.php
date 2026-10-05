@@ -19,10 +19,10 @@ final class EmailGateway
     /**
      * @return array{ok: bool, error: ?string}
      */
-    public static function send(MessagingProvider $provider, string $to, string $subject, string $body, string $fromName, ?string $replyTo): array
+    public static function send(MessagingProvider $provider, string $to, string $subject, string $body, string $fromName, ?string $replyTo, ?string $fromEmail = null): array
     {
         $c = $provider->credentials ?? [];
-        $from = (string) ($provider->sender ?: config('mail.from.address'));
+        $from = (string) ($fromEmail ?: $provider->sender ?: config('mail.from.address'));
 
         if ($provider->driver === MessagingDriver::SendGrid || $provider->driver === MessagingDriver::Brevo) {
             return self::sendViaApi($provider->driver, (string) ($c['api_key'] ?? ''), $to, $subject, $body, $from, $fromName, $replyTo);
