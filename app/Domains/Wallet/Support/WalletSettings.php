@@ -17,6 +17,11 @@ final class WalletSettings
         'wallet.price_audio_per_minute_cents' => 120,
         'wallet.price_chat_per_session_cents' => 1200,
         'wallet.threshold_cents' => 15000,
+        // AI scribe: add-on monthly fee and included minutes; extra minutes charged from the wallet.
+        'ai.addon_monthly_cents' => 49900,
+        'ai.addon_minutes' => 300,
+        'ai.price_per_minute_cents' => 150,
+        'ai.max_recording_minutes' => 30,
         'wallet.packs' => [['amount' => 50000, 'bonus' => 0], ['amount' => 100000, 'bonus' => 5000], ['amount' => 250000, 'bonus' => 20000]],
     ];
 

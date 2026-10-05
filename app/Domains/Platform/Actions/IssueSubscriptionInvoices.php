@@ -8,6 +8,7 @@ use App\Domains\Billing\Models\SubscriptionInvoice;
 use App\Domains\Messaging\Support\MessagingUsage;
 use App\Domains\Platform\Enums\SubscriptionStatus;
 use App\Domains\Platform\Models\Subscription;
+use App\Domains\Wallet\Support\WalletSettings;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -48,6 +49,9 @@ class IssueSubscriptionInvoices
                 }
                 if (in_array('whatsapp', (array) ($subscription->getAttribute('addons') ?? []), true)) {
                     $amount += (int) config('clinicflow.whatsapp.addon_monthly_cents', 19900) * ($annual ? 12 : 1);
+                }
+                if (in_array('ai_scribe', (array) ($subscription->getAttribute('addons') ?? []), true)) {
+                    $amount += (int) WalletSettings::get('ai.addon_monthly_cents') * ($annual ? 12 : 1);
                 }
                 $amount += (int) ($subscription->getAttribute('extra_branches') ?? 0) * (int) config('clinicflow.branches.extra_monthly_cents', 49900) * ($annual ? 12 : 1);
                 $locumFees = DB::connection((string) config('tenancy.database.central_connection'))->table('locum_fees')->where('tenant_id', $subscription->tenant_id)->whereNull('subscription_invoice_id');

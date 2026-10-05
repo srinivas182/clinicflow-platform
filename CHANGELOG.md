@@ -4,6 +4,19 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.34.0] — Sprint 18A-1a: AI scribe — providers, billing and drafting
+
+### Added
+- Super admin → AI scribe: speech-to-text providers Deepgram Nova-3 Medical and Azure AI Speech (South Africa North, South African English) and the note writer Claude (Sonnet 5.5 by default); keys encrypted; one active provider per kind; provider cost per minute recorded; prices for practices; usage per practice.
+- AI scribe add-on (offered on clinic and doctor packages): monthly fee with included minutes (default R499 incl. 300 minutes) and packages can include minutes; extra minutes charged from the practice wallet (default R1.50/min); maximum recording length (default 30 minutes). The add-on fee is billed on the subscription invoice.
+- The scribe only runs when the practice has it, the doctor starts it and the patient agrees (declines are recorded). A recording the wallet cannot cover is refused before anything is sent.
+- Transcription → billing on the provider-measured length (included minutes first) → the patient's names removed → Claude drafts history, examination, assessment, plan and ICD-10 suggestions (invalid codes dropped). Audio is never stored; transcript and draft are encrypted.
+- Nothing is charged when transcription fails or no speech is recognised; re-drafting reuses the transcript at no extra charge.
+- Settings → AI scribe for practices: switch the add-on, see this month's minutes.
+
+### Next
+- 18A-1b: doctor screens (in person, video/audio calls with the patient's on-screen consent, chat consults) and automatic removal of drafts after 30 days.
+
 ## [0.33.0] — Sprint 17D-2b: outgoing lab orders and test-code mapping
 
 ### Added
