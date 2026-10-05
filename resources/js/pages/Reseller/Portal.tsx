@@ -13,12 +13,20 @@ interface Props {
     };
     referrals: { practice: string; referred: string }[];
     periods: Period[];
+    brands?: {
+        name: string;
+        signupLink: string;
+        signupsThisMonth: number;
+        aiMinutesThisMonth: number;
+        practices: { name: string; status: string; since: string }[];
+    }[];
 }
 
 export default function ResellerPortal({
     reseller,
     referrals,
     periods,
+    brands = [],
 }: Props) {
     return (
         <div className="mx-auto max-w-3xl px-6 py-8">
@@ -58,6 +66,30 @@ export default function ResellerPortal({
                     </p>
                 ))}
             </Card>
+            {brands.map((b) => (
+                <Card
+                    key={b.name}
+                    title={`Your brand: ${b.name}`}
+                    className="mt-4"
+                >
+                    <p className="mb-2 text-sm">
+                        Sign-up link:{" "}
+                        <span className="font-mono text-xs">
+                            {b.signupLink}
+                        </span>
+                    </p>
+                    <p className="mb-2 text-sm">
+                        {b.practices.length} practices · {b.signupsThisMonth}{" "}
+                        signed up this month · {b.aiMinutesThisMonth} AI minutes
+                        this month
+                    </p>
+                    {b.practices.map((p, i) => (
+                        <p key={i} className="text-sm">
+                            {p.name} · {p.status} · since {p.since}
+                        </p>
+                    ))}
+                </Card>
+            ))}
         </div>
     );
 }

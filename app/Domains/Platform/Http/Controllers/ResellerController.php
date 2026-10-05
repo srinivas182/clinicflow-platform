@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Platform\Http\Controllers;
 
+use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Resellers\ResellerProgramme;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -54,6 +55,16 @@ class ResellerController extends Controller
                 'link' => rtrim((string) config('app.url'), '/').'/?ref='.$reseller->code],
             'referrals' => $programme->statement((int) $reseller->id)['referrals'],
             'periods' => $programme->statement((int) $reseller->id)['months'],
+            // White-label partners: their brands, practices, sign-ups this month and AI use.
+            'brands' => DB::table('brands')->where('reseller_id', $reseller->id)->orderBy('name')->get()->map(function ($b) {
+                $practices = Provider::query()->where('brand_id', $b->id)->orderBy('name')->get();
+
+                return ['name' => $b->name, 'signupLink' => rtrim((string) config('app.url'), '/').'/?brand='.$b->slug,
+                    'signupsThisMonth' => $practices->filter(fn ($p) => $p->getAttribute('created_at') !== null && $p->getAttribute('created_at') >= now()->startOfMonth())->count(),
+                    'aiMinutesThisMonth' => (int) DB::table('ai_usage')->whereIn('tenant_id', $practices->pluck('id'))->where('period', now()->format('Y-m'))->sum(DB::raw('minutes_included_used + minutes_wallet')),
+                    'practices' => $practices->map(fn ($p) => ['name' => (string) $p->getAttribute('name'), 'status' => (string) ($p->getAttribute('status') instanceof \BackedEnum ? $p->getAttribute('status')->value : $p->getAttribute('status')),
+                        'since' => substr((string) $p->getAttribute('created_at'), 0, 10)])->values()];
+            })->values(),
         ]);
     }
 }

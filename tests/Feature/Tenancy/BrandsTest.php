@@ -7,6 +7,7 @@ use App\Domains\Platform\Enums\ProviderType;
 use App\Domains\Platform\Models\Package;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Resellers\ResellerProgramme;
+use App\Domains\Platform\Support\DnsResolver;
 use App\Models\User;
 use Database\Seeders\PackageSeeder;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
@@ -80,4 +81,50 @@ it('shows the brand to the practice and its patients, and Clinic Flow to everyon
         ->assertInertia(fn ($p) => $p->where('brand.name', 'Partner Health')->where('brand.primary', '#7a1fa2')->where('brand.poweredBy', false));
     $this->actingAs($otherOwner)->get('http://northside.clinicflow.test/workspace')->assertOk()->assertInertia(fn ($p) => $p->where('brand', null));
     $this->actingAs($admin)->get('http://localhost/admin/brands')->assertOk()->assertInertia(fn ($p) => $p->component('Admin/Brands')->where('brands.0.practices', 1));
+});
+
+it('uses a brand email address only after its DNS records verify, and an SMS name only once approved', function (): void {
+    $brand = $this->brands->save(null, brandData());
+    $clinic = makeProvider('Sunrise Medical Centre', ProviderType::Clinic, 'sunrise.clinicflow.test');
+    $this->brands->assign($clinic->id, $brand);
+    $clinic = Provider::query()->findOrFail($clinic->id);
+
+    expect(fn () => $this->brands->setEmailFrom($brand, 'someone@gmail.com'))->toThrow(ValidationException::class);
+    $records = $this->brands->setEmailFrom($brand, 'care@partnerhealth.test');
+    expect($records['ownership']['host'])->toBe('_clinicflow.partnerhealth.test')
+        ->and($this->brands->senderFor($clinic)['email'])->toBeNull();
+
+    $dns = new class extends DnsResolver
+    {
+        /** @var array<string, list<string>> */
+        public array $records = [];
+
+        public function txt(string $host): array
+        {
+            return $this->records[$host] ?? [];
+        }
+    };
+    expect($this->brands->verifyEmail($brand, $dns))->toBeFalse();
+    $dns->records = ['_clinicflow.partnerhealth.test' => [$records['ownership']['value']]];
+    expect($this->brands->verifyEmail($brand, $dns))->toBeFalse();
+    $dns->records['partnerhealth.test'] = ['v=spf1 '.$records['spf'].' ~all'];
+    expect($this->brands->verifyEmail($brand, $dns))->toBeTrue()
+        ->and($this->brands->senderFor($clinic)['email'])->toBe('care@partnerhealth.test');
+
+    expect(fn () => $this->brands->setSmsSender($brand, 'Way-too-long-name!', true))->toThrow(ValidationException::class);
+    $this->brands->setSmsSender($brand, 'PartnerHlth', false);
+    expect($this->brands->senderFor($clinic)['sms'])->toBeNull();
+    $this->brands->setSmsSender($brand, 'PartnerHlth', true);
+    expect($this->brands->senderFor($clinic)['sms'])->toBe('PartnerHlth');
+});
+
+it('shows the partner its brand, practices and sign-ups in the partner portal', function (): void {
+    $user = User::factory()->create(['email' => 'sales@partnerhealth.test']);
+    $reseller = app(ResellerProgramme::class)->create('Partner Health Sales', 'sales@partnerhealth.test', null, 15, 12);
+    $brand = $this->brands->save(null, brandData(['reseller_id' => $reseller]));
+    $clinic = makeProvider('Sunrise Medical Centre', ProviderType::Clinic, 'sunrise.clinicflow.test');
+    $this->brands->assign($clinic->id, $brand);
+
+    $this->actingAs($user)->get('http://localhost/reseller')->assertOk()->assertInertia(fn ($p) => $p->component('Reseller/Portal')
+        ->where('brands.0.name', 'Partner Health')->where('brands.0.practices.0.name', 'Sunrise Medical Centre')->where('brands.0.signupsThisMonth', 1));
 });

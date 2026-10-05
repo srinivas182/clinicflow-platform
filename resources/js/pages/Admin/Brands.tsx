@@ -19,6 +19,14 @@ interface Brand {
     active: boolean;
     signupLink: string;
     practices: number;
+    emailFrom: string | null;
+    emailVerified: boolean;
+    emailRecords: {
+        ownership: { host: string; value: string };
+        spf: string;
+    } | null;
+    smsSender: string | null;
+    smsApproved: boolean;
 }
 interface Props {
     brands: Brand[];
@@ -310,6 +318,112 @@ export default function AdminBrands({ brands, resellers, providers }: Props) {
                         >
                             Edit
                         </Button>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-3 border-t border-[#EBF0EE] pt-3 text-sm">
+                        <div>
+                            <p className="mb-1 font-medium">
+                                Email sender{" "}
+                                {b.emailVerified ? (
+                                    <Badge tone="success">verified</Badge>
+                                ) : b.emailFrom ? (
+                                    <Badge tone="warning">not verified</Badge>
+                                ) : null}
+                            </p>
+                            <p className="mb-1 text-xs text-muted">
+                                {b.emailFrom ??
+                                    "Uses the Clinic Flow address until a verified brand address is set."}
+                            </p>
+                            {b.emailRecords && !b.emailVerified && (
+                                <p className="mb-1 font-mono text-[11px]">
+                                    TXT {b.emailRecords.ownership.host} ={" "}
+                                    {b.emailRecords.ownership.value}
+                                    <br />
+                                    SPF on the domain must include:{" "}
+                                    {b.emailRecords.spf}
+                                </p>
+                            )}
+                            <div className="flex gap-2">
+                                <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    onClick={() => {
+                                        const email = window.prompt(
+                                            "From address on the brand domain",
+                                            b.emailFrom ?? "",
+                                        );
+                                        if (email)
+                                            router.post(
+                                                `/admin/brands/${b.id}/senders/email`,
+                                                { email_from: email },
+                                                { preserveScroll: true },
+                                            );
+                                    }}
+                                >
+                                    Set address
+                                </Button>
+                                {b.emailFrom && !b.emailVerified && (
+                                    <Button
+                                        size="sm"
+                                        onClick={() =>
+                                            router.post(
+                                                `/admin/brands/${b.id}/senders/verify`,
+                                                {},
+                                                { preserveScroll: true },
+                                            )
+                                        }
+                                    >
+                                        Verify
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                        <div>
+                            <p className="mb-1 font-medium">
+                                SMS sender{" "}
+                                {b.smsSender && (
+                                    <Badge
+                                        tone={
+                                            b.smsApproved
+                                                ? "success"
+                                                : "warning"
+                                        }
+                                    >
+                                        {b.smsApproved
+                                            ? "approved"
+                                            : "not approved"}
+                                    </Badge>
+                                )}
+                            </p>
+                            <p className="mb-1 text-xs text-muted">
+                                {b.smsSender ??
+                                    "Uses the SMS supplier default."}{" "}
+                                Only approved names are used — register them
+                                with the SMS supplier first.
+                            </p>
+                            <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => {
+                                    const name = window.prompt(
+                                        "SMS sender name (3–11 letters/numbers)",
+                                        b.smsSender ?? "",
+                                    );
+                                    if (name !== null)
+                                        router.post(
+                                            `/admin/brands/${b.id}/senders/sms`,
+                                            {
+                                                sms_sender: name,
+                                                approved: window.confirm(
+                                                    "Is this name registered and approved with the SMS supplier?",
+                                                ),
+                                            },
+                                            { preserveScroll: true },
+                                        );
+                                }}
+                            >
+                                Set SMS sender
+                            </Button>
+                        </div>
                     </div>
                 </Card>
             ))}

@@ -10,6 +10,7 @@ use App\Domains\Messaging\Support\MessageCatalogue;
 use App\Domains\Messaging\Support\MessagingUsage;
 use App\Domains\Messaging\Support\TemplateResolver;
 use App\Domains\Messaging\WhatsApp\WhatsAppRouter;
+use App\Domains\Platform\Branding\Brands;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\Setting;
 use Illuminate\Support\Facades\DB;
@@ -77,6 +78,9 @@ class SendMessage
             $this->sender->fromName = $provider instanceof Provider ? (string) Setting::get('messaging', 'from_name', $provider->name) : 'Clinic Flow';
             $reply = $provider instanceof Provider ? Setting::get('messaging', 'reply_to') : null;
             $this->sender->replyTo = is_string($reply) && $reply !== '' ? $reply : null;
+            $brandSender = app(Brands::class)->senderFor($provider instanceof Provider ? $provider : null);
+            $this->sender->fromEmail = $brandSender['email'];
+            $this->sender->smsSender = $brandSender['sms'];
         }
 
         $ok = $this->sender->send($channel, $recipient, $subject, $body);

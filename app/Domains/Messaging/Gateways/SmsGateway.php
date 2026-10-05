@@ -26,11 +26,11 @@ final class SmsGateway
     /**
      * @return array{ok: bool, error: ?string}
      */
-    public static function send(MessagingProvider $provider, string $to, string $body): array
+    public static function send(MessagingProvider $provider, string $to, string $body, ?string $senderName = null): array
     {
         $c = $provider->credentials ?? [];
         $number = self::e164($to);
-        $sender = $provider->sender;
+        $sender = $senderName ?: $provider->sender;
 
         $response = match ($provider->driver) {
             MessagingDriver::Clickatell => Http::withHeaders(['Authorization' => (string) ($c['api_key'] ?? '')])->acceptJson()
