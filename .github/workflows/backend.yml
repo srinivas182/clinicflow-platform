@@ -1,13 +1,7 @@
 name: Backend
 
-# Minutes-saving rules (GitHub Actions minutes are limited):
-# - draft PRs run only lint + static analysis (~1 min);
-# - the full test suite runs once a PR is ready for review (or is marked ready);
-# - pushes to main (after a merge) run only lint + static analysis — the same code already passed on the PR;
-# - a newer push cancels the older run; unrelated file changes don't trigger this workflow.
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - 'app/**'
       - 'bootstrap/**'
@@ -139,8 +133,6 @@ jobs:
 
   tests:
     # The suite is split across 4 runners, each with its own machine and MySQL.
-    # Only for ready (non-draft) PRs, or when run by hand.
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
     name: Tests (part ${{ matrix.shard }} of 4)
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -256,7 +248,7 @@ jobs:
   summary:
     name: Test summary
     needs: [quality, tests]
-    if: success() && needs.tests.result == 'success'
+    if: success()
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
