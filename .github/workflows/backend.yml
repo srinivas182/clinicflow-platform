@@ -229,7 +229,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           {
-            if [ "${{ cancelled() }}" = "true" ]; then
+            if [ "${{ job.status }}" = "cancelled" ]; then
               echo "### Backend CI cancelled (tests part ${{ matrix.shard }} of 4, superseded) — \`${GITHUB_SHA::8}\`"
             else
               echo "### Backend CI failed (tests part ${{ matrix.shard }} of 4) — \`${GITHUB_SHA::8}\`"
