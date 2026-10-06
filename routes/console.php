@@ -27,3 +27,4 @@ Schedule::command('locums:remind')->hourly()->onOneServer();
 Schedule::command('webhooks:deliver')->everyMinute()->withoutOverlapping()->onOneServer();
 Schedule::command('scribe:purge')->dailyAt('02:30')->onOneServer();
 Schedule::command('reports:send')->dailyAt('07:00')->onOneServer();
+Schedule::command('queue:alert')->hourly()->onOneServer();
