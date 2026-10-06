@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Identity\Http\Controllers;
 
 use App\Domains\Identity\Actions\Authenticator;
+use App\Domains\Identity\Actions\TrustedDevices;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\SessionGuard;
@@ -30,6 +31,8 @@ class SecurityController extends Controller
             'enabled' => $user->totp_confirmed_at !== null,
             'required' => $auth->required($user),
             'recoveryLeft' => count((array) ($user->recovery_codes ?? [])),
+            'trustedDevices' => DB::table('trusted_devices')->where('user_id', $user->id)->where('expires_at', '>', now())->latest('created_at')->get()
+                ->map(fn ($d) => ['id' => $d->id, 'label' => (string) $d->label, 'lastUsed' => substr((string) $d->last_used_at, 0, 16), 'expires' => substr((string) $d->expires_at, 0, 10)])->values(),
             'signIns' => DB::table('login_events')->where('user_id', $user->id)->latest('created_at')->limit(10)->get()
                 ->map(fn ($e) => ['at' => substr((string) $e->created_at, 0, 16), 'ip' => $e->ip, 'device' => mb_substr((string) $e->user_agent, 0, 80), 'newDevice' => (bool) $e->new_device])->values(),
         ]);
@@ -64,6 +67,13 @@ class SecurityController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    public function forgetDevice(Request $request, int $device): JsonResponse
+    {
+        app(TrustedDevices::class)->forget($this->user($request), $device);
+
+        return response()->json(['ok' => true]);
+    }
+
     /** Signs out every other browser and device (needs the password). */
     public function signOutOthers(Request $request): JsonResponse
     {
@@ -75,6 +85,7 @@ class SecurityController extends Controller
         $guard = Auth::guard('web');
         abort_unless($guard instanceof SessionGuard, 500);
         $guard->logoutOtherDevices($request->string('password')->toString());
+        app(TrustedDevices::class)->forget($user);
         activity('auth')->causedBy($user)->log('Signed out other devices');
 
         return response()->json(['ok' => true]);

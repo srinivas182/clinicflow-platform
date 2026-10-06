@@ -84,6 +84,7 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/confirm-identity', [ConfirmIdentityController::class, 'show'])->name('identity.confirm');
             Route::post('/confirm-identity', [ConfirmIdentityController::class, 'store'])->middleware('throttle:10,1')->name('identity.confirm.store');
             Route::post('/account/security/sign-out-others', [SecurityController::class, 'signOutOthers'])->middleware('throttle:5,1')->name('account.security.signout');
+            Route::post('/account/security/devices/{device}/forget', [SecurityController::class, 'forgetDevice'])->name('account.security.device.forget');
             Route::get('/account/security', [SecurityController::class, 'show'])->name('account.security');
             Route::post('/account/security/authenticator', [SecurityController::class, 'start'])->middleware('throttle:10,1')->name('account.security.start');
             Route::post('/account/security/authenticator/confirm', [SecurityController::class, 'confirm'])->middleware('throttle:10,1')->name('account.security.confirm');

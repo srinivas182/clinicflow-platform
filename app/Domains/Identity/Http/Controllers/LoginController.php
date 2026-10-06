@@ -6,6 +6,7 @@ namespace App\Domains\Identity\Http\Controllers;
 
 use App\Domains\Identity\Actions\RecordSignIn;
 use App\Domains\Identity\Actions\StartLogin;
+use App\Domains\Identity\Actions\TrustedDevices;
 use App\Domains\Identity\Actions\VerifyLoginChallenge;
 use App\Domains\Identity\Http\Requests\LoginRequest;
 use App\Domains\Identity\Models\LoginChallenge;
@@ -28,7 +29,20 @@ class LoginController extends Controller
 
     public function store(LoginRequest $request, StartLogin $action): RedirectResponse
     {
-        $challenge = $action->handle($request->string('login')->toString(), $request->string('password')->toString(), $request->ip());
+        $user = $action->checkPassword($request->string('login')->toString(), $request->string('password')->toString(), $request->ip());
+        // A device the user trusted in the last 30 days skips the code step (never for super admins).
+        $devices = app(TrustedDevices::class);
+        $cookie = $request->cookie($devices::COOKIE);
+        if ($devices->trusted($user, is_string($cookie) ? $cookie : null)) {
+            Auth::guard('web')->login($user);
+            $request->session()->regenerate();
+            $user->forceFill(['last_login_at' => now()])->save();
+            activity('auth')->causedBy($user)->log('Signed in on a trusted device');
+            app(RecordSignIn::class)->handle($user, (string) $request->ip(), (string) $request->userAgent());
+
+            return redirect()->route('workspaces');
+        }
+        $challenge = $action->challenge($user, $request->ip());
 
         $request->session()->put('login_challenge', $challenge->id);
 
@@ -57,8 +71,13 @@ class LoginController extends Controller
         $request->session()->forget('login_challenge');
         $request->session()->regenerate();
         app(RecordSignIn::class)->handle($user, (string) $request->ip(), (string) $request->userAgent());
+        $response = redirect()->route('workspaces');
+        $devices = app(TrustedDevices::class);
+        if ($request->boolean('trust_device') && $devices->allowed($user)) {
+            $response->withCookie($devices->remember($user, (string) $request->userAgent()));
+        }
 
-        return redirect()->route('workspaces');
+        return $response;
     }
 
     public function destroy(Request $request): RedirectResponse

@@ -25,6 +25,7 @@ use App\Domains\Hub\Http\Controllers\EscriptController;
 use App\Domains\Hub\Http\Controllers\NetworkController;
 use App\Domains\Identity\Http\Controllers\ConfirmIdentityController;
 use App\Domains\Identity\Http\Controllers\HandoffController;
+use App\Domains\Identity\Http\Controllers\PracticeSecurityController;
 use App\Domains\Lab\Http\Controllers\LabCatalogController;
 use App\Domains\Lab\Http\Controllers\LabController;
 use App\Domains\Lab\Inbound\LabInboundController;
@@ -323,6 +324,8 @@ Route::middleware([
         Route::get('/me/calendar', [CalendarController::class, 'show'])->name('calendar.show');
         Route::get('/me/calendar/{driver}/connect', [CalendarController::class, 'connect'])->whereIn('driver', ['google', 'microsoft'])->name('calendar.connect');
         Route::put('/me/calendar', [CalendarController::class, 'update'])->name('calendar.update');
+        Route::get('/settings/security', [PracticeSecurityController::class, 'show'])->name('settings.security');
+        Route::post('/settings/security', [PracticeSecurityController::class, 'update'])->middleware('step-up')->name('settings.security.update');
         Route::get('/confirm-identity', [ConfirmIdentityController::class, 'show'])->name('identity.confirm');
         Route::post('/confirm-identity', [ConfirmIdentityController::class, 'store'])->middleware('throttle:10,1')->name('identity.confirm.store');
         Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
