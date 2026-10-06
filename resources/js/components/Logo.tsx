@@ -1,6 +1,7 @@
 import { usePage } from "@inertiajs/react";
 import { Activity } from "lucide-react";
 import { useEffect } from "react";
+import { brandTitle } from "@/lib/brandTitle";
 
 type Brand =
     | {
@@ -22,6 +23,7 @@ export function Logo({ tone = "dark" }: { tone?: "dark" | "light" }) {
 
     useEffect(() => {
         const root = document.documentElement.style;
+        brandTitle.name = brand ? brand.name : "Clinic Flow";
         if (brand) {
             root.setProperty("--color-teal", brand.primary);
             root.setProperty("--color-teal-deep", brand.accent);

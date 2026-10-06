@@ -4,6 +4,17 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.44.0] — Sprint S1c-1: faster loading and Octane readiness
+
+### Changed
+- Pages are downloaded only when opened: the main JavaScript file drops from about 1.25 MB to about 364 KB, with each screen in its own small file.
+- Practice settings and platform prices are cached (10 minutes, shared through the cache store so every server sees the same values) and cleared the moment they change; each practice's settings are cached separately.
+- White-label: the browser tab shows the brand's name instead of "Clinic Flow".
+
+### Added
+- Octane configuration (Swoole by default); the super admin's storage choice is re-applied at the start of every request, so a storage switch takes effect without restarting workers.
+- N+1 query detection in development and tests: lazy loading is logged as a warning (never thrown) so it can be found and fixed.
+
 ## [0.43.0] — Sprint S1b-2: AI scribe in the background
 
 ### Changed
