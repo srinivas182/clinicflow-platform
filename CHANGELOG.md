@@ -4,6 +4,16 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.43.0] — Sprint S1b-2: AI scribe in the background
+
+### Changed
+- AI scribe recordings are transcribed and drafted in the background (the "ai" queue): consent, length, providers and affordability are still checked at upload, so the doctor hears at once if it cannot be paid for; the doctor's screen and the call page show progress and pick up the draft when ready. On the sync queue (single server, tests) it runs immediately as before.
+- Audio is kept encrypted only until the background job picks it up and is deleted before transcription starts. One attempt only, so a retry can never charge twice; billing still happens only after a successful transcription.
+- `scribe:purge` also deletes any leftover recording older than an hour.
+
+### Notes
+- Lab explanations and chat drafts stay immediate (short text-only calls); report exports remain capped at 5,000 rows.
+
 ## [0.42.0] — Sprint S1b-1: background messaging and the queue dashboard
 
 ### Added

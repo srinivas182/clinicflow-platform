@@ -49,7 +49,7 @@ class ScribeSessionController extends Controller
         $request->validate(['audio' => ['required', 'file', 'max:61440', 'mimetypes:audio/webm,video/webm,audio/ogg,audio/mp4,audio/mpeg,audio/wav,audio/x-wav'], 'seconds' => ['required', 'integer', 'min:1']]);
         $file = $request->file('audio');
         abort_unless($file instanceof UploadedFile, 422);
-        $scribe->process($session, (string) file_get_contents($file->getRealPath()), (string) $file->getMimeType(), $request->integer('seconds'));
+        $scribe->queueAudio($session, (string) file_get_contents($file->getRealPath()), (string) $file->getMimeType(), $request->integer('seconds'));
         @unlink($file->getRealPath());
 
         return $this->show($request, $session, $scribe);

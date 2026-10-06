@@ -7,6 +7,8 @@ namespace App\Domains\Scribe\Actions;
 use App\Domains\Clinical\Models\Consultation;
 use App\Domains\Patients\Models\Patient;
 use App\Domains\Platform\Models\Subscription;
+use App\Domains\Platform\Storage\FileStore;
+use App\Domains\Scribe\Jobs\ProcessScribeAudio;
 use App\Domains\Scribe\Models\AiProvider;
 use App\Domains\Scribe\Providers\NoteWriter;
 use App\Domains\Scribe\Providers\SpeechToText;
@@ -16,6 +18,7 @@ use App\Domains\Wallet\Support\WalletSettings;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -137,25 +140,43 @@ class AiScribe
      * Transcribe, bill, and draft. $claimedSeconds (from the browser) is only used to refuse
      * recordings the practice cannot pay for before anything is sent; billing uses the provider's measured length.
      */
-    public function process(string $sessionId, string $audio, string $mime, int $claimedSeconds): void
+    /**
+     * Upload entry point: checks everything now (so the doctor hears at once if it can't be paid for),
+     * then transcribes in the background on a real queue. The audio is kept encrypted only until the
+     * job picks it up, and is deleted before transcription starts. On the sync queue it runs immediately.
+     */
+    public function queueAudio(string $sessionId, string $audio, string $mime, int $claimedSeconds): void
     {
+        if (config('queue.default') === 'sync') {
+            $this->process($sessionId, $audio, $mime, $claimedSeconds);
+
+            return;
+        }
         $session = DB::table('scribe_sessions')->where('id', $sessionId)->first();
         if ($session === null || $session->status !== 'created') {
             throw ValidationException::withMessages(['scribe' => 'This recording was already processed.']);
         }
+        $this->precheck($claimedSeconds);
+        Storage::disk(FileStore::DISK)
+            ->put(self::audioPath($sessionId), Crypt::encryptString(base64_encode($audio)));
+        DB::table('scribe_sessions')->where('id', $sessionId)->update(['status' => 'processing', 'updated_at' => now()]);
+        ProcessScribeAudio::dispatch($sessionId, $mime, $claimedSeconds);
+    }
+
+    public static function audioPath(string $sessionId): string
+    {
+        return 'scribe-audio/'.$sessionId.'.enc';
+    }
+
+    public function process(string $sessionId, string $audio, string $mime, int $claimedSeconds): void
+    {
+        $session = DB::table('scribe_sessions')->where('id', $sessionId)->first();
+        if ($session === null || ! in_array($session->status, ['created', 'processing'], true)) {
+            throw ValidationException::withMessages(['scribe' => 'This recording was already processed.']);
+        }
         $tenantId = (string) tenant('id');
         $max = (int) WalletSettings::get('ai.max_recording_minutes') * 60;
-        if ($claimedSeconds < 1 || $claimedSeconds > $max) {
-            throw ValidationException::withMessages(['audio' => 'Recordings can be up to '.intdiv($max, 60).' minutes.']);
-        }
-        $speech = AiProvider::active('speech');
-        $notes = AiProvider::active('notes');
-        if (! $speech instanceof AiProvider || ! $notes instanceof AiProvider) {
-            throw ValidationException::withMessages(['scribe' => 'The AI scribe is not available right now.']);
-        }
-        if (! $this->affordable($tenantId, (int) ceil($claimedSeconds / 60))) {
-            throw ValidationException::withMessages(['scribe' => 'Not enough AI scribe minutes or wallet balance for this recording. Top up the wallet.']);
-        }
+        [$speech] = $this->precheck($claimedSeconds);
 
         try {
             $heard = SpeechToText::transcribe($speech, $audio, $mime);
@@ -217,6 +238,29 @@ class AiScribe
         DB::table('scribe_sessions')->where('id', $sessionId)->whereIn('status', ['drafted', 'transcribed', 'failed'])
             ->update(['status' => $accepted ? 'accepted' : 'discarded', 'accepted_at' => $accepted ? now() : null, 'updated_at' => now()]);
         activity('scribe')->withProperties(['session' => $sessionId])->log($accepted ? 'AI draft accepted into the note for review and saving' : 'AI draft discarded');
+    }
+
+    /**
+     * Length, providers and affordability — checked before anything is sent or queued.
+     *
+     * @return array{0: AiProvider, 1: AiProvider}
+     */
+    private function precheck(int $claimedSeconds): array
+    {
+        $max = (int) WalletSettings::get('ai.max_recording_minutes') * 60;
+        if ($claimedSeconds < 1 || $claimedSeconds > $max) {
+            throw ValidationException::withMessages(['audio' => 'Recordings can be up to '.intdiv($max, 60).' minutes.']);
+        }
+        $speech = AiProvider::active('speech');
+        $notes = AiProvider::active('notes');
+        if (! $speech instanceof AiProvider || ! $notes instanceof AiProvider) {
+            throw ValidationException::withMessages(['scribe' => 'The AI scribe is not available right now.']);
+        }
+        if (! $this->affordable((string) tenant('id'), (int) ceil($claimedSeconds / 60))) {
+            throw ValidationException::withMessages(['scribe' => 'Not enough AI scribe minutes or wallet balance for this recording. Top up the wallet.']);
+        }
+
+        return [$speech, $notes];
     }
 
     /** Removes the patient's names before any text leaves for the note writer. */
