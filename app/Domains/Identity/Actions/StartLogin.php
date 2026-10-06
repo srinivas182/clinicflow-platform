@@ -30,6 +30,11 @@ class StartLogin
             throw ValidationException::withMessages(['login' => 'These details do not match our records.']);
         }
 
+        // Authenticator app set up: no SMS or email code is sent; the app's code (or a recovery code) is asked for.
+        if ($user->totp_confirmed_at !== null) {
+            return LoginChallenge::create(['user_id' => $user->id, 'code_hash' => '-', 'method' => 'authenticator', 'expires_at' => now()->addMinutes(5), 'ip' => $ip]);
+        }
+
         $code = (string) random_int(100000, 999999);
 
         $challenge = LoginChallenge::create([

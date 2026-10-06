@@ -7,6 +7,7 @@ namespace App\Domains\Identity\Http\Controllers;
 use App\Domains\Identity\Actions\StartLogin;
 use App\Domains\Identity\Actions\VerifyLoginChallenge;
 use App\Domains\Identity\Http\Requests\LoginRequest;
+use App\Domains\Identity\Models\LoginChallenge;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,12 +40,15 @@ class LoginController extends Controller
             return redirect()->route('login');
         }
 
-        return Inertia::render('Auth/VerifyCode');
+        $challenge = LoginChallenge::query()->find((string) $request->session()->get('login_challenge'));
+
+        return Inertia::render('Auth/VerifyCode', ['method' => $challenge?->getAttribute('method') ?? 'message']);
     }
 
     public function verify(Request $request, VerifyLoginChallenge $action): RedirectResponse
     {
-        $request->validate(['code' => ['required', 'digits:6']]);
+        // Six digits (message or authenticator app) or a recovery code (xxxxx-xxxxx).
+        $request->validate(['code' => ['required', 'string', 'max:20']]);
 
         $user = $action->handle((string) $request->session()->get('login_challenge'), $request->string('code')->toString());
 

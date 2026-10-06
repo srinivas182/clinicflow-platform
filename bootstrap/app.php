@@ -6,6 +6,7 @@ use App\Domains\Platform\Http\Middleware\EnsurePlatformAdmin;
 use App\Domains\Platform\Http\Middleware\EnsureProviderWritable;
 use App\Http\Middleware\CaptureResellerRef;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\RequireAuthenticator;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -50,6 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
             CaptureResellerRef::class,
+            RequireAuthenticator::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

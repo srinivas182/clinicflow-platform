@@ -4,6 +4,18 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.46.0] — Sprint H1a-1: authenticator-app sign-in
+
+### Added
+- Account → Security: set up an authenticator app (Google or Microsoft Authenticator, Authy, 1Password…) by scanning a QR code (or entering the key); it is switched on only after a working code is confirmed. Ten one-time recovery codes are shown once and stored only as hashes; they can be replaced with a current code.
+- Sign-in: staff with an authenticator app enter its code instead of a code by SMS or email (none is sent); a code can never be reused; recovery codes work once each.
+- Super admins, owners and practice admins must use an authenticator app: until it is set up, only the security page and sign-out are available, and they cannot turn it off (CLINICFLOW_REQUIRE_AUTHENTICATOR, on by default).
+- TOTP implemented to RFC 6238 and verified against its published test vectors; the secret is encrypted and never included when a user record is serialised.
+
+### Notes
+- Adds the qrcode npm package (QR codes are drawn in the browser).
+- Next (H1a-2): trusted devices, practice-wide requirement, step-up confirmation for sensitive actions, session hardening.
+
 ## [0.45.0] — Sprint S1c-2: pagination on long lists
 
 ### Changed
