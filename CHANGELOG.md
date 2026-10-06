@@ -4,6 +4,15 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.45.0] — Sprint S1c-2: pagination on long lists
+
+### Changed
+- Long lists now load 50 rows per page with page controls (filters kept in the links): the audit log, medical aid claims, pharmacy deliveries, e-scripts received, and the super admin's wallet list. Previously these loaded a fixed 100–200 rows and could not show older records.
+- The audit log looks up who performed each action once per page instead of once per row (previously up to 200 extra queries per page).
+
+### Notes
+- Patients remain search-first (no browse-everything list), which also limits bulk scrolling through patient records.
+
 ## [0.44.0] — Sprint S1c-1: faster loading and Octane readiness
 
 ### Changed

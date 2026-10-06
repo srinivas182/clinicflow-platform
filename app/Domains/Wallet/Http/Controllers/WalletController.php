@@ -126,9 +126,9 @@ class WalletController extends Controller
             ],
             'threshold' => WalletSettings::thresholdCents() / 100,
             'packs' => array_map(fn (array $p) => ['amount' => $p['amount'] / 100, 'bonus' => $p['bonus'] / 100], WalletSettings::packs()),
-            'wallets' => Wallet::query()->with('provider')->orderBy('balance_cents')->limit(100)->get()->map(fn (Wallet $w) => [
+            'wallets' => Wallet::query()->with('provider')->orderBy('balance_cents')->paginate(50)->withQueryString()->through(fn (Wallet $w) => [
                 'provider' => $w->provider->name, 'balance' => $w->balance_cents / 100, 'reserved' => $w->reserved_cents / 100, 'below' => ! $w->acceptsOnlineBookings(),
-            ])->values(),
+            ]),
         ]);
     }
 
