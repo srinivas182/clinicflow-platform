@@ -229,7 +229,19 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           {
-            echo "### Backend CI failed (tests part ${{ matrix.shard }} of 4) — \`${GITHUB_SHA::8}\`"
+            if [ "${{ cancelled() }}" = "true" ]; then
+              echo "### Backend CI cancelled (tests part ${{ matrix.shard }} of 4, superseded) — \`${GITHUB_SHA::8}\`"
+            else
+              echo "### Backend CI failed (tests part ${{ matrix.shard }} of 4) — \`${GITHUB_SHA::8}\`"
+            fi
+            if [ -s .ci-pest.txt ] && grep -q "FAILED" .ci-pest.txt; then
+              echo ""
+              echo "**First failure** (test name and error):"
+              echo ""
+              echo '```'
+              sed 's/\x1b\[[0-9;]*m//g' .ci-pest.txt | grep -m1 -A 30 "FAILED" | cut -c1-240
+              echo '```'
+            fi
             if [ -s .ci-events.txt ]; then
               echo ""
               echo "<details><summary>Last tests started (shows where a stuck run stopped)</summary>"
