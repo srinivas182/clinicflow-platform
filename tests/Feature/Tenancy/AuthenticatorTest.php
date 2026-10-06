@@ -82,6 +82,8 @@ it('requires an authenticator app for owners (and stops them turning it off), bu
     $receptionist = User::factory()->create();
     app(AddStaffMember::class)->handle($this->clinic, $receptionist, StaffRole::Receptionist);
     $this->actingAs($receptionist)->get('http://localhost/workspaces')->assertOk();
+    // A different person signs in on a fresh session (the session check signs out a mismatched user, as in real use).
+    $this->flushSession();
     $this->actingAs($this->owner)->get('http://localhost/workspaces')->assertRedirect(rtrim((string) config('app.url'), '/').'/account/security');
     $this->actingAs($this->owner)->get('http://localhost/account/security')->assertOk()->assertInertia(fn ($p) => $p->where('required', true)->where('enabled', false));
 

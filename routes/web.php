@@ -2,6 +2,7 @@
 
 use App\Domains\Finance\Http\Controllers\AccountingAdminController;
 use App\Domains\Finance\Http\Controllers\AccountingCallbackController;
+use App\Domains\Identity\Http\Controllers\ConfirmIdentityController;
 use App\Domains\Identity\Http\Controllers\LoginController;
 use App\Domains\Identity\Http\Controllers\SecurityController;
 use App\Domains\Identity\Http\Controllers\WorkspaceController;
@@ -80,6 +81,9 @@ foreach ($centralDomains as $index => $domain) {
             Route::match(['get', 'post'], '/locum/shifts/{shift}/{action}', [LocumController::class, 'locumAction'])->whereIn('action', ['hours', 'cancel', 'invoice'])->name('locum.shift.act');
             Route::get('/groups/{group}', [GroupController::class, 'show'])->name('groups.show');
             Route::get('/workspaces', [WorkspaceController::class, 'index'])->name('workspaces');
+            Route::get('/confirm-identity', [ConfirmIdentityController::class, 'show'])->name('identity.confirm');
+            Route::post('/confirm-identity', [ConfirmIdentityController::class, 'store'])->middleware('throttle:10,1')->name('identity.confirm.store');
+            Route::post('/account/security/sign-out-others', [SecurityController::class, 'signOutOthers'])->middleware('throttle:5,1')->name('account.security.signout');
             Route::get('/account/security', [SecurityController::class, 'show'])->name('account.security');
             Route::post('/account/security/authenticator', [SecurityController::class, 'start'])->middleware('throttle:10,1')->name('account.security.start');
             Route::post('/account/security/authenticator/confirm', [SecurityController::class, 'confirm'])->middleware('throttle:10,1')->name('account.security.confirm');
@@ -135,7 +139,7 @@ foreach ($centralDomains as $index => $domain) {
             Route::put('/accounting/{driver}', [AccountingAdminController::class, 'save'])->whereIn('driver', ['xero', 'sage', 'zoho'])->name('accounting.save');
             Route::get('/accounting/{driver}/connect', [AccountingAdminController::class, 'connect'])->whereIn('driver', ['xero', 'sage', 'zoho'])->name('accounting.connect');
             Route::put('/accounting/{driver}/platform', [AccountingAdminController::class, 'updatePlatform'])->whereIn('driver', ['xero', 'sage', 'zoho'])->name('accounting.platform');
-            Route::post('/accounting/export', [AccountingAdminController::class, 'exportPlatform'])->name('accounting.export');
+            Route::post('/accounting/export', [AccountingAdminController::class, 'exportPlatform'])->middleware('step-up')->name('accounting.export');
             Route::put('/telemedicine/{driver}', [TelemedicineAdminController::class, 'save'])->whereIn('driver', ['cloud', 'self_hosted'])->name('telemedicine.save');
             Route::post('/telemedicine/{driver}/test', [TelemedicineAdminController::class, 'test'])->whereIn('driver', ['cloud', 'self_hosted'])->name('telemedicine.test');
             Route::put('/wallet', [WalletController::class, 'saveAdminSettings'])->name('wallet.settings.save');

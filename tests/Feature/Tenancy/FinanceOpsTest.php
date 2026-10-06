@@ -27,6 +27,7 @@ use App\Domains\Platform\Models\Setting;
 use App\Domains\Platform\Models\Subscription;
 use App\Domains\Visits\Actions\CheckInPatient;
 use App\Domains\Visits\Enums\PayerType;
+use App\Http\Middleware\RequireRecentConfirmation;
 use App\Models\User;
 use Database\Seeders\ClinicalReferenceSeeder;
 use Database\Seeders\PackageSeeder;
@@ -41,6 +42,8 @@ beforeEach(function (): void {
     if (config('database.default') !== 'mysql') {
         $this->markTestSkipped('Tenancy tests require MySQL.');
     }
+    // These tests exercise protected actions as a user who has just confirmed their identity (step-up).
+    $this->withSession([RequireRecentConfirmation::SESSION_KEY => now()->getTimestamp()]);
 
     $this->seed([PackageSeeder::class, ClinicalReferenceSeeder::class]);
     $this->app->instance(MessageSender::class, $this->sms = new LogMessageSender);

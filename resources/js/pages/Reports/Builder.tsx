@@ -113,6 +113,13 @@ export default function ReportBuilder({
             definition: JSON.stringify(def),
             title: set?.label ?? "Report",
         });
+        if (res.status === 423) {
+            // Protected action: confirm identity, then export again.
+            window.location.href =
+                ((await res.json().catch(() => ({}))) as { confirm?: string })
+                    .confirm ?? "/confirm-identity";
+            return;
+        }
         if (!res.ok) return setError("Export failed.");
         const url = URL.createObjectURL(await res.blob());
         const a = document.createElement("a");

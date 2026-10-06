@@ -4,6 +4,16 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.47.0] — Sprint H1a-2: step-up confirmation and session hardening
+
+### Added
+- "Confirm it's you" before sensitive actions — patient and audit exports, report exports, finance and accounting exports, API key creation, break-glass requests and approvals, and granting support access: the password (or an authenticator code for staff who use the app) is re-entered, valid for 15 minutes.
+- Sign-in history on Account → Security (last 10, with new devices marked) and an email to the user when they sign in from a browser or device not seen before.
+- "Sign out other devices" (needs the password); other sessions end on their next request.
+
+### Changed
+- Sessions: 30-minute idle timeout (was 120), encrypted, secure cookies in production. .env.example updated to match so new installations get the safer values.
+
 ## [0.46.0] — Sprint H1a-1: authenticator-app sign-in
 
 ### Added

@@ -8,6 +8,12 @@ interface Props {
     enabled: boolean;
     required: boolean;
     recoveryLeft: number;
+    signIns: {
+        at: string;
+        ip: string | null;
+        device: string;
+        newDevice: boolean;
+    }[];
 }
 
 /** Account → Security: sign in with an authenticator app (Google or Microsoft Authenticator, Authy, 1Password…). */
@@ -15,6 +21,7 @@ export default function Security({
     enabled: initiallyEnabled,
     required,
     recoveryLeft,
+    signIns,
 }: Props) {
     const [enabled, setEnabled] = useState(initiallyEnabled);
     const [setup, setSetup] = useState<{ secret: string; uri: string } | null>(
@@ -230,6 +237,45 @@ export default function Security({
                         </div>
                     </div>
                 )}
+            </Card>
+            <Card title="Recent sign-ins" className="mt-4">
+                {signIns.length === 0 && (
+                    <p className="text-sm text-muted">
+                        No sign-ins recorded yet.
+                    </p>
+                )}
+                {signIns.map((e, i) => (
+                    <p key={i} className="text-sm">
+                        {e.at} · {e.ip ?? "unknown"} ·{" "}
+                        <span className="text-muted">{e.device}</span>{" "}
+                        {e.newDevice && (
+                            <Badge tone="warning">new device</Badge>
+                        )}
+                    </p>
+                ))}
+                <div className="mt-3">
+                    <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() =>
+                            run(async () => {
+                                const password = window.prompt(
+                                    "Enter your password to sign out every other browser and device",
+                                );
+                                if (!password) return;
+                                await post(
+                                    "/account/security/sign-out-others",
+                                    { password },
+                                );
+                                window.alert(
+                                    "Other browsers and devices will be signed out.",
+                                );
+                            })
+                        }
+                    >
+                        Sign out other devices
+                    </Button>
+                </div>
             </Card>
         </div>
     );

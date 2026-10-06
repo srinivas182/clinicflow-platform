@@ -6,6 +6,7 @@ use App\Domains\Platform\Enums\ProviderType;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Support\StatusPage;
 use App\Domains\Platform\SupportDesk\SupportDesk;
+use App\Http\Middleware\RequireRecentConfirmation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,8 @@ beforeEach(function (): void {
     if (config('database.default') !== 'mysql') {
         $this->markTestSkipped('Tenancy tests require MySQL.');
     }
+    // These tests exercise protected actions as a user who has just confirmed their identity (step-up).
+    $this->withSession([RequireRecentConfirmation::SESSION_KEY => now()->getTimestamp()]);
     $this->clinic = makeProvider('Sunrise Medical Centre', ProviderType::Clinic, 'sunrise.clinicflow.test');
     $this->ownerUser = User::factory()->create();
     app(AddStaffMember::class)->handle($this->clinic, $this->ownerUser, StaffRole::Owner);

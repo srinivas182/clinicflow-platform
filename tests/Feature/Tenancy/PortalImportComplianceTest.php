@@ -22,6 +22,7 @@ use App\Domains\Scheduling\Actions\CreateRosterSession;
 use App\Domains\Scheduling\Models\Appointment;
 use App\Domains\Visits\Actions\CheckInPatient;
 use App\Domains\Visits\Enums\PayerType;
+use App\Http\Middleware\RequireRecentConfirmation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Http\UploadedFile;
@@ -33,6 +34,8 @@ beforeEach(function (): void {
     if (config('database.default') !== 'mysql') {
         $this->markTestSkipped('Tenancy tests require MySQL.');
     }
+    // These tests exercise protected actions as a user who has just confirmed their identity (step-up).
+    $this->withSession([RequireRecentConfirmation::SESSION_KEY => now()->getTimestamp()]);
 
     $this->clinic = makeProvider('Sunrise Medical Centre', ProviderType::Clinic, 'sunrise.clinicflow.test');
     $add = app(AddStaffMember::class);
