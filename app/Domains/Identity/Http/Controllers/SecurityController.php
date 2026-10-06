@@ -7,8 +7,13 @@ namespace App\Domains\Identity\Http\Controllers;
 use App\Domains\Identity\Actions\Authenticator;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Auth\SessionGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,6 +30,8 @@ class SecurityController extends Controller
             'enabled' => $user->totp_confirmed_at !== null,
             'required' => $auth->required($user),
             'recoveryLeft' => count((array) ($user->recovery_codes ?? [])),
+            'signIns' => DB::table('login_events')->where('user_id', $user->id)->latest('created_at')->limit(10)->get()
+                ->map(fn ($e) => ['at' => substr((string) $e->created_at, 0, 16), 'ip' => $e->ip, 'device' => mb_substr((string) $e->user_agent, 0, 80), 'newDevice' => (bool) $e->new_device])->values(),
         ]);
     }
 
@@ -53,6 +60,22 @@ class SecurityController extends Controller
         $user = $this->user($request);
         abort_if($auth->required($user), 422, 'Your role requires an authenticator app. Set it up on a new phone instead of turning it off.');
         $auth->disable($user, $request->string('code')->toString());
+
+        return response()->json(['ok' => true]);
+    }
+
+    /** Signs out every other browser and device (needs the password). */
+    public function signOutOthers(Request $request): JsonResponse
+    {
+        $request->validate(['password' => ['required', 'string']]);
+        $user = $this->user($request);
+        if (! Hash::check($request->string('password')->toString(), (string) $user->password)) {
+            throw ValidationException::withMessages(['password' => 'That password is not correct.']);
+        }
+        $guard = Auth::guard('web');
+        abort_unless($guard instanceof SessionGuard, 500);
+        $guard->logoutOtherDevices($request->string('password')->toString());
+        activity('auth')->causedBy($user)->log('Signed out other devices');
 
         return response()->json(['ok' => true]);
     }

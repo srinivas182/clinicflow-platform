@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Identity\Http\Controllers;
 
+use App\Domains\Identity\Actions\RecordSignIn;
 use App\Domains\Identity\Actions\StartLogin;
 use App\Domains\Identity\Actions\VerifyLoginChallenge;
 use App\Domains\Identity\Http\Requests\LoginRequest;
@@ -55,6 +56,7 @@ class LoginController extends Controller
         Auth::guard('web')->login($user);
         $request->session()->forget('login_challenge');
         $request->session()->regenerate();
+        app(RecordSignIn::class)->handle($user, (string) $request->ip(), (string) $request->userAgent());
 
         return redirect()->route('workspaces');
     }

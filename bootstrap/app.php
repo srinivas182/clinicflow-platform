@@ -7,11 +7,13 @@ use App\Domains\Platform\Http\Middleware\EnsureProviderWritable;
 use App\Http\Middleware\CaptureResellerRef;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RequireAuthenticator;
+use App\Http\Middleware\RequireRecentConfirmation;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Illuminate\Session\Middleware\AuthenticateSession;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -46,12 +48,15 @@ return Application::configure(basePath: dirname(__DIR__))
             'platform.admin' => EnsurePlatformAdmin::class,
             'provider.writable' => EnsureProviderWritable::class,
             'api.key' => AuthenticateApiKey::class,
+            'step-up' => RequireRecentConfirmation::class,
         ]);
         $middleware->web(append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
             CaptureResellerRef::class,
             RequireAuthenticator::class,
+            // "Sign out other devices" takes effect on their next request.
+            AuthenticateSession::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

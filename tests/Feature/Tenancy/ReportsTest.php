@@ -11,6 +11,7 @@ use App\Domains\Platform\Models\Package;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\Subscription;
 use App\Domains\Visits\Enums\PayerType;
+use App\Http\Middleware\RequireRecentConfirmation;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Seeders\ClinicalReferenceSeeder;
@@ -24,6 +25,8 @@ beforeEach(function (): void {
     if (config('database.default') !== 'mysql') {
         $this->markTestSkipped('Tenancy tests require MySQL.');
     }
+    // These tests exercise protected actions as a user who has just confirmed their identity (step-up).
+    $this->withSession([RequireRecentConfirmation::SESSION_KEY => now()->getTimestamp()]);
     $this->artisan('migrate:fresh', ['--database' => 'hub', '--path' => 'database/migrations/hub'])->assertSuccessful();
     $this->seed(ClinicalReferenceSeeder::class);
     $this->seed(PackageSeeder::class);
