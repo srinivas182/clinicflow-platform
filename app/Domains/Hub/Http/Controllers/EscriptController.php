@@ -53,12 +53,12 @@ class EscriptController extends Controller
         $issuers = Provider::query()->pluck('name', 'id');
 
         return Inertia::render('Pharmacy/Escripts', [
-            'escripts' => HubEscript::query()->where('pharmacy_tenant_id', $pharmacy->id)->latest('sent_at')->limit(100)->get()
-                ->map(fn (HubEscript $e) => [
+            'escripts' => HubEscript::query()->where('pharmacy_tenant_id', $pharmacy->id)->latest('sent_at')->paginate(50)->withQueryString()
+                ->through(fn (HubEscript $e) => [
                     'id' => $e->id, 'status' => $e->status, 'note' => $e->status_note, 'version' => $e->version,
                     'sentAt' => $e->sent_at->format('j M H:i'), 'practice' => $issuers[$e->issuer_tenant_id] ?? 'A practice',
                     'payload' => $e->payload, 'fingerprint' => substr($e->signature_hash, 0, 16),
-                ])->values(),
+                ]),
         ]);
     }
 

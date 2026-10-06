@@ -136,7 +136,7 @@ it('imports legacy patients, skips bad rows with reasons and requires consent at
 it('gives managers a searchable audit log, CSV export and POPIA patient export', function (): void {
     $this->actingAs($this->receptionUser)->get('http://sunrise.clinicflow.test/compliance/audit')->assertForbidden();
     $this->actingAs($this->managerUser)->get('http://sunrise.clinicflow.test/compliance/audit?search=registered')
-        ->assertOk()->assertInertia(fn ($page) => $page->component('Compliance/Audit')->where('entries.0.description', 'Patient registered'));
+        ->assertOk()->assertInertia(fn ($page) => $page->component('Compliance/Audit')->where('entries.data.0.description', 'Patient registered'));
     $this->actingAs($this->managerUser)->get('http://sunrise.clinicflow.test/compliance/audit/export')->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8');
 
     $this->actingAs($this->managerUser)->get("http://sunrise.clinicflow.test/compliance/patients/{$this->mother->id}/export")

@@ -33,10 +33,10 @@ class DeliveryController extends Controller
         $this->authorize(Permission::PHARMACY_DISPENSE);
 
         return Inertia::render('Pharmacy/Deliveries', [
-            'deliveries' => Delivery::query()->with('patient')->latest()->limit(100)->get()->map(fn (Delivery $d) => [
+            'deliveries' => Delivery::query()->with('patient')->latest()->paginate(50)->withQueryString()->through(fn (Delivery $d) => [
                 'id' => $d->id, 'patient' => $d->patient->fullName(), 'driver' => $d->driver, 'address' => $d->address, 'status' => $d->status,
                 'tracking' => $d->tracking_number, 'fee' => $d->fee_cents / 100, 'payer' => $d->payer, 'failure' => $d->failure_reason,
-            ])->values(),
+            ]),
             'couriers' => Deliveries::available(),
             'partners' => CourierPartner::query()->where('enabled', true)->get()->map(fn (CourierPartner $p) => ['driver' => $p->driver, 'label' => CourierPartner::LABELS[$p->driver] ?? $p->driver, 'apiReady' => $p->api_ready,
                 'linked' => CourierAccount::query()->where('driver', $p->driver)->where('enabled', true)->exists()])->values(),

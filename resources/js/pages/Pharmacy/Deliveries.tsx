@@ -3,9 +3,10 @@ import { Flash } from "@/components/Flash";
 import { Badge, Button, Card } from "@/components/ui";
 import { AppShell } from "@/layouts/AppShell";
 import { rand } from "@/lib/money";
+import { Pager, type Paginated } from "@/components/Pager";
 
 interface Props {
-    deliveries: {
+    deliveries: Paginated<{
         id: number;
         patient: string;
         driver: string;
@@ -15,7 +16,7 @@ interface Props {
         fee: number;
         payer: string;
         failure: string | null;
-    }[];
+    }>;
     couriers: Record<string, string>;
     partners: {
         driver: string;
@@ -197,13 +198,13 @@ export default function Deliveries({
             </div>
             <Card title="Recent deliveries">
                 <ul className="divide-y divide-[#EBF0EE] text-sm">
-                    {deliveries.length === 0 && (
+                    {deliveries.data.length === 0 && (
                         <li className="py-2 text-muted">
                             None yet. Request a delivery from the dispensing
                             screen.
                         </li>
                     )}
-                    {deliveries.map((d) => (
+                    {deliveries.data.map((d) => (
                         <li
                             key={d.id}
                             className="flex flex-wrap items-center gap-2 py-2"
@@ -289,6 +290,7 @@ export default function Deliveries({
                     ))}
                 </ul>
             </Card>
+            <Pager page={deliveries} />
         </AppShell>
     );
 }

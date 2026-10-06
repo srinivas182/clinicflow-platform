@@ -218,6 +218,6 @@ it('builds claims from the invoice and diagnoses, and resubmits after correction
         ->and(fn () => app(SubmitClaim::class)->handle($invoice->fresh()))->toThrow(ValidationException::class);
 
     tenancy()->end();
-    $this->actingAs($this->clerkUser)->get('http://sunrise.clinicflow.test/claims')->assertOk()->assertInertia(fn ($page) => $page->where('claims.0.status', 'accepted'));
+    $this->actingAs($this->clerkUser)->get('http://sunrise.clinicflow.test/claims')->assertOk()->assertInertia(fn ($page) => $page->where('claims.data.0.status', 'accepted'));
     $this->actingAs($this->nurseUser)->get('http://sunrise.clinicflow.test/claims')->assertForbidden();
 });

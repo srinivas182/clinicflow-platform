@@ -228,7 +228,7 @@ it('sends e-scripts only for linked patients and lets the chosen pharmacy dispen
         ->and($escript->payload['items'][0]['description'])->toContain('Paracetamol')
         ->and(fn () => $send($this->pharmacy->id))->toThrow(ValidationException::class);
 
-    $this->actingAs($this->pharmacistUser)->get('http://corner.clinicflow.test/escripts')->assertInertia(fn ($page) => $page->where('escripts.0.status', 'sent'));
+    $this->actingAs($this->pharmacistUser)->get('http://corner.clinicflow.test/escripts')->assertInertia(fn ($page) => $page->where('escripts.data.0.status', 'sent'));
     expect(fn () => $exchange->accept($escript, $this->otherPharmacy))->toThrow(HttpException::class);
 
     $this->actingAs($this->pharmacistUser)->post("http://corner.clinicflow.test/escripts/{$escript->id}/accept")->assertSessionHasNoErrors();

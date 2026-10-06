@@ -76,14 +76,18 @@ class PatientAdminController extends Controller
         $this->authorize(Permission::AUDIT_VIEW);
         $query = $this->auditQuery($request);
 
+        // 50 per page; who did each action is looked up once per page (not once per row).
+        $page = $query->paginate(50)->withQueryString();
+        $names = User::query()->whereIn('id', collect($page->items())->pluck('causer_id')->filter()->unique())->pluck('name', 'id');
+
         return Inertia::render('Compliance/Audit', [
             'filters' => $request->only(['log', 'search', 'from', 'to']),
             'logs' => AuditEntry::query()->distinct()->orderBy('log_name')->pluck('log_name'),
-            'entries' => $query->limit(200)->get()->map(fn (AuditEntry $e) => [
+            'entries' => $page->through(fn (AuditEntry $e) => [
                 'at' => $e->created_at?->format('Y-m-d H:i'), 'log' => $e->log_name, 'description' => $e->description,
-                'by' => $e->causer_id === null ? 'System' : (User::query()->whereKey($e->causer_id)->value('name') ?? 'User #'.$e->causer_id),
+                'by' => $e->causer_id === null ? 'System' : ($names[$e->causer_id] ?? 'User #'.$e->causer_id),
                 'subject' => $e->subject_type === null ? null : class_basename((string) $e->subject_type).' '.$e->subject_id,
-            ])->values(),
+            ]),
         ]);
     }
 
