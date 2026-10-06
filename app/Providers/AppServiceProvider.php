@@ -29,8 +29,10 @@ use App\Domains\Scheduling\Models\Appointment;
 use App\Domains\Telemedicine\Support\OnlineConsultHooks;
 use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -52,6 +54,13 @@ class AppServiceProvider extends ServiceProvider
     {
         // Point the "files" disk at the super admin's active storage (S3, S3-compatible or local).
         FileStore::configure();
+        // N+1 queries: logged in development and tests (never thrown), so they can be found and fixed.
+        if (! $this->app->isProduction()) {
+            Model::preventLazyLoading();
+            Model::handleLazyLoadingViolationUsing(function ($model, string $relation): void {
+                Log::channel('single')->warning('N+1 query: lazy loading '.$relation.' on '.$model::class);
+            });
+        }
         LedgerPoster::register();
         OnlineConsultHooks::register();
         BranchContext::register();

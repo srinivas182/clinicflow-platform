@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Wallet\Support;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -27,7 +28,9 @@ final class WalletSettings
 
     public static function get(string $key): mixed
     {
-        $row = DB::connection((string) config('tenancy.database.central_connection'))->table('platform_settings')->where('key', $key)->value('value');
+        // Platform prices and settings: cached for 10 minutes; put() clears the entry at once.
+        $row = Cache::remember('platform-setting:'.$key, 600, fn (): array => ['value' => DB::connection((string) config('tenancy.database.central_connection'))
+            ->table('platform_settings')->where('key', $key)->value('value')])['value'];
 
         return $row === null ? self::DEFAULTS[$key] ?? null : json_decode((string) $row, true);
     }
@@ -36,6 +39,7 @@ final class WalletSettings
     {
         DB::connection((string) config('tenancy.database.central_connection'))->table('platform_settings')
             ->updateOrInsert(['key' => $key], ['value' => json_encode($value), 'updated_at' => now(), 'created_at' => now()]);
+        Cache::forget('platform-setting:'.$key);
     }
 
     public static function thresholdCents(): int
