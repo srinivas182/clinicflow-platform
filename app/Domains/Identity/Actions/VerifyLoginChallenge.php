@@ -22,7 +22,13 @@ class VerifyLoginChallenge
             throw ValidationException::withMessages(['code' => 'This code has expired. Please sign in again.']);
         }
 
-        if (! Hash::check($code, $challenge->code_hash)) {
+        if ($challenge->getAttribute('method') === 'authenticator') {
+            if (! app(Authenticator::class)->verify($challenge->user, $code)) {
+                $challenge->increment('attempts');
+
+                throw ValidationException::withMessages(['code' => 'That code is not correct.']);
+            }
+        } elseif (! Hash::check($code, $challenge->code_hash)) {
             $challenge->increment('attempts');
 
             throw ValidationException::withMessages(['code' => 'That code is not correct.']);

@@ -3,6 +3,7 @@
 use App\Domains\Finance\Http\Controllers\AccountingAdminController;
 use App\Domains\Finance\Http\Controllers\AccountingCallbackController;
 use App\Domains\Identity\Http\Controllers\LoginController;
+use App\Domains\Identity\Http\Controllers\SecurityController;
 use App\Domains\Identity\Http\Controllers\WorkspaceController;
 use App\Domains\Locums\Http\Controllers\LocumController;
 use App\Domains\Messaging\Http\Controllers\MessagingAdminController;
@@ -79,6 +80,11 @@ foreach ($centralDomains as $index => $domain) {
             Route::match(['get', 'post'], '/locum/shifts/{shift}/{action}', [LocumController::class, 'locumAction'])->whereIn('action', ['hours', 'cancel', 'invoice'])->name('locum.shift.act');
             Route::get('/groups/{group}', [GroupController::class, 'show'])->name('groups.show');
             Route::get('/workspaces', [WorkspaceController::class, 'index'])->name('workspaces');
+            Route::get('/account/security', [SecurityController::class, 'show'])->name('account.security');
+            Route::post('/account/security/authenticator', [SecurityController::class, 'start'])->middleware('throttle:10,1')->name('account.security.start');
+            Route::post('/account/security/authenticator/confirm', [SecurityController::class, 'confirm'])->middleware('throttle:10,1')->name('account.security.confirm');
+            Route::post('/account/security/recovery-codes', [SecurityController::class, 'regenerate'])->middleware('throttle:10,1')->name('account.security.recovery');
+            Route::post('/account/security/authenticator/disable', [SecurityController::class, 'disable'])->middleware('throttle:10,1')->name('account.security.disable');
             Route::post('/workspaces/{provider}/open', [WorkspaceController::class, 'open'])->name('workspaces.open');
             Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
         });

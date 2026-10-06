@@ -21,6 +21,10 @@ use Stancl\Tenancy\Database\Concerns\CentralConnection;
  * @property string $password
  * @property bool $is_platform_admin
  * @property Carbon|null $last_login_at
+ * @property string|null $totp_secret
+ * @property Carbon|null $totp_confirmed_at
+ * @property int|null $totp_last_step
+ * @property list<string>|null $recovery_codes
  */
 class User extends Authenticatable
 {
@@ -47,6 +51,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'totp_secret',
+        'recovery_codes',
     ];
 
     /**
@@ -59,6 +65,9 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'is_platform_admin' => 'boolean',
             'password' => 'hashed',
+            'totp_secret' => 'encrypted',
+            'totp_confirmed_at' => 'datetime',
+            'recovery_codes' => 'encrypted:array',
         ];
     }
 }
