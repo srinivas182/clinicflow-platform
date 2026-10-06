@@ -4,6 +4,13 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.42.0] — Sprint S1b-1: background messaging and the queue dashboard
+
+### Added
+- SMS and email are sent in the background on a real queue: the message is logged as queued, delivered by a job on the "messages" queue (up to three attempts: after 30 seconds, 2 minutes and 10 minutes), and the log shows sent or failed. Pages no longer wait for the SMS or email supplier. On the sync queue (single server, tests) messages are sent immediately as before.
+- Horizon queue dashboard at /admin/horizon on the platform domain only, super admin only; supervisors for messages, AI and default/exports queues with production and local sizes.
+- `queue:alert` (hourly): emails platform admins when background jobs failed in the last hour.
+
 ## [0.41.0] — Sprint S1a: file storage chosen by the super admin
 
 ### Added

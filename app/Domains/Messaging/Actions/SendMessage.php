@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Messaging\Actions;
 
 use App\Domains\Messaging\Contracts\MessageSender;
+use App\Domains\Messaging\Jobs\DeliverMessage;
 use App\Domains\Messaging\Support\GatewayMessageSender;
 use App\Domains\Messaging\Support\MessageCatalogue;
 use App\Domains\Messaging\Support\MessagingUsage;
@@ -73,6 +74,22 @@ class SendMessage
             throw new InvalidArgumentException("Unknown channel {$channel}.");
         }
 
+        // On a real queue, record the message as queued and deliver it in the background (with retries).
+        if (config('queue.default') !== 'sync') {
+            $logId = $this->log($channel, $recipient, $subject, $body, 'queued', MessagingUsage::units($channel, $body), $relatedType, $relatedId);
+            DeliverMessage::dispatch($channel, $recipient, $body, $subject, $relatedType, $relatedId, $logId);
+
+            return true;
+        }
+
+        return $this->deliver($channel, $recipient, $body, $subject, $relatedType, $relatedId, null);
+    }
+
+    /**
+     * Sends now and records the result (used directly on the sync queue, and by the DeliverMessage job).
+     */
+    public function deliver(string $channel, string $recipient, string $body, ?string $subject, ?string $relatedType, ?string $relatedId, ?int $logId): bool
+    {
         $provider = tenant();
         if ($this->sender instanceof GatewayMessageSender) {
             $this->sender->fromName = $provider instanceof Provider ? (string) Setting::get('messaging', 'from_name', $provider->name) : 'Clinic Flow';
@@ -85,7 +102,11 @@ class SendMessage
 
         $ok = $this->sender->send($channel, $recipient, $subject, $body);
         $units = MessagingUsage::units($channel, $body);
-        $this->log($channel, $recipient, $subject, $body, $ok ? 'sent' : 'failed', $units, $relatedType, $relatedId);
+        if ($logId !== null && tenant() !== null) {
+            DB::table('message_log')->where('id', $logId)->update(['status' => $ok ? 'sent' : 'failed', 'sent_at' => now()]);
+        } else {
+            $this->log($channel, $recipient, $subject, $body, $ok ? 'sent' : 'failed', $units, $relatedType, $relatedId);
+        }
 
         if ($ok && $provider !== null) {
             MessagingUsage::record((string) $provider->getTenantKey(), $units, $channel);
@@ -94,13 +115,13 @@ class SendMessage
         return $ok;
     }
 
-    private function log(string $channel, string $recipient, ?string $subject, string $body, string $status, int $units, ?string $relatedType, ?string $relatedId): void
+    private function log(string $channel, string $recipient, ?string $subject, string $body, string $status, int $units, ?string $relatedType, ?string $relatedId): ?int
     {
         if (tenant() === null) {
-            return;
+            return null;
         }
 
-        DB::table('message_log')->insert([
+        return (int) DB::table('message_log')->insertGetId([
             'channel' => $channel, 'recipient' => $recipient, 'subject' => $subject, 'body' => $body,
             'status' => $status, 'units' => $units, 'related_type' => $relatedType, 'related_id' => $relatedId, 'sent_at' => now(),
         ]);
