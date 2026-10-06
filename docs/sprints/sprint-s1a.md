@@ -1,16 +1,12 @@
-# Sprint S1a — Shared file storage
+# Sprint S1a — File storage chosen by the super admin
 
 | Story | Acceptance | Status |
 |---|---|---|
-| Targets | Local, Amazon S3, S3-compatible providers; encrypted keys; https only; safe folders | Done |
-| Test and activate | Probe write/read/delete required; one active target; audited | Done |
-| One disk | All file call sites use the "files" disk; per-practice folders | Done |
-| Migration | Verified copy (size + SHA-256), re-runnable, no deletes | Done |
+| Storage targets | Local (default), Amazon S3, S3-compatible (GCS, MinIO, R2, Wasabi, DO Spaces, Backblaze); encrypted keys | Done |
+| Safety | Connection test before activation; local folders outside the app and public/ | Done |
+| Isolation | Each practice in its own folder (prefix) | Done |
+| Migration | Verified copy command (size + SHA-256), re-runnable, no deletion | Done |
+| Call sites | All file reads/writes use the chosen storage | Done |
 
-Verified locally before CI: style, PHPStan level 8, storage tests (9), document/media/prescribing/locum tests (28).
-
-## Deployment checklist
-1. Create a private bucket (e.g. AWS af-south-1) with encryption and versioning on; an IAM user limited to that bucket.
-2. Admin → Storage: add, test.
-3. `php artisan storage:copy-to-active <id> --dry-run`, then without --dry-run.
-4. Activate; run the copy once more.
+Verified locally before CI: style, PHPStan level 8, storage tests (4), website media and locum document tests (11).
+The S3 library is installed by CI (not reachable from the build workspace); real S3 connections are verified on staging.

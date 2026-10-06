@@ -45,8 +45,16 @@ class StorageTargets
                 $errors['key'] = 'Enter the access key and secret.';
             }
         }
-        if ($data['root'] !== null && $data['root'] !== '' && (preg_match('#^[A-Za-z0-9_\-./]{1,120}$#', (string) $data['root']) !== 1 || str_contains((string) $data['root'], '..') || str_starts_with((string) $data['root'], '/'))) {
-            $errors['root'] = 'Use letters, numbers, dashes and slashes only.';
+        $root = (string) ($data['root'] ?? '');
+        if ($root !== '') {
+            if (preg_match('#^[A-Za-z0-9_\-./]{1,120}$#', $root) !== 1 || str_contains($root, '..')) {
+                $errors['root'] = 'Use letters, numbers, dashes and slashes only.';
+            } elseif ($data['driver'] === 's3' && str_starts_with($root, '/')) {
+                $errors['root'] = 'The top folder must not start with a slash.';
+            } elseif ($data['driver'] === 'local' && ! self::safeLocalRoot($root)) {
+                // A folder inside the app (e.g. public/) could expose patient files on the web.
+                $errors['root'] = 'Use a full path outside the application folder (or inside its private storage folder).';
+            }
         }
         if ($errors !== []) {
             throw ValidationException::withMessages($errors);
@@ -64,6 +72,18 @@ class StorageTargets
         $this->db()->table('storage_targets')->where('id', $id)->update($row);
 
         return $id;
+    }
+
+    /** Local folders must be absolute and outside the application, except its private storage folder. */
+    public static function safeLocalRoot(string $root): bool
+    {
+        $root = rtrim($root, '/');
+        $base = rtrim(base_path(), '/');
+        $storage = rtrim(storage_path(), '/');
+        $public = rtrim(public_path(), '/');
+        $inside = fn (string $dir) => $root === $dir || str_starts_with($root.'/', $dir.'/');
+
+        return str_starts_with($root, '/') && ! $inside($public) && ($inside($storage) || ! $inside($base));
     }
 
     /** Writes, reads back and deletes a probe file. */

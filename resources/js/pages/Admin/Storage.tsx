@@ -25,29 +25,28 @@ interface Props {
     current: string;
 }
 
+/** Endpoint guidance per provider (the super admin confirms the exact value from the provider's console). */
 const HINTS: Record<string, string> = {
-    aws: "Region e.g. af-south-1 (Cape Town). Leave the endpoint empty.",
-    gcs: "Endpoint https://storage.googleapis.com, region auto, HMAC keys. Bucket in africa-south1 (Johannesburg) keeps files in South Africa.",
-    minio: 'Endpoint of your MinIO server (https://…), tick "path-style".',
-    r2: "Endpoint https://<account-id>.r2.cloudflarestorage.com, region auto. Files are stored outside South Africa.",
-    wasabi: "Endpoint https://s3.<region>.wasabisys.com. Files are stored outside South Africa.",
-    digitalocean:
-        "Endpoint https://<region>.digitaloceanspaces.com. Files are stored outside South Africa.",
-    backblaze:
-        "Endpoint https://s3.<region>.backblazeb2.com. Files are stored outside South Africa.",
-    other: "Enter the provider\u2019s S3 endpoint (https://…).",
+    aws: "Leave the endpoint empty. Region e.g. af-south-1 (Cape Town).",
+    gcs: "Endpoint https://storage.googleapis.com, region e.g. africa-south1. Use HMAC keys.",
+    minio: 'Your MinIO address, e.g. https://files.example.co.za. Tick "path-style".',
+    r2: "Endpoint https://<account-id>.r2.cloudflarestorage.com, region auto.",
+    wasabi: "Endpoint https://s3.<region>.wasabisys.com.",
+    digitalocean: "Endpoint https://<region>.digitaloceanspaces.com.",
+    backblaze: "Endpoint https://s3.<region>.backblazeb2.com.",
+    other: "The provider’s S3 endpoint (https only).",
 };
 const empty = {
     id: "",
     name: "",
-    driver: "s3",
+    driver: "s3" as "local" | "s3",
     provider: "aws",
     bucket: "",
     region: "af-south-1",
     endpoint: "",
     path_style: false,
     encrypt: true,
-    root: "clinicflow",
+    root: "",
     key: "",
     secret: "",
 };
@@ -73,20 +72,18 @@ export default function AdminStorage({ targets, providers, current }: Props) {
 
     return (
         <AdminShell active="Storage">
-            <Head title="Storage" />
+            <Head title="File storage" />
             <h1 className="mb-1 text-2xl font-semibold">File storage</h1>
             <p className="mb-5 text-sm text-muted">
-                Where uploads, documents, lab reports and website media are
-                kept. Currently:{" "}
+                Where uploads, documents, lab reports and website images are
+                kept, for every practice (each in its own folder). Currently:{" "}
                 <b>
-                    {current === "local"
-                        ? "this server\u2019s disk"
-                        : "S3-compatible storage"}
+                    {current === "s3"
+                        ? "S3-compatible storage"
+                        : "this server’s disk"}
                 </b>
-                . Local disk works for one server only — use S3-compatible
-                storage before running several servers. Buckets stay private;
-                files are always served through Clinic Flow&apos;s permission
-                checks, each practice in its own folder.
+                . Use S3 or S3-compatible storage before running more than one
+                server.
             </p>
             <Flash />
             <div className="grid gap-4 md:grid-cols-2">
@@ -106,13 +103,14 @@ export default function AdminStorage({ targets, providers, current }: Props) {
                             className={input}
                             value={form.data.driver}
                             onChange={(e) =>
-                                form.setData("driver", e.target.value)
+                                form.setData(
+                                    "driver",
+                                    e.target.value as "local" | "s3",
+                                )
                             }
                         >
                             <option value="s3">S3 or S3-compatible</option>
-                            <option value="local">
-                                This server&apos;s disk
-                            </option>
+                            <option value="local">This server’s disk</option>
                         </select>
                         {form.data.driver === "s3" && (
                             <select
@@ -215,7 +213,7 @@ export default function AdminStorage({ targets, providers, current }: Props) {
                                             )
                                         }
                                     />{" "}
-                                    Encrypt at rest
+                                    Encrypt files at rest
                                 </label>
                             </>
                         )}
@@ -223,8 +221,8 @@ export default function AdminStorage({ targets, providers, current }: Props) {
                             aria-label="Folder"
                             placeholder={
                                 form.data.driver === "s3"
-                                    ? "Folder in the bucket, e.g. clinicflow"
-                                    : "Folder on this server (empty = default)"
+                                    ? "Top folder (default clinicflow)"
+                                    : "Folder on this server (default storage/app/private)"
                             }
                             className={`${input} col-span-2`}
                             value={form.data.root}
@@ -261,26 +259,24 @@ export default function AdminStorage({ targets, providers, current }: Props) {
                         )}
                     </div>
                 </Card>
-                <Card title="Moving existing files">
+                <Card title="Switching storage safely">
                     <ol className="list-decimal space-y-1 pl-5 text-sm">
                         <li>
-                            Add the new storage and press <b>Test</b>.
+                            Add the storage and press <b>Test connection</b>.
                         </li>
                         <li>
-                            On the server, run{" "}
-                            <code className="font-mono text-xs">
+                            Copy existing files:{" "}
+                            <span className="font-mono text-xs">
                                 php artisan storage:copy-to-active &lt;id&gt;
-                                --dry-run
-                            </code>
-                            , then without{" "}
-                            <code className="font-mono text-xs">--dry-run</code>
-                            . Every file is copied into its practice&apos;s
-                            folder and verified (size and SHA-256). Nothing is
+                            </span>{" "}
+                            (add{" "}
+                            <span className="font-mono text-xs">--dry-run</span>{" "}
+                            to preview). Every file is checked; nothing is
                             deleted.
                         </li>
                         <li>
-                            Press <b>Activate</b> — new files go to the new
-                            storage.
+                            Press <b>Activate</b>. New files go to the new
+                            storage straight away.
                         </li>
                         <li>
                             Run the copy once more to catch files uploaded in
@@ -292,30 +288,44 @@ export default function AdminStorage({ targets, providers, current }: Props) {
             {targets.map((t) => (
                 <Card
                     key={t.id}
-                    title={`${t.name} (id ${t.id})`}
+                    title={t.name}
                     aside={
-                        <span className="flex gap-1">
-                            {t.active && <Badge tone="success">active</Badge>}
-                            <Badge tone={t.verified ? "success" : "warning"}>
-                                {t.verified ? "tested" : "not tested"}
-                            </Badge>
-                        </span>
+                        <Badge
+                            tone={
+                                t.active
+                                    ? "success"
+                                    : t.verified
+                                      ? "neutral"
+                                      : "warning"
+                            }
+                        >
+                            {t.active
+                                ? "active"
+                                : t.verified
+                                  ? "tested"
+                                  : "not tested"}
+                        </Badge>
                     }
                     className="mt-4"
                 >
-                    <p className="text-sm text-muted">
-                        {t.driver === "local"
-                            ? "This server\u2019s disk"
-                            : `${providers[t.provider ?? "other"] ?? "S3"} · ${t.bucket} · ${t.region ?? ""}${t.endpoint ? ` · ${t.endpoint}` : ""}`}
-                        {t.root ? ` · folder ${t.root}` : ""}
-                        {t.encrypt && t.driver === "s3" ? " · encrypted" : ""}
-                    </p>
-                    {t.lastError && (
-                        <p className="mt-1 text-xs text-status-danger">
-                            Last test: {t.lastError}
-                        </p>
-                    )}
-                    <div className="mt-2 flex gap-2">
+                    <div className="flex flex-wrap items-center gap-3 text-sm">
+                        <span className="flex-1">
+                            {t.driver === "s3"
+                                ? `${providers[t.provider ?? "other"] ?? "S3"} · ${t.bucket} · ${t.region ?? ""}${t.endpoint ? ` · ${t.endpoint}` : ""}${t.encrypt ? " · encrypted" : ""}`
+                                : "This server’s disk"}
+                            {t.lastError && (
+                                <span className="block text-xs text-status-danger">
+                                    {t.lastError}
+                                </span>
+                            )}
+                        </span>
+                        <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => edit(t)}
+                        >
+                            Edit
+                        </Button>
                         <Button
                             size="sm"
                             variant="secondary"
@@ -329,13 +339,12 @@ export default function AdminStorage({ targets, providers, current }: Props) {
                         >
                             Test connection
                         </Button>
-                        {!t.active && (
+                        {!t.active && t.verified && (
                             <Button
                                 size="sm"
-                                disabled={!t.verified}
                                 onClick={() =>
                                     window.confirm(
-                                        "New files will be stored here for every practice. Activate?",
+                                        "Activate this storage for all practices? Copy existing files first.",
                                     ) &&
                                     router.post(
                                         `/admin/storage/${t.id}/activate`,
@@ -347,13 +356,6 @@ export default function AdminStorage({ targets, providers, current }: Props) {
                                 Activate
                             </Button>
                         )}
-                        <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => edit(t)}
-                        >
-                            Edit
-                        </Button>
                     </div>
                 </Card>
             ))}
