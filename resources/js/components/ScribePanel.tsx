@@ -5,6 +5,7 @@ import {
     scribePost,
     startRecording,
     uploadRecording,
+    waitForDraft,
 } from "@/lib/scribe";
 
 interface Props {
@@ -89,7 +90,13 @@ export function ScribePanel({
         const { blob, seconds: secs } = await rec.current.stop();
         stream.current?.getTracks().forEach((t) => t.stop());
         try {
-            const r = await uploadRecording(sessionId, blob, secs);
+            let r = await uploadRecording(sessionId, blob, secs);
+            if (r.status === "processing") r = await waitForDraft(sessionId);
+            if (r.status === "failed")
+                throw new Error(
+                    r.error ??
+                        "The recording could not be processed. Nothing was charged.",
+                );
             setDraft(r.draft ?? null);
             setStep(r.draft ? "draft" : "idle");
         } catch (e) {

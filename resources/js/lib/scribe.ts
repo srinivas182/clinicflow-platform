@@ -89,3 +89,23 @@ export async function uploadRecording(
     form.append("seconds", String(seconds));
     return scribePost(`/scribe/${sessionId}/audio`, form);
 }
+
+/** Background processing: checks every 3 seconds until the draft is ready or failed (up to 6 minutes). */
+export async function waitForDraft(
+    sessionId: string,
+    onTick?: (status: string) => void,
+): Promise<ScribeState> {
+    for (let i = 0; i < 120; i++) {
+        const res = await fetch(`/scribe/${sessionId}`, {
+            headers: { Accept: "application/json" },
+            credentials: "same-origin",
+        });
+        const data = (await res.json().catch(() => ({}))) as ScribeState;
+        if (data.status && data.status !== "processing") return data;
+        onTick?.(data.status ?? "processing");
+        await new Promise((r) => setTimeout(r, 3000));
+    }
+    throw new Error(
+        "This is taking longer than usual. Check back in a few minutes.",
+    );
+}

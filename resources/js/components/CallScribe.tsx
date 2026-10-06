@@ -1,6 +1,11 @@
 import type { Room } from "livekit-client";
 import { type MutableRefObject, useRef, useState } from "react";
-import { scribePost, startRecording, uploadRecording } from "@/lib/scribe";
+import {
+    scribePost,
+    startRecording,
+    uploadRecording,
+    waitForDraft,
+} from "@/lib/scribe";
 
 interface Props {
     role: "doctor" | "patient";
@@ -98,7 +103,14 @@ export function CallScribe({
         const { blob, seconds } = await rec.current.stop();
         void ctx.current?.close();
         try {
-            await uploadRecording(scribe.id, blob, seconds);
+            const r = await uploadRecording(scribe.id, blob, seconds);
+            const done =
+                r.status === "processing" ? await waitForDraft(scribe.id) : r;
+            if (done.status === "failed")
+                throw new Error(
+                    done.error ??
+                        "The recording could not be processed. Nothing was charged.",
+                );
             setMessage("Draft ready — review it in the consultation note.");
         } catch (e) {
             setMessage((e as Error).message);
