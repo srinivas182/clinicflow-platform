@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Website\Actions;
 
 use App\Domains\Platform\Models\SitePage;
+use App\Domains\Platform\Storage\FileStore;
 use App\Domains\Website\Models\Media;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -32,7 +33,7 @@ class MediaLibrary
         $media = Media::create(['filename' => mb_substr($file->getClientOriginalName(), 0, 200), 'mime' => $mime, 'size' => strlen($bytes),
             'width' => $info[0], 'height' => $info[1], 'alt' => trim($alt), 'uploaded_by' => $by]);
         foreach (['large' => 1600, 'thumb' => 400] as $size => $max) {
-            Storage::disk('local')->put($media->path($size), $this->resize($bytes, $mime, $max));
+            Storage::disk(FileStore::DISK)->put($media->path($size), $this->resize($bytes, $mime, $max));
         }
         [$w, $h] = $this->fit($info[0], $info[1], 1600);
         $media->forceFill(['width' => $w, 'height' => $h])->save();
@@ -58,7 +59,7 @@ class MediaLibrary
         if ($pages !== []) {
             throw ValidationException::withMessages(['media' => 'This image is used on: '.implode(', ', $pages).'. Remove it there first.']);
         }
-        Storage::disk('local')->delete([$media->path('large'), $media->path('thumb')]);
+        Storage::disk(FileStore::DISK)->delete([$media->path('large'), $media->path('thumb')]);
         $media->delete();
     }
 

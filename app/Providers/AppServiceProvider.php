@@ -21,6 +21,7 @@ use App\Domains\Lab\Inbound\LabConnections;
 use App\Domains\Lab\Models\LabOrder;
 use App\Domains\Messaging\Contracts\MessageSender;
 use App\Domains\Messaging\Support\GatewayMessageSender;
+use App\Domains\Platform\Storage\FileStore;
 use App\Domains\Prescribing\Contracts\DrugDatabase;
 use App\Domains\Prescribing\Support\DemoDrugDatabase;
 use App\Domains\Scheduling\Calendar\CalendarSync;
@@ -49,6 +50,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Point the "files" disk at the super admin's active storage (S3, S3-compatible or local).
+        FileStore::configure();
         LedgerPoster::register();
         OnlineConsultHooks::register();
         BranchContext::register();

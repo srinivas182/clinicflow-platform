@@ -20,6 +20,7 @@ use App\Domains\Documents\Actions\RenderDocument;
 use App\Domains\Documents\Support\DocumentType;
 use App\Domains\Documents\Support\PracticeData;
 use App\Domains\Identity\Enums\Permission;
+use App\Domains\Platform\Storage\FileStore;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -135,7 +136,7 @@ class InvoiceController extends Controller
             'lines' => $invoice->lines->map(fn (InvoiceLine $l) => ['code' => $l->code ?? '', 'description' => $l->description, 'quantity' => (string) $l->quantity, 'total' => $money($l->total_cents)])->all(),
         ], $this->user($request));
 
-        return Storage::disk('local')->download($issued->file_path, "{$invoice->number}.pdf", ['Content-Type' => 'application/pdf']);
+        return Storage::disk(FileStore::DISK)->download($issued->file_path, "{$invoice->number}.pdf", ['Content-Type' => 'application/pdf']);
     }
 
     private function user(Request $request): User

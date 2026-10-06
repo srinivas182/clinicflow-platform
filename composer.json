@@ -2,7 +2,7 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "mayura/clinicflow-platform",
     "type": "project",
-    "description": "Clinic Flow \u2014 healthcare network SaaS platform (web portal and API).",
+    "description": "Clinic Flow — healthcare network SaaS platform (web portal and API).",
     "keywords": [
         "clinicflow",
         "healthcare",
@@ -11,9 +11,9 @@
     ],
     "license": "proprietary",
     "require": {
+        "php": "^8.4",
         "ext-pcntl": "*",
         "ext-posix": "*",
-        "php": "^8.4",
         "dompdf/dompdf": "^3.1",
         "inertiajs/inertia-laravel": "^3.5",
         "laravel/framework": "^13.17",
@@ -22,6 +22,7 @@
         "laravel/reverb": "^1.12",
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^3.0",
+        "league/flysystem-aws-s3-v3": "^3.29",
         "spatie/laravel-activitylog": "^5.1",
         "spatie/laravel-permission": "^8.3",
         "stancl/tenancy": "^3.10",

@@ -112,6 +112,7 @@ return [
         'disks' => [
             'local',
             'public',
+            'files',
             // 's3',
         ],
 
@@ -123,6 +124,8 @@ return [
         'root_override' => [
             // Disks whose roots should be overridden after storage_path() is suffixed.
             'local' => '%storage_path%/app/',
+            // Removed at boot when the active storage is not the local disk (S3 uses a folder prefix instead).
+            'files' => '%storage_path%/app/',
             'public' => '%storage_path%/app/public/',
         ],
 
