@@ -26,6 +26,11 @@ class VisitStageChanged implements ShouldBroadcast
         return new self((string) tenant()?->getTenantKey(), $visit->id, $visit->ticket, $visit->stage->value);
     }
 
+    public function broadcastAs(): string
+    {
+        return 'queue.changed';
+    }
+
     /**
      * @return list<PrivateChannel>
      */

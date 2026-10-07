@@ -42,6 +42,10 @@ class HandleInertiaRequests extends Middleware
                 'newApiKey' => $request->session()->get('new_api_key'),
             ],
             // White-label: the practice's brand, or the brand from a brand sign-up link (null = Clinic Flow).
+            // Real-time updates (Reverb); null when broadcasting is off, so pages fall back to polling.
+            'realtime' => config('broadcasting.default') === 'reverb' && $provider instanceof Provider ? ['key' => (string) config('broadcasting.connections.reverb.key'),
+                'host' => (string) config('broadcasting.connections.reverb.options.host'), 'port' => (int) config('broadcasting.connections.reverb.options.port'),
+                'tls' => (bool) config('broadcasting.connections.reverb.options.useTLS'), 'provider' => (string) $provider->id] : null,
             'brand' => app(Brands::class)->forDisplay($provider instanceof Provider ? $provider : null,
                 is_string($request->cookie(Brands::COOKIE)) ? (string) $request->cookie(Brands::COOKIE) : null),
             'provider' => $provider instanceof Provider ? [

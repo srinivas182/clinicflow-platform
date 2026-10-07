@@ -8,6 +8,7 @@ use App\Domains\Identity\Enums\Permission;
 use App\Domains\Identity\Models\Staff;
 use App\Domains\Portal\Actions\PortalSignIn;
 use App\Domains\Scribe\Actions\AiScribe;
+use App\Domains\Telemedicine\Events\ChatMessagePosted;
 use App\Domains\Telemedicine\Models\ChatMessage;
 use App\Domains\Telemedicine\Models\ChatThread;
 use App\Domains\Telemedicine\Models\TeleSession;
@@ -97,6 +98,7 @@ class ChatController extends Controller
             throw ValidationException::withMessages(['body' => $thread->opens_at->isFuture() ? 'This chat opens at '.$thread->opens_at->format('H:i').'.' : 'This chat has closed.']);
         }
         $thread->messages()->create(['sender' => $sender, 'body' => trim($data['body']), 'created_at' => now()]);
+        event(new ChatMessagePosted((string) tenant('id'), (string) $thread->id));
     }
 
     private function ownPatient(Request $request, ChatThread $thread, PortalSignIn $signIn): void

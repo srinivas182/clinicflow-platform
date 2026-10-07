@@ -63,6 +63,7 @@ class AppServiceProvider extends ServiceProvider
             Log::critical('APP_DEBUG was on in production and has been forced off. Fix the environment settings.');
         }
         FileStore::configure();
+        require base_path('routes/channels.php');
         // N+1 queries: logged in development and tests (never thrown), so they can be found and fixed.
         if (! $this->app->isProduction()) {
             Model::preventLazyLoading();
