@@ -13,8 +13,10 @@
     "dependencies": {
         "@fontsource/ibm-plex-sans": "^5.3.0",
         "@inertiajs/react": "^3.8.0",
+        "laravel-echo": "^2.1.6",
         "livekit-client": "^2.22.3",
         "lucide-react": "^1.50.0",
+        "pusher-js": "^8.4.0",
         "qrcode": "^1.5.4",
         "react": "^19.3.0",
         "react-dom": "^19.3.0"

@@ -69,7 +69,7 @@ class SecurityHeaders
             "img-src 'self' data: blob: https:",
             "media-src 'self' blob:",
             "font-src 'self' data:",
-            trim("connect-src 'self' {$video}"),
+            trim("connect-src 'self' {$video} ".$this->realtimeOrigin()),
             "frame-src 'self'",
             "frame-ancestors 'self'",
             "object-src 'none'",
@@ -78,6 +78,18 @@ class SecurityHeaders
             "form-action 'self' https:",
             app()->isProduction() ? 'upgrade-insecure-requests' : null,
         ]));
+    }
+
+    private function realtimeOrigin(): string
+    {
+        if (config('broadcasting.default') !== 'reverb') {
+            return '';
+        }
+        $host = (string) config('broadcasting.connections.reverb.options.host');
+        $port = (int) config('broadcasting.connections.reverb.options.port');
+        $tls = (bool) config('broadcasting.connections.reverb.options.useTLS');
+
+        return $host === '' ? '' : ($tls ? 'wss://' : 'ws://').$host.(in_array($port, [80, 443], true) ? '' : ":{$port}");
     }
 
     private function cspEnabled(): bool

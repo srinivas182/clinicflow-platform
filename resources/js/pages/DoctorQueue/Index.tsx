@@ -1,8 +1,16 @@
-import { Head, Link, router, usePoll } from '@inertiajs/react';
-import { ArrowRight, Siren } from 'lucide-react';
-import { Flash } from '@/components/Flash';
-import { Badge, Button, Card, Ticket, TriageDot, type TriageColour } from '@/components/ui';
-import { AppShell } from '@/layouts/AppShell';
+import { Head, Link, router } from "@inertiajs/react";
+import { useLiveReload } from "@/lib/realtime";
+import { ArrowRight, Siren } from "lucide-react";
+import { Flash } from "@/components/Flash";
+import {
+    Badge,
+    Button,
+    Card,
+    Ticket,
+    TriageDot,
+    type TriageColour,
+} from "@/components/ui";
+import { AppShell } from "@/layouts/AppShell";
 
 interface Row {
     id: string;
@@ -28,10 +36,33 @@ const List = ({ rows, empty }: { rows: Row[]; empty: string }) => (
     </ul>
 );
 
-export default function DoctorQueue({ doctor, current, mine, pool, redAlerts }: { doctor: string; current: { id: string; ticket: string; patient: string; colour: string | null } | null; mine: Row[]; pool: Row[]; redAlerts: Row[] }) {
-    usePoll(10000);
+export default function DoctorQueue({
+    doctor,
+    current,
+    mine,
+    pool,
+    redAlerts,
+}: {
+    doctor: string;
+    current: {
+        id: string;
+        ticket: string;
+        patient: string;
+        colour: string | null;
+    } | null;
+    mine: Row[];
+    pool: Row[];
+    redAlerts: Row[];
+}) {
+    useLiveReload("queue", "queue.changed", 10000);
 
-    const move = (stage: string) => current && router.post(`/visits/${current.id}/stage`, { stage }, { preserveScroll: true });
+    const move = (stage: string) =>
+        current &&
+        router.post(
+            `/visits/${current.id}/stage`,
+            { stage },
+            { preserveScroll: true },
+        );
 
     return (
         <AppShell active="My queue">
@@ -39,20 +70,52 @@ export default function DoctorQueue({ doctor, current, mine, pool, redAlerts }: 
             <div className="mb-5 flex items-end gap-3">
                 <div>
                     <h1 className="text-2xl font-semibold">My queue</h1>
-                    <p className="text-sm text-muted">{doctor} · Call next picks your bookings, then patients asking for you, then the pool by triage colour.</p>
+                    <p className="text-sm text-muted">
+                        {doctor} · Call next picks your bookings, then patients
+                        asking for you, then the pool by triage colour.
+                    </p>
                 </div>
-                <Button size="lg" className="ml-auto" icon={<ArrowRight className="size-4" />} disabled={current !== null} onClick={() => router.post('/doctor/call-next', {}, { preserveScroll: true })}>
+                <Button
+                    size="lg"
+                    className="ml-auto"
+                    icon={<ArrowRight className="size-4" />}
+                    disabled={current !== null}
+                    onClick={() =>
+                        router.post(
+                            "/doctor/call-next",
+                            {},
+                            { preserveScroll: true },
+                        )
+                    }
+                >
                     Call next patient
                 </Button>
             </div>
             <Flash />
             {redAlerts.map((r) => (
-                <div key={r.id} role="alert" className="mb-3 flex items-center gap-3 rounded-lg border border-[#F3C7C7] bg-status-danger-wash px-4 py-3 text-status-danger">
+                <div
+                    key={r.id}
+                    role="alert"
+                    className="mb-3 flex items-center gap-3 rounded-lg border border-[#F3C7C7] bg-status-danger-wash px-4 py-3 text-status-danger"
+                >
                     <Siren className="size-5" aria-hidden="true" />
                     <span className="flex-1">
-                        <b>Red triage — {r.patient} ({r.ticket}).</b> First doctor to accept takes the patient.
+                        <b>
+                            Red triage — {r.patient} ({r.ticket}).
+                        </b>{" "}
+                        First doctor to accept takes the patient.
                     </span>
-                    <Button variant="danger" size="sm" onClick={() => router.post(`/doctor/accept/${r.id}`, {}, { preserveScroll: true })}>
+                    <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() =>
+                            router.post(
+                                `/doctor/accept/${r.id}`,
+                                {},
+                                { preserveScroll: true },
+                            )
+                        }
+                    >
                         Accept
                     </Button>
                 </div>
@@ -61,16 +124,25 @@ export default function DoctorQueue({ doctor, current, mine, pool, redAlerts }: 
                 <Card title="With you now" className="mb-4">
                     <div className="flex items-center gap-4">
                         <Ticket number={current.ticket} />
-                        <span className="flex-1 text-lg font-medium">{current.patient}</span>
+                        <span className="flex-1 text-lg font-medium">
+                            {current.patient}
+                        </span>
                         <Link href={`/consults/${current.id}`}>
                             <Button>Open consult</Button>
                         </Link>
-                        <Button variant="secondary" onClick={() => move('pharmacy')}>
+                        <Button
+                            variant="secondary"
+                            onClick={() => move("pharmacy")}
+                        >
                             Send to pharmacy
                         </Button>
-                        <Button onClick={() => move('done')}>Done — no script</Button>
+                        <Button onClick={() => move("done")}>
+                            Done — no script
+                        </Button>
                     </div>
-                    <p className="mt-2 text-xs text-muted">Consult notes and prescribing arrive in Sprint 5.</p>
+                    <p className="mt-2 text-xs text-muted">
+                        Consult notes and prescribing arrive in Sprint 5.
+                    </p>
                 </Card>
             )}
             <div className="grid grid-cols-2 gap-4">

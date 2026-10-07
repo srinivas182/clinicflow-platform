@@ -4,6 +4,17 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.53.0] — Sprint H2-1: real-time updates for staff (Reverb)
+
+### Added
+- Real-time updates with Laravel Reverb: front desk, triage and doctor queue screens refresh the moment a patient checks in or moves stage, and staff see new chat consult messages instantly. Channels are private and scoped to one practice: only its active staff may listen, and only on its own domain. Events carry identifiers only (no message text). A slow 60-second refresh remains as a safety net; when real-time is off or disconnected, screens refresh as before.
+- Reverb configuration (config/reverb.php, REVERB_* settings); the content-security policy allows the Reverb address when real-time is on.
+
+### Notes
+- Production: BROADCAST_CONNECTION=reverb with queue workers running, so a Reverb outage never blocks check-ins or messages.
+- Adds laravel-echo and pusher-js (front end, loaded only when real-time is on).
+- Next (H2-2): patient side (portal chat, call screen, portal home), waiting-room display, caching and index tuning, load-test plan.
+
 ## [0.52.0] — Sprint H1d: key rotation, data retention and reseller page fix
 
 ### Added

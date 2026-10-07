@@ -1,4 +1,5 @@
-import { Head, useForm, usePoll, router } from "@inertiajs/react";
+import { Head, useForm, router } from "@inertiajs/react";
+import { useLiveReload } from "@/lib/realtime";
 import { scribePost } from "@/lib/scribe";
 import type { FormEvent } from "react";
 import { Flash } from "@/components/Flash";
@@ -30,7 +31,12 @@ export default function Thread({
     messages,
     scribe,
 }: Props) {
-    usePoll(4000, { only: ["messages", "thread"] });
+    // Staff get live updates; patients keep 4-second refresh until H2-2.
+    const isStaff = me === "doctor";
+    useLiveReload(isStaff ? `chat.${thread.id}` : "", "chat.posted", 4000, [
+        "messages",
+        "thread",
+    ]);
     const form = useForm({ body: "" });
     const submit = (e: FormEvent) => {
         e.preventDefault();

@@ -65,6 +65,8 @@ use App\Domains\Website\Http\Controllers\WebsiteToolsController;
 use App\Domains\Wellness\Http\Controllers\WellnessController;
 use App\Http\Controllers\Provider\ProviderHomeController;
 use App\Http\Middleware\SupportSessionGuard;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
@@ -326,6 +328,8 @@ Route::middleware([
         Route::put('/me/calendar', [CalendarController::class, 'update'])->name('calendar.update');
         Route::get('/settings/security', [PracticeSecurityController::class, 'show'])->name('settings.security');
         Route::post('/settings/security', [PracticeSecurityController::class, 'update'])->middleware('step-up')->name('settings.security.update');
+        // Real-time channel sign-in (staff of this practice only; see routes/channels.php).
+        Route::post('/broadcasting/auth', fn (Request $request) => Broadcast::auth($request))->name('broadcasting.auth');
         Route::get('/confirm-identity', [ConfirmIdentityController::class, 'show'])->name('identity.confirm');
         Route::post('/confirm-identity', [ConfirmIdentityController::class, 'store'])->middleware('throttle:10,1')->name('identity.confirm.store');
         Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
