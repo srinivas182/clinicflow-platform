@@ -86,7 +86,7 @@ export default function Reviews({
                     </label>
                 )}
                 {form.errors.legal_confirmed && (
-                    <p className="mb-2 text-xs text-status-danger">
+                    <p role="alert" className="mb-2 text-xs text-status-danger">
                         {form.errors.legal_confirmed}
                     </p>
                 )}

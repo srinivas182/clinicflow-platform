@@ -175,7 +175,10 @@ export default function LocumPortal({
                         Also SMS me
                     </label>
                     {Object.values(form.errors)[0] && (
-                        <p className="mb-2 text-xs text-status-danger">
+                        <p
+                            role="alert"
+                            className="mb-2 text-xs text-status-danger"
+                        >
                             {Object.values(form.errors)[0]}
                         </p>
                     )}
@@ -260,7 +263,10 @@ export default function LocumPortal({
                                 />
                             )}
                             {Object.values(doc.errors)[0] && (
-                                <p className="text-xs text-status-danger">
+                                <p
+                                    role="alert"
+                                    className="text-xs text-status-danger"
+                                >
                                     {Object.values(doc.errors)[0]}
                                 </p>
                             )}

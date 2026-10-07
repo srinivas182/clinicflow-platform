@@ -44,11 +44,21 @@ export default function AutoDebits({
                 <table className="w-full text-sm">
                     <thead className="text-left text-xs text-muted">
                         <tr>
-                            <th className="py-2 font-medium">Provider</th>
-                            <th className="py-2 font-medium">Gateway</th>
-                            <th className="py-2 font-medium">Card</th>
-                            <th className="py-2 font-medium">Last charged</th>
-                            <th className="py-2 font-medium">Status</th>
+                            <th scope="col" className="py-2 font-medium">
+                                Provider
+                            </th>
+                            <th scope="col" className="py-2 font-medium">
+                                Gateway
+                            </th>
+                            <th scope="col" className="py-2 font-medium">
+                                Card
+                            </th>
+                            <th scope="col" className="py-2 font-medium">
+                                Last charged
+                            </th>
+                            <th scope="col" className="py-2 font-medium">
+                                Status
+                            </th>
                         </tr>
                     </thead>
                     <tbody>

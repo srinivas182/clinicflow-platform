@@ -168,7 +168,7 @@ export default function StaffIndex({
                     </Button>
                 </div>
                 {Object.values(invite.errors)[0] && (
-                    <p className="mt-2 text-xs text-status-danger">
+                    <p role="alert" className="mt-2 text-xs text-status-danger">
                         {Object.values(invite.errors)[0]}
                     </p>
                 )}
@@ -228,12 +228,14 @@ export default function StaffIndex({
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="text-left text-xs text-muted">
-                                <th className="py-1">Name</th>
-                                <th>Role</th>
-                                <th>Branches</th>
-                                <th>Sign-in</th>
-                                <th>Status</th>
-                                <th>
+                                <th scope="col" className="py-1">
+                                    Name
+                                </th>
+                                <th scope="col">Role</th>
+                                <th scope="col">Branches</th>
+                                <th scope="col">Sign-in</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">
                                     <span className="sr-only">Actions</span>
                                 </th>
                             </tr>

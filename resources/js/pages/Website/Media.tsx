@@ -65,7 +65,7 @@ export default function Media({
                     </Button>
                 </div>
                 {(form.errors.file || form.errors.alt) && (
-                    <p className="mt-1 text-xs text-status-danger">
+                    <p role="alert" className="mt-1 text-xs text-status-danger">
                         {form.errors.file ?? form.errors.alt}
                     </p>
                 )}

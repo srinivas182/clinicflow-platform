@@ -131,7 +131,9 @@ export function ScribePanel({
             className="mb-4"
         >
             {error && (
-                <p className="mb-2 text-xs text-status-danger">{error}</p>
+                <p role="alert" className="mb-2 text-xs text-status-danger">
+                    {error}
+                </p>
             )}
             {step === "idle" && (
                 <>

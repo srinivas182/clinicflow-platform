@@ -99,15 +99,19 @@ export default function PackagesIndex({ packages }: { packages: Pkg[] }) {
                 <table className="w-full text-sm">
                     <thead className="bg-paper text-left text-xs text-muted">
                         <tr>
-                            <th className="px-4 py-2.5 font-medium">Package</th>
-                            <th className="px-4 py-2.5 font-medium">
+                            <th scope="col" className="px-4 py-2.5 font-medium">
+                                Package
+                            </th>
+                            <th scope="col" className="px-4 py-2.5 font-medium">
                                 Monthly (R)
                             </th>
-                            <th className="px-4 py-2.5 font-medium">
+                            <th scope="col" className="px-4 py-2.5 font-medium">
                                 Trial days
                             </th>
-                            <th className="px-4 py-2.5 font-medium">Active</th>
-                            <th />
+                            <th scope="col" className="px-4 py-2.5 font-medium">
+                                Active
+                            </th>
+                            <th scope="col" />
                         </tr>
                     </thead>
                     <tbody>

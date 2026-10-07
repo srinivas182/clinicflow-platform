@@ -149,7 +149,10 @@ export default function WellnessRegister({
                             anonymous totals. Taking part is voluntary.
                         </label>
                         {Object.values(form.errors)[0] && (
-                            <p className="mb-2 text-xs text-status-danger">
+                            <p
+                                role="alert"
+                                className="mb-2 text-xs text-status-danger"
+                            >
                                 {Object.values(form.errors)[0]}
                             </p>
                         )}

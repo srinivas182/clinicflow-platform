@@ -315,7 +315,9 @@ export default function ReportBuilder({
                     ))}
                 </div>
                 {error && (
-                    <p className="mt-2 text-xs text-status-danger">{error}</p>
+                    <p role="alert" className="mt-2 text-xs text-status-danger">
+                        {error}
+                    </p>
                 )}
                 <div className="mt-3 flex gap-2">
                     <Button size="sm" disabled={busy} onClick={run}>
@@ -475,6 +477,7 @@ export default function ReportBuilder({
                                 <tr>
                                     {result.columns.map((c) => (
                                         <th
+                                            scope="col"
                                             key={c.key}
                                             className="border-b border-line py-1 text-left"
                                         >

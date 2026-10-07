@@ -436,20 +436,22 @@ export default function Messaging({
                     <table className="w-full text-sm">
                         <thead className="text-left text-xs text-muted">
                             <tr>
-                                <th className="py-2 font-medium">Package</th>
-                                <th className="py-2 font-medium">
+                                <th scope="col" className="py-2 font-medium">
+                                    Package
+                                </th>
+                                <th scope="col" className="py-2 font-medium">
                                     SMS / month
                                 </th>
-                                <th className="py-2 font-medium">
+                                <th scope="col" className="py-2 font-medium">
                                     Emails / month
                                 </th>
-                                <th className="py-2 font-medium">
+                                <th scope="col" className="py-2 font-medium">
                                     Over allowance (per message)
                                 </th>
-                                <th className="py-2 font-medium">
+                                <th scope="col" className="py-2 font-medium">
                                     Messages included
                                 </th>
-                                <th />
+                                <th scope="col" />
                             </tr>
                         </thead>
                         <tbody>

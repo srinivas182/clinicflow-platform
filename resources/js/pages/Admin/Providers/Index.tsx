@@ -34,13 +34,19 @@ export default function ProvidersIndex({ providers }: { providers: Row[] }) {
                 <table className="w-full text-sm">
                     <thead className="bg-paper text-left text-xs text-muted">
                         <tr>
-                            <th className="px-4 py-2.5 font-medium">
+                            <th scope="col" className="px-4 py-2.5 font-medium">
                                 Provider
                             </th>
-                            <th className="px-4 py-2.5 font-medium">Package</th>
-                            <th className="px-4 py-2.5 font-medium">Address</th>
-                            <th className="px-4 py-2.5 font-medium">Status</th>
-                            <th className="px-4 py-2.5 font-medium">
+                            <th scope="col" className="px-4 py-2.5 font-medium">
+                                Package
+                            </th>
+                            <th scope="col" className="px-4 py-2.5 font-medium">
+                                Address
+                            </th>
+                            <th scope="col" className="px-4 py-2.5 font-medium">
+                                Status
+                            </th>
+                            <th scope="col" className="px-4 py-2.5 font-medium">
                                 Checks pending
                             </th>
                         </tr>
