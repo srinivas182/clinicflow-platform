@@ -116,6 +116,9 @@ jobs:
       - name: PHPStan (level 8)
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G 2>&1 | tee .ci-phpstan.txt
 
+      - name: Dependency vulnerabilities (Composer)
+        run: composer audit --locked --no-interaction --abandoned=ignore
+
       - name: Report failure on the pull request
         if: (failure() || cancelled()) && github.event_name == 'pull_request'
         env:
