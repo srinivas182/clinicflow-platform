@@ -4,6 +4,13 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.57.0] — Sprint L3: staff management
+
+### Added
+- Staff page (owners and practice admins): invite people by email and/or mobile with a role and branches; see pending invitations (send again, withdraw); see the team with role, branches, authenticator use, last sign-in and status; change role and branches; suspend or restore access (suspension takes effect immediately).
+- Invitations: single-use links valid for 7 days (only a hash is stored); sending again replaces the link. A new person creates an account (same password rules as sign-up) and signs in normally; an existing account signs in and accepts. A link only works for the email or mobile it was sent to.
+- Rules: nobody can change or suspend themselves; the owner cannot be changed here and the owner role cannot be given by invitation; roles must suit the practice type. Every change needs step-up confirmation and is audited.
+
 ## [0.56.0] — Sprint L1: Excel export, safer CSV and remaining pagination
 
 ### Added
