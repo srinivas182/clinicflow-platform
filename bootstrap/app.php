@@ -17,6 +17,8 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Illuminate\Session\Middleware\AuthenticateSession;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -69,4 +71,18 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // Inside the app (Inertia requests), errors show as a branded page instead of raw HTML in a pop-up.
+        // Ordinary page loads use resources/views/errors/{code}.blade.php; JSON and API keep JSON;
+        // debug mode keeps the detailed debug page for server errors.
+        $exceptions->respond(function (Response $response, Throwable $e, Request $request) {
+            $status = $response->getStatusCode();
+            if ($request->header('X-Inertia') === null || ! in_array($status, [403, 404, 419, 429, 500, 503], true)
+                || ($status >= 500 && (bool) config('app.debug'))) {
+                return $response;
+            }
+            $message = $status === 403 && ! in_array($e->getMessage(), ['', 'This action is unauthorized.', 'Forbidden', 'Unauthorized.'], true) ? $e->getMessage() : null;
+
+            return Inertia::render('Errors/Show', ['status' => $status, 'message' => $message])->toResponse($request)->setStatusCode($status);
+        });
     })->create();
