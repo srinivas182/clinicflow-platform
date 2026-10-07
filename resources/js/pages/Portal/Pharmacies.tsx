@@ -40,7 +40,7 @@ export default function Pharmacies({ items, pharmacies }: Props) {
                         ))}
                     </Card>
                     <Card title="Pharmacies">
-                        <ul className="divide-y divide-[#EBF0EE] text-sm">
+                        <ul className="divide-y divide-line-soft text-sm">
                             {pharmacies.map((p) => (
                                 <li
                                     key={p.id}

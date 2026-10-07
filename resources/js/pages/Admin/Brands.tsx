@@ -319,7 +319,7 @@ export default function AdminBrands({ brands, resellers, providers }: Props) {
                             Edit
                         </Button>
                     </div>
-                    <div className="mt-3 grid grid-cols-2 gap-3 border-t border-[#EBF0EE] pt-3 text-sm">
+                    <div className="mt-3 grid grid-cols-2 gap-3 border-t border-line-soft pt-3 text-sm">
                         <div>
                             <p className="mb-1 font-medium">
                                 Email sender{" "}

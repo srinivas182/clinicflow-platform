@@ -32,7 +32,7 @@ export default function TriageIndex({
                         Nobody is waiting for triage.
                     </p>
                 )}
-                <ul className="divide-y divide-[#EBF0EE]">
+                <ul className="divide-y divide-line-soft">
                     {visits.map((v) => (
                         <li key={v.id} className="flex items-center gap-4 py-3">
                             <Ticket number={v.ticket} />

@@ -63,7 +63,7 @@ export default function Debtors({ buckets, patients, writeOffs }: Props) {
                 </Card>
             )}
             <Card title="Patients who owe">
-                <ul className="divide-y divide-[#EBF0EE] text-sm">
+                <ul className="divide-y divide-line-soft text-sm">
                     {patients.map((p) => (
                         <li key={p.id} className="flex py-2">
                             <span className="flex-1">{p.name}</span>

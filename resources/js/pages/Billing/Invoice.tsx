@@ -70,7 +70,7 @@ export default function InvoicePage({
         quantity: 1,
     });
     const select =
-        "min-h-10 rounded-lg border border-[#CBD5D2] bg-white px-3 py-2 text-sm";
+        "min-h-10 rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm";
 
     const submitPay = (e: FormEvent) => {
         e.preventDefault();
@@ -116,7 +116,7 @@ export default function InvoicePage({
             {invoice.needsReview && (
                 <div
                     role="alert"
-                    className="mb-4 rounded-lg border border-[#F0DE9C] bg-status-warning-wash px-4 py-3 text-sm text-status-warning"
+                    className="mb-4 rounded-lg border border-status-warning-wash bg-status-warning-wash px-4 py-3 text-sm text-status-warning"
                 >
                     {invoice.reviewNote}
                 </div>
@@ -128,7 +128,7 @@ export default function InvoicePage({
                             {invoice.lines.map((l) => (
                                 <tr
                                     key={l.id}
-                                    className="border-t border-[#EBF0EE] first:border-0"
+                                    className="border-t border-line-soft first:border-0"
                                 >
                                     <td className="py-2 text-muted">
                                         {l.code}

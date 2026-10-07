@@ -1,3 +1,4 @@
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Link, router, usePage } from "@inertiajs/react";
 import {
     Activity,
@@ -136,11 +137,17 @@ export function AppShell({
 
     return (
         <div className="flex min-h-screen">
-            <aside className="flex w-60 flex-none flex-col bg-ink px-3.5 py-5 text-[#C8D3D7]">
+            <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:text-ink focus:shadow"
+            >
+                Skip to main content
+            </a>
+            <aside className="flex w-60 flex-none flex-col bg-chrome px-3.5 py-5 text-chrome-muted">
                 <div className="px-1.5 pb-4">
                     <Logo tone="light" />
                 </div>
-                <div className="mb-4 flex items-center gap-2.5 rounded-lg bg-ink-2 px-3 py-2.5">
+                <div className="mb-4 flex items-center gap-2.5 rounded-lg bg-chrome-2 px-3 py-2.5">
                     <span className="grid size-8 place-items-center rounded-md bg-[#2D5161] text-xs font-semibold text-white">
                         {initials}
                     </span>
@@ -148,7 +155,7 @@ export function AppShell({
                         <div className="text-sm font-medium text-white">
                             {provider?.name ?? "Clinic Flow"}
                         </div>
-                        <div className="text-xs text-[#9FB2B9]">
+                        <div className="text-xs text-chrome-muted">
                             {provider?.typeLabel ?? "Platform"}
                         </div>
                     </div>
@@ -156,7 +163,7 @@ export function AppShell({
                 {branches && (
                     <select
                         aria-label="Branch"
-                        className="mb-4 rounded-md bg-ink-2 px-2 py-1.5 text-sm text-white"
+                        className="mb-4 rounded-md bg-chrome-2 px-2 py-1.5 text-sm text-white"
                         value={branches.current ?? ""}
                         onChange={(e) =>
                             router.post("/branches/switch", {
@@ -177,16 +184,17 @@ export function AppShell({
                             key={label}
                             href={href}
                             aria-current={label === active ? "page" : undefined}
-                            className={`mb-0.5 flex items-center gap-3 rounded-md px-2.5 py-2 text-sm ${label === active ? "bg-white/10 font-medium text-white" : "hover:bg-white/5"}`}
+                            className={`mb-0.5 flex items-center gap-3 rounded-md px-2.5 py-2 text-sm ${label === active ? "bg-surface/10 font-medium text-white" : "hover:bg-surface/5"}`}
                         >
                             <Icon className="size-4" aria-hidden="true" />
                             {label}
                         </Link>
                     ))}
                 </nav>
+                <ThemeToggle className="mt-3 self-start" />
             </aside>
             <div className="flex min-w-0 flex-1 flex-col">
-                <header className="flex h-15 items-center gap-3 border-b border-line bg-white px-6">
+                <header className="flex h-15 items-center gap-3 border-b border-line bg-surface px-6">
                     <label className="flex w-96 items-center gap-2 rounded-lg border border-line bg-paper px-3 py-2 text-sm text-muted">
                         <Search className="size-4" aria-hidden="true" />
                         <span className="sr-only">Search</span>
@@ -212,7 +220,13 @@ export function AppShell({
                         </button>
                     </div>
                 </header>
-                <main className="flex-1 px-6 py-6">{children}</main>
+                <main
+                    id="main-content"
+                    tabIndex={-1}
+                    className="flex-1 px-6 py-6"
+                >
+                    {children}
+                </main>
             </div>
         </div>
     );

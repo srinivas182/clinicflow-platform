@@ -487,7 +487,7 @@ export default function ReportBuilder({
                                 {result.rows.map((r, i) => (
                                     <tr
                                         key={i}
-                                        className="border-t border-[#EBF0EE]"
+                                        className="border-t border-line-soft"
                                     >
                                         {result.columns.map((c) => (
                                             <td key={c.key} className="py-1">

@@ -102,7 +102,7 @@ export default function ClaimsIndex({
             </Card>
             {unclaimed.length > 0 && (
                 <Card title="Ready to claim" className="mb-4">
-                    <ul className="divide-y divide-[#EBF0EE] text-sm">
+                    <ul className="divide-y divide-line-soft text-sm">
                         {unclaimed.map((i) => (
                             <li
                                 key={i.id}
@@ -146,7 +146,7 @@ export default function ClaimsIndex({
                         {claims.data.map((c) => (
                             <tr
                                 key={c.id}
-                                className="border-t border-[#EBF0EE] first:border-0"
+                                className="border-t border-line-soft first:border-0"
                             >
                                 <td className="py-2.5">
                                     <div className="font-medium">

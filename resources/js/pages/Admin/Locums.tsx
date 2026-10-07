@@ -10,7 +10,12 @@ interface Profile {
     hpcsa: string;
     qualifications: string;
     status: string;
-    documents: { id: number; kind: string; filename: string; expires_on: string | null }[];
+    documents: {
+        id: number;
+        kind: string;
+        filename: string;
+        expires_on: string | null;
+    }[];
     lateCancellations: number;
     wouldRebook: number;
     wouldNotRebook: number;
@@ -48,7 +53,11 @@ export default function AdminLocums({ profiles }: { profiles: Profile[] }) {
                     <p className="mb-2 text-sm">
                         {p.qualifications} · {p.email}
                     </p>
-                    <p className="mb-2 text-xs text-muted">Late cancellations: {p.lateCancellations} · Practices would book again: {p.wouldRebook} yes / {p.wouldNotRebook} no</p>
+                    <p className="mb-2 text-xs text-muted">
+                        Late cancellations: {p.lateCancellations} · Practices
+                        would book again: {p.wouldRebook} yes /{" "}
+                        {p.wouldNotRebook} no
+                    </p>
                     <ul className="mb-2 text-sm">
                         {p.documents.map((d) => (
                             <li key={d.id}>

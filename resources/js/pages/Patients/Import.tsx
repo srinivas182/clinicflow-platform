@@ -1,8 +1,8 @@
-import { Head, useForm } from '@inertiajs/react';
-import type { FormEvent } from 'react';
-import { Flash } from '@/components/Flash';
-import { Button, Card } from '@/components/ui';
-import { AppShell } from '@/layouts/AppShell';
+import { Head, useForm } from "@inertiajs/react";
+import type { FormEvent } from "react";
+import { Flash } from "@/components/Flash";
+import { Button, Card } from "@/components/ui";
+import { AppShell } from "@/layouts/AppShell";
 
 interface ImportRow {
     id: number;
@@ -14,28 +14,53 @@ interface ImportRow {
     at: string;
 }
 
-export default function ImportPatients({ columns, imports }: { columns: string[]; imports: ImportRow[] }) {
+export default function ImportPatients({
+    columns,
+    imports,
+}: {
+    columns: string[];
+    imports: ImportRow[];
+}) {
     const form = useForm<{ file: File | null }>({ file: null });
     const submit = (e: FormEvent) => {
         e.preventDefault();
-        form.post('/patients/import', { forceFormData: true });
+        form.post("/patients/import", { forceFormData: true });
     };
 
     return (
         <AppShell active="Patients">
             <Head title="Import patients" />
             <h1 className="mb-1 text-2xl font-semibold">Import patients</h1>
-            <p className="mb-5 text-sm text-muted">Upload a CSV export from your previous system. Imported patients give consent at their next check-in.</p>
+            <p className="mb-5 text-sm text-muted">
+                Upload a CSV export from your previous system. Imported patients
+                give consent at their next check-in.
+            </p>
             <Flash />
             <Card title="Upload" className="mb-4">
-                <p className="mb-3 text-xs text-muted">Columns: {columns.join(', ')}. First names, surname and an SA ID or date of birth are required.</p>
+                <p className="mb-3 text-xs text-muted">
+                    Columns: {columns.join(", ")}. First names, surname and an
+                    SA ID or date of birth are required.
+                </p>
                 <form onSubmit={submit} className="flex items-center gap-3">
-                    <input type="file" accept=".csv,text/csv" onChange={(e) => form.setData('file', e.target.files?.[0] ?? null)} />
-                    <Button type="submit" disabled={!form.data.file || form.processing}>
+                    <input
+                        type="file"
+                        accept=".csv,text/csv"
+                        onChange={(e) =>
+                            form.setData("file", e.target.files?.[0] ?? null)
+                        }
+                    />
+                    <Button
+                        type="submit"
+                        disabled={!form.data.file || form.processing}
+                    >
                         Import
                     </Button>
                 </form>
-                {form.errors.file && <p className="mt-2 text-xs text-status-danger">{form.errors.file}</p>}
+                {form.errors.file && (
+                    <p className="mt-2 text-xs text-status-danger">
+                        {form.errors.file}
+                    </p>
+                )}
             </Card>
             {imports.map((i) => (
                 <Card key={i.id} title={i.file} aside={i.at} className="mb-3">

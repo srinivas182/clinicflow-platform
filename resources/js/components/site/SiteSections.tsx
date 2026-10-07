@@ -14,7 +14,7 @@ const ButtonLink = ({
 }) => (
     <a
         href={link.href}
-        className={`inline-flex items-center rounded-lg px-5 py-2.5 text-sm font-semibold ${primary ? "text-white" : "border border-line bg-white text-ink"}`}
+        className={`inline-flex items-center rounded-lg px-5 py-2.5 text-sm font-semibold ${primary ? "text-white" : "border border-line bg-surface text-ink"}`}
         style={primary ? { background: colour } : undefined}
     >
         {link.label}
@@ -141,7 +141,7 @@ function Section({ s, site }: { s: SiteSection; site: SiteInfo }) {
                                 <a
                                     key={k}
                                     href={i.href ?? "#"}
-                                    className="rounded-2xl border border-line bg-white p-5 hover:shadow-md"
+                                    className="rounded-2xl border border-line bg-surface p-5 hover:shadow-md"
                                 >
                                     {i.image && (
                                         <img
@@ -205,7 +205,10 @@ function Section({ s, site }: { s: SiteSection; site: SiteInfo }) {
                         )}
                         <ol className="grid gap-5 md:grid-cols-5">
                             {s.items?.map((i, k) => (
-                                <li key={k} className="rounded-xl bg-white p-5">
+                                <li
+                                    key={k}
+                                    className="rounded-xl bg-surface p-5"
+                                >
                                     <span
                                         className="grid size-8 place-items-center rounded-full text-sm font-bold text-white"
                                         style={{ background: site.colour }}
@@ -286,7 +289,7 @@ function Section({ s, site }: { s: SiteSection; site: SiteInfo }) {
                             {s.primary && (
                                 <a
                                     href={s.primary.href}
-                                    className="rounded-lg bg-white px-5 py-2.5 text-sm font-semibold"
+                                    className="rounded-lg bg-surface px-5 py-2.5 text-sm font-semibold"
                                     style={accent}
                                 >
                                     {s.primary.label}

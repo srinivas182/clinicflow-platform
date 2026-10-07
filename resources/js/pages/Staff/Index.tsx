@@ -242,7 +242,7 @@ export default function StaffIndex({
                             {members.map((m) => (
                                 <tr
                                     key={m.id}
-                                    className="border-t border-[#EBF0EE] align-top"
+                                    className="border-t border-line-soft align-top"
                                 >
                                     <td className="py-2">
                                         {m.name}

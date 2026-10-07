@@ -22,7 +22,7 @@ interface Row {
 }
 
 const List = ({ rows, empty }: { rows: Row[]; empty: string }) => (
-    <ul className="divide-y divide-[#EBF0EE] text-sm">
+    <ul className="divide-y divide-line-soft text-sm">
         {rows.length === 0 && <li className="py-3 text-muted">{empty}</li>}
         {rows.map((r) => (
             <li key={r.id} className="flex items-center gap-3 py-2.5">
@@ -96,7 +96,7 @@ export default function DoctorQueue({
                 <div
                     key={r.id}
                     role="alert"
-                    className="mb-3 flex items-center gap-3 rounded-lg border border-[#F3C7C7] bg-status-danger-wash px-4 py-3 text-status-danger"
+                    className="mb-3 flex items-center gap-3 rounded-lg border border-danger-line bg-status-danger-wash px-4 py-3 text-status-danger"
                 >
                     <Siren className="size-5" aria-hidden="true" />
                     <span className="flex-1">

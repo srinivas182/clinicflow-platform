@@ -194,7 +194,7 @@ export default function ApiSettings({
                 {keys.map((k) => (
                     <div
                         key={k.id}
-                        className="flex flex-wrap items-center gap-2 border-t border-[#EBF0EE] py-2 text-sm first:border-0"
+                        className="flex flex-wrap items-center gap-2 border-t border-line-soft py-2 text-sm first:border-0"
                     >
                         <span className="flex-1">
                             <b>{k.name}</b>{" "}
@@ -240,7 +240,7 @@ export default function ApiSettings({
                 <table className="w-full text-xs">
                     <tbody>
                         {requests.map((r, i) => (
-                            <tr key={i} className="border-t border-[#EBF0EE]">
+                            <tr key={i} className="border-t border-line-soft">
                                 <td className="py-1">{r.at.slice(0, 19)}</td>
                                 <td>{r.key}</td>
                                 <td className="font-mono">
@@ -323,7 +323,7 @@ export default function ApiSettings({
                 {endpoints.map((e) => (
                     <div
                         key={e.id}
-                        className="mt-2 flex flex-wrap items-center gap-2 border-t border-[#EBF0EE] pt-2 text-sm"
+                        className="mt-2 flex flex-wrap items-center gap-2 border-t border-line-soft pt-2 text-sm"
                     >
                         <span className="flex-1">
                             <span className="font-mono text-xs">{e.url}</span>
@@ -373,7 +373,7 @@ export default function ApiSettings({
                             {deliveries.map((d) => (
                                 <tr
                                     key={d.id}
-                                    className="border-t border-[#EBF0EE]"
+                                    className="border-t border-line-soft"
                                 >
                                     <td className="py-1">
                                         {d.at.slice(0, 19)}

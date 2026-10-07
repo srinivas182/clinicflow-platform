@@ -17,7 +17,7 @@ export function SiteLayout({
     const [open, setOpen] = useState(false);
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-surface">
             <Head title={title}>
                 <meta name="description" content={description} />
                 <meta property="og:title" content={title} />
@@ -26,7 +26,7 @@ export function SiteLayout({
                     <meta property="og:image" content={site.ogImage} />
                 )}
             </Head>
-            <header className="sticky top-0 z-20 border-b border-[#EBF0EE] bg-white/95 backdrop-blur">
+            <header className="sticky top-0 z-20 border-b border-line-soft bg-surface/95 backdrop-blur">
                 <div className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-4">
                     <a
                         href="/"
@@ -42,7 +42,7 @@ export function SiteLayout({
                     </a>
                     <nav
                         aria-label="Main"
-                        className={`${open ? "flex" : "hidden"} absolute top-16 right-0 left-0 flex-col gap-1 border-b border-line bg-white p-4 md:static md:flex md:flex-row md:border-0 md:p-0`}
+                        className={`${open ? "flex" : "hidden"} absolute top-16 right-0 left-0 flex-col gap-1 border-b border-line bg-surface p-4 md:static md:flex md:flex-row md:border-0 md:p-0`}
                     >
                         {site.menu.map((m) => (
                             <a

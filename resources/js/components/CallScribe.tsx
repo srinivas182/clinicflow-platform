@@ -41,7 +41,7 @@ export function CallScribe({
                     .then(onChange)
                     .catch((e) => setMessage((e as Error).message));
             return (
-                <div className="mx-6 mb-3 rounded-lg bg-white/10 p-3 text-sm">
+                <div className="mx-6 mb-3 rounded-lg bg-surface/10 p-3 text-sm">
                     Your doctor would like to use an AI scribe to help write
                     your notes. It listens to this call; the recording is not
                     kept and your doctor checks everything. It is your choice.
@@ -53,7 +53,7 @@ export function CallScribe({
                             Agree
                         </button>
                         <button
-                            className="rounded bg-white/20 px-3 py-1"
+                            className="rounded bg-surface/20 px-3 py-1"
                             onClick={() => answer("decline")}
                         >
                             Decline
@@ -124,7 +124,10 @@ export function CallScribe({
             ["declined", "discarded", "accepted", "drafted", "failed"].includes(
                 status ?? "",
             ) ? (
-                <button className="rounded bg-white/15 px-3 py-1" onClick={ask}>
+                <button
+                    className="rounded bg-surface/15 px-3 py-1"
+                    onClick={ask}
+                >
                     AI scribe
                 </button>
             ) : status === "awaiting" ? (

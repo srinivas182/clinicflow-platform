@@ -1,12 +1,21 @@
-import { Head, Link } from '@inertiajs/react';
-import { Flash } from '@/components/Flash';
-import { GatewayCard, type GatewayRow } from '@/components/payments/GatewayCard';
-import { AppShell } from '@/layouts/AppShell';
+import { Head, Link } from "@inertiajs/react";
+import { Flash } from "@/components/Flash";
+import {
+    GatewayCard,
+    type GatewayRow,
+} from "@/components/payments/GatewayCard";
+import { AppShell } from "@/layouts/AppShell";
 
 /**
  * The practice's own merchant accounts. Patient money goes straight to the practice.
  */
-export default function PaymentSettings({ gateways, action }: { gateways: GatewayRow[]; action: string }) {
+export default function PaymentSettings({
+    gateways,
+    action,
+}: {
+    gateways: GatewayRow[];
+    action: string;
+}) {
     return (
         <AppShell active="Settings">
             <Head title="Payments" />
@@ -19,8 +28,10 @@ export default function PaymentSettings({ gateways, action }: { gateways: Gatewa
                 </nav>
             </div>
             <p className="mb-5 text-sm text-muted">
-                Connect your own PayFast, Paystack, Peach Payments or Yoco account. Patients pay straight into your account — Clinic Flow never holds patient money. Start in test
-                mode, then switch to live.
+                Connect your own PayFast, Paystack, Peach Payments or Yoco
+                account. Patients pay straight into your account — Clinic Flow
+                never holds patient money. Start in test mode, then switch to
+                live.
             </p>
             <Flash />
             <div className="grid grid-cols-2 gap-4">

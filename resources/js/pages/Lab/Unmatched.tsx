@@ -72,7 +72,7 @@ export default function LabUnmatched({
                             {m.results.map((r, i) => (
                                 <tr
                                     key={i}
-                                    className="border-t border-[#EBF0EE]"
+                                    className="border-t border-line-soft"
                                 >
                                     <td className="py-1">
                                         {r.name}{" "}

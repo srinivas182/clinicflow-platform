@@ -157,7 +157,7 @@ export default function AnalyticsDashboard({
                     return (
                         <div
                             key={c.key}
-                            className="rounded-lg border border-line bg-white p-3"
+                            className="rounded-lg border border-line bg-surface p-3"
                         >
                             <p className="text-xs text-muted">{c.label}</p>
                             <p className="text-lg font-semibold">{c.show(v)}</p>
@@ -223,7 +223,7 @@ export default function AnalyticsDashboard({
                             {doctors.map((d) => (
                                 <tr
                                     key={d.doctor}
-                                    className="border-t border-[#EBF0EE]"
+                                    className="border-t border-line-soft"
                                 >
                                     <td className="py-1">{d.doctor}</td>
                                     <td>{d.visits}</td>
@@ -255,7 +255,7 @@ export default function AnalyticsDashboard({
                                 {branches.map((b) => (
                                     <tr
                                         key={b.branch}
-                                        className="border-t border-[#EBF0EE]"
+                                        className="border-t border-line-soft"
                                     >
                                         <td className="py-1">{b.branch}</td>
                                         <td>{b.visits}</td>

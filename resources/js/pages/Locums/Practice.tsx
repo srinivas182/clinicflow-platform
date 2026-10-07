@@ -51,7 +51,7 @@ function BookedActions({ s }: { s: Shift }) {
         });
 
     return (
-        <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-[#EBF0EE] pt-2 text-sm">
+        <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-line-soft pt-2 text-sm">
             {s.worked && (
                 <span>
                     Worked {s.worked} {s.hours && <Badge>{s.hours}</Badge>}

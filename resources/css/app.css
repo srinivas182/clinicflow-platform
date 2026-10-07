@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @source '../views/**/*.blade.php';
 @source '../js/**/*.tsx';
@@ -8,7 +8,7 @@
  * Red, orange, yellow and green are reserved for triage and status only.
  */
 @theme {
-    --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
 
     --color-ink: #12232e;
     --color-ink-2: #1d3544;
@@ -22,6 +22,15 @@
     --color-paper: #f5f7f6;
     --color-line: #dce3e1;
     --color-muted: #5e6e76;
+    /* Secondary text on the dark chrome (sidebars, display) only — not for light cards. */
+    --color-chrome-muted: #9fb2b9;
+    --color-surface: #ffffff;
+    --color-line-soft: #ebf0ee;
+    --color-line-strong: #cbd5d2;
+    --color-danger-line: #f3c7c7;
+    /* Sidebars, sign-in panel, waiting-room display: dark in both themes. */
+    --color-chrome: #12232e;
+    --color-chrome-2: #1d3544;
 
     --color-triage-red: #d32f2f;
     --color-triage-orange: #ef6c00;
@@ -30,7 +39,7 @@
 
     --color-status-danger: #c62828;
     --color-status-danger-wash: #fdecec;
-    --color-status-warning: #9a7200;
+    --color-status-warning: #8a6600;
     --color-status-warning-wash: #fdf5d8;
     --color-status-success: #2e7d3e;
     --color-status-success-wash: #e6f3e8;
@@ -39,5 +48,79 @@
 @layer base {
     body {
         font-variant-numeric: tabular-nums;
+    }
+}
+
+/* Dark mode: follows the device setting unless the person chose light or dark (data-theme on <html>). */
+:root[data-theme="dark"] {
+    --color-ink: #e6eef0;
+    --color-ink-2: #c9d6da;
+    --color-teal-deep: #5fd3c6;
+    --color-mint: #12302d;
+    --color-mint-2: #1a4440;
+    --color-jacaranda: #9b85f0;
+    --color-jacaranda-deep: #c2b5f7;
+    --color-jacaranda-wash: #241d45;
+    --color-paper: #0e1a20;
+    --color-surface: #15242c;
+    --color-line: #2a3c45;
+    --color-line-soft: #213238;
+    --color-line-strong: #36505a;
+    --color-muted: #9aadb4;
+    --color-chrome-muted: #8fa5ad;
+    --color-status-danger: #ff8a80;
+    --color-status-danger-wash: #3a1818;
+    --color-danger-line: #5a2626;
+    --color-status-warning: #e9c46a;
+    --color-status-warning-wash: #33290f;
+    --color-status-success: #7bd389;
+    --color-status-success-wash: #15301c;
+    --color-chrome: #0a151a;
+    --color-chrome-2: #14252c;
+    color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --color-ink: #e6eef0;
+        --color-ink-2: #c9d6da;
+        --color-teal-deep: #5fd3c6;
+        --color-mint: #12302d;
+        --color-mint-2: #1a4440;
+        --color-jacaranda: #9b85f0;
+        --color-jacaranda-deep: #c2b5f7;
+        --color-jacaranda-wash: #241d45;
+        --color-paper: #0e1a20;
+        --color-surface: #15242c;
+        --color-line: #2a3c45;
+        --color-line-soft: #213238;
+        --color-line-strong: #36505a;
+        --color-muted: #9aadb4;
+        --color-chrome-muted: #8fa5ad;
+        --color-status-danger: #ff8a80;
+        --color-status-danger-wash: #3a1818;
+        --color-danger-line: #5a2626;
+        --color-status-warning: #e9c46a;
+        --color-status-warning-wash: #33290f;
+        --color-status-success: #7bd389;
+        --color-status-success-wash: #15301c;
+        --color-chrome: #0a151a;
+        --color-chrome-2: #14252c;
+        color-scheme: dark;
+    }
+}
+
+/* Accessibility: visible keyboard focus everywhere (not on mouse click), and less motion when asked. */
+:focus-visible {
+    outline: 2px solid var(--color-teal);
+    outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
 }

@@ -144,7 +144,7 @@ export default function ConsultShow({
     }>("/reference/medicines", medQ);
     const locked = consultation.completed;
     const area =
-        "min-h-20 w-full rounded-lg border border-[#CBD5D2] px-3 py-2 text-sm disabled:bg-paper";
+        "min-h-20 w-full rounded-lg border border-line-strong px-3 py-2 text-sm disabled:bg-paper";
     const issuesFor = (id?: number) => safety.filter((i) => i.itemId === id);
     const blocked = safety.some((i) => i.level === "block");
 
@@ -304,13 +304,14 @@ export default function ConsultShow({
                     {!locked && (
                         <div className="relative mt-2">
                             <input
+                                aria-label="Search ICD-10 code or description"
                                 value={icdQ}
                                 onChange={(e) => setIcdQ(e.target.value)}
                                 placeholder="Search ICD-10 code or description"
                                 className="w-full rounded-lg border border-line px-3 py-2 text-sm"
                             />
                             {icd.length > 0 && (
-                                <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-line bg-white text-sm shadow">
+                                <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-line bg-surface text-sm shadow">
                                     {icd.map((c) => (
                                         <li key={c.code}>
                                             <button
@@ -578,7 +579,8 @@ export default function ConsultShow({
                                                 {issue.message}
                                                 {issue.level === "override" && (
                                                     <input
-                                                        className="mt-1 w-full rounded border border-line bg-white px-2 py-1 text-ink"
+                                                        aria-label="Reason to prescribe anyway"
+                                                        className="mt-1 w-full rounded border border-line bg-surface px-2 py-1 text-ink"
                                                         placeholder="Reason to prescribe anyway"
                                                         value={
                                                             it.override_reason ??
@@ -609,13 +611,14 @@ export default function ConsultShow({
                             </ul>
                             <div className="relative mt-3">
                                 <input
+                                    aria-label="Add medicine"
                                     value={medQ}
                                     onChange={(e) => setMedQ(e.target.value)}
                                     placeholder="Add medicine"
                                     className="w-full rounded-lg border border-line px-3 py-2 text-sm"
                                 />
                                 {meds.length > 0 && (
-                                    <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-line bg-white text-sm shadow">
+                                    <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-line bg-surface text-sm shadow">
                                         {meds.map((m) => (
                                             <li key={m.id}>
                                                 <button
