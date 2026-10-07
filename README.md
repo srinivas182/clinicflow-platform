@@ -19,7 +19,7 @@ This repository holds the **web portal and the REST API** (Laravel 13 + React). 
 | Quality | Pint, PHPStan level 8 (Larastan), Pest 5, Vitest |
 | Hosting | Docker, AWS af-south-1 (Cape Town) |
 
-Architecture decisions are recorded in [`docs/adr`](docs/adr).
+Architecture decisions are recorded in [`docs/adr`](docs/adr). Manuals for administrators, practice owners and developers are in [`docs/manuals`](docs/manuals).
 
 ## Local setup
 
