@@ -193,7 +193,7 @@ export default function Packages({ packages, sold, validYears }: Props) {
                         {sold.data.map((s) => (
                             <tr
                                 key={s.id}
-                                className="border-t border-[#EBF0EE]"
+                                className="border-t border-line-soft"
                             >
                                 <td className="py-1.5">{s.patient}</td>
                                 <td>{s.package}</td>

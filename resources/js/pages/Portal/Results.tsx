@@ -73,7 +73,7 @@ export default function Results({
                                     {o.results.map((r, i) => (
                                         <tr
                                             key={i}
-                                            className="border-t border-[#EBF0EE] first:border-0"
+                                            className="border-t border-line-soft first:border-0"
                                         >
                                             <td className="py-1.5">{r.name}</td>
                                             <td className="py-1.5 font-medium">

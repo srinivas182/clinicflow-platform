@@ -52,7 +52,7 @@ export default function StatusShow({
                       ? "Some systems are degraded"
                       : "We are experiencing an outage"}
             </p>
-            <ul className="mb-8 divide-y divide-[#EBF0EE] rounded-lg border border-line">
+            <ul className="mb-8 divide-y divide-line-soft rounded-lg border border-line">
                 {components.map((c) => (
                     <li
                         key={c.key}

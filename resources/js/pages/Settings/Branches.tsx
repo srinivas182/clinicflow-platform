@@ -117,7 +117,7 @@ export default function Branches({
                             {stock.map((s) => (
                                 <tr
                                     key={s.id}
-                                    className="border-t border-[#EBF0EE]"
+                                    className="border-t border-line-soft"
                                 >
                                     <td className="py-1">{s.name}</td>
                                     {branches.map((b) => (

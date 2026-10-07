@@ -37,7 +37,7 @@ export function ConnectedSystems({
             {systems.map((s) => (
                 <div
                     key={s.key}
-                    className="mb-3 border-t border-[#EBF0EE] pt-2 text-sm first:border-0 first:pt-0"
+                    className="mb-3 border-t border-line-soft pt-2 text-sm first:border-0 first:pt-0"
                 >
                     <p className="mb-1 font-medium">
                         {s.name}{" "}

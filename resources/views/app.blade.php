@@ -6,6 +6,7 @@
         <meta name="theme-color" content="#12232E">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <title inertia>{{ config('app.name', 'Clinic Flow') }}</title>
+        <script nonce="{{ $cspNonce ?? '' }}">try{var t=localStorage.getItem('cf-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
         @vite('resources/js/app.tsx')
         @inertiaHead
     </head>

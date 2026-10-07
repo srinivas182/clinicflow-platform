@@ -53,7 +53,7 @@ export default function MessagesIndex({
                 {threads.length === 0 && (
                     <p className="text-sm text-muted">No conversations yet.</p>
                 )}
-                <ul className="divide-y divide-[#EBF0EE] text-sm">
+                <ul className="divide-y divide-line-soft text-sm">
                     {threads.map((t) => (
                         <li key={t.id} className="flex items-center gap-2 py-3">
                             <Link

@@ -177,7 +177,7 @@ export default function AdminWhatsApp({
                             return (
                                 <tr
                                     key={m.key}
-                                    className="border-t border-[#EBF0EE]"
+                                    className="border-t border-line-soft"
                                 >
                                     <td className="py-1.5">{m.label}</td>
                                     <td className="text-xs text-muted">

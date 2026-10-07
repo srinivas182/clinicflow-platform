@@ -4,6 +4,16 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.58.0] — Sprint UX-1: dark mode and accessibility basics
+
+### Added
+- Dark mode across the staff app, admin, portal and public pages: follows the device setting by default; a System / Light / Dark switch in the staff and admin sidebars (remembered on the device). The theme is applied before the page draws (no white flash), with the content-security nonce.
+- Accessibility: visible keyboard focus on every control, "Skip to main content" link in the staff and admin layouts, reduced motion for people who ask their device for it, labels on five unlabelled inputs (front desk search, ICD-10 and medicine search, prescribing override reason, portal booking date).
+
+### Changed
+- Colours now come from named tokens everywhere (131 hard-coded colours in 69 files replaced): surface, soft/strong lines, chrome (sidebars and display, dark in both themes), chrome-muted (text on chrome only).
+- Contrast checked against WCAG AA (4.5:1) for text pairs in both themes; the warning colour is slightly darker in light mode (4.83:1).
+
 ## [0.57.0] — Sprint L3: staff management
 
 ### Added

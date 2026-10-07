@@ -197,7 +197,7 @@ export default function Deliveries({
                 </Card>
             </div>
             <Card title="Recent deliveries">
-                <ul className="divide-y divide-[#EBF0EE] text-sm">
+                <ul className="divide-y divide-line-soft text-sm">
                     {deliveries.data.length === 0 && (
                         <li className="py-2 text-muted">
                             None yet. Request a delivery from the dispensing

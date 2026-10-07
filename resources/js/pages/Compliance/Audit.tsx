@@ -100,7 +100,7 @@ export default function Audit({
                         {entries.data.map((e, i) => (
                             <tr
                                 key={i}
-                                className="border-t border-[#EBF0EE] first:border-0"
+                                className="border-t border-line-soft first:border-0"
                             >
                                 <td className="w-36 py-2 text-xs text-muted">
                                     {e.at}

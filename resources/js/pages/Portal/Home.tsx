@@ -99,7 +99,7 @@ export default function PortalHome(p: Props) {
                 {p.appointments.map((a) => (
                     <div
                         key={a.id}
-                        className="flex items-center gap-2 border-b border-[#EBF0EE] py-2 text-sm last:border-0"
+                        className="flex items-center gap-2 border-b border-line-soft py-2 text-sm last:border-0"
                     >
                         <span className="flex-1">
                             {a.when} · {a.doctor}
@@ -119,6 +119,7 @@ export default function PortalHome(p: Props) {
                 <div className="mt-3 flex items-center gap-2 text-sm">
                     <span>Book for</span>
                     <input
+                        aria-label="Booking date"
                         type="date"
                         value={date}
                         onChange={(e) => {
@@ -200,7 +201,7 @@ export default function PortalHome(p: Props) {
                 {p.invoices.map((i) => (
                     <div
                         key={i.id}
-                        className="flex items-center gap-2 border-b border-[#EBF0EE] py-2 text-sm last:border-0"
+                        className="flex items-center gap-2 border-b border-line-soft py-2 text-sm last:border-0"
                     >
                         <span className="flex-1">
                             {i.number} · {i.date}

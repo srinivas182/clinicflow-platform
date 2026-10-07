@@ -55,7 +55,7 @@ export default function BreakGlass({
                 Request a review
             </Button>
             <Card>
-                <ul className="divide-y divide-[#EBF0EE] text-sm">
+                <ul className="divide-y divide-line-soft text-sm">
                     {reviews.map((r) => (
                         <li key={r.id} className="flex items-center gap-2 py-2">
                             <span className="flex-1">

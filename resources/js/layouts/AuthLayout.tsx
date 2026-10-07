@@ -6,8 +6,8 @@ import { Logo } from "@/components/Logo";
  */
 export function AuthLayout({ children }: { children: ReactNode }) {
     return (
-        <div className="flex min-h-screen bg-white">
-            <aside className="hidden w-[480px] flex-col bg-ink p-12 text-white lg:flex">
+        <div className="flex min-h-screen bg-surface">
+            <aside className="hidden w-[480px] flex-col bg-chrome p-12 text-white lg:flex">
                 <Logo tone="light" />
                 <div className="mt-auto">
                     <p className="text-3xl leading-tight font-semibold">

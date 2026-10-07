@@ -58,7 +58,7 @@ export default function WellnessEvent({ event, registrations }: Props) {
                 {registrations.map((r) => (
                     <div
                         key={r.id}
-                        className="flex items-center gap-2 border-t border-[#EBF0EE] py-2 text-sm first:border-0"
+                        className="flex items-center gap-2 border-t border-line-soft py-2 text-sm first:border-0"
                     >
                         <span className="w-14 font-mono">{r.slot}</span>
                         <span className="flex-1">{r.name}</span>

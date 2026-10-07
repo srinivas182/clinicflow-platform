@@ -120,6 +120,7 @@ export default function FrontDesk({
                         />
                         <span className="sr-only">Find patient</span>
                         <input
+                            aria-label="Find patient"
                             value={term}
                             onChange={(e) => setTerm(e.target.value)}
                             placeholder="Name, SA ID or cell"
@@ -131,7 +132,7 @@ export default function FrontDesk({
                     </Button>
                 </form>
                 {results.length > 0 && (
-                    <ul className="mt-3 divide-y divide-[#EBF0EE] text-sm">
+                    <ul className="mt-3 divide-y divide-line-soft text-sm">
                         {results.map((r) => (
                             <li
                                 key={r.id}
@@ -208,7 +209,7 @@ export default function FrontDesk({
                         {visits.map((v) => (
                             <tr
                                 key={v.id}
-                                className="border-t border-[#EBF0EE]"
+                                className="border-t border-line-soft"
                             >
                                 <td className="py-2.5">
                                     <Ticket number={v.ticket} />

@@ -86,7 +86,7 @@ export default function GroupShow({ group, period, practices }: Props) {
                         {practices.map((p) => (
                             <tr
                                 key={p.id}
-                                className="border-t border-[#EBF0EE]"
+                                className="border-t border-line-soft"
                             >
                                 <td className="py-1.5">{p.name}</td>
                                 <td>{p.visits}</td>

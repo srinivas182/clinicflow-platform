@@ -233,7 +233,7 @@ export default function WellnessIndex({ accounts, events, services }: Props) {
                 {events.map((e) => (
                     <div
                         key={e.id}
-                        className="flex flex-wrap items-center gap-2 border-t border-[#EBF0EE] py-2 text-sm first:border-0"
+                        className="flex flex-wrap items-center gap-2 border-t border-line-soft py-2 text-sm first:border-0"
                     >
                         <span className="flex-1">
                             <b>{e.company}</b> · {e.title} ·{" "}
