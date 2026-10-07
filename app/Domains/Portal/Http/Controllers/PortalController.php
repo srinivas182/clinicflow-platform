@@ -88,6 +88,8 @@ class PortalController extends Controller
         return Inertia::render('Portal/Home', [
             'provider' => $this->providerName(),
             'profiles' => $profiles->map(fn (Patient $p) => ['id' => $p->id, 'name' => $p->fullName(), 'age' => $p->ageInYears(), 'current' => $p->id === $patient->id])->values(),
+            // Live updates for today's visit (this patient's own channel).
+            'patientChannel' => $visit === null ? null : 'patient.'.$visit->patient_id,
             'visit' => $visit === null ? null : ['ticket' => $visit->ticket, 'stage' => $visit->stage->label(), 'ahead' => $ahead, 'collectionCode' => $visit->stage === VisitStage::Dispatch ? $visit->collection_code : null],
             'appointments' => Appointment::query()->with('staff')->where('patient_id', $patient->id)->where('status', AppointmentStatus::Booked->value)
                 ->where('starts_at', '>=', now())->orderBy('starts_at')->get()

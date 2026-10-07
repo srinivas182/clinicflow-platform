@@ -4,6 +4,16 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.54.0] — Sprint H2-2a: real-time updates for patients and the waiting-room display
+
+### Added
+- Patients (portal): today's visit status updates live as they move through the queue; chat consult messages appear instantly; on video and audio calls, AI scribe consent requests and progress and paid extensions reach both screens instantly (the 5-second check becomes a 30-second safety net while live).
+- Waiting-room display updates the moment a ticket is called (it receives ticket numbers only, never names).
+- Channel sign-in for non-staff: patients can listen only to their own patient, chat and call channels (checked against their portal session); a paired display only to its practice's queue (checked with its device token).
+
+### Notes
+- When real-time is off or disconnected, every screen refreshes as before.
+
 ## [0.53.0] — Sprint H2-1: real-time updates for staff (Reverb)
 
 ### Added

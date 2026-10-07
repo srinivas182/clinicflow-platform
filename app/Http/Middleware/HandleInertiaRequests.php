@@ -45,7 +45,10 @@ class HandleInertiaRequests extends Middleware
             // Real-time updates (Reverb); null when broadcasting is off, so pages fall back to polling.
             'realtime' => config('broadcasting.default') === 'reverb' && $provider instanceof Provider ? ['key' => (string) config('broadcasting.connections.reverb.key'),
                 'host' => (string) config('broadcasting.connections.reverb.options.host'), 'port' => (int) config('broadcasting.connections.reverb.options.port'),
-                'tls' => (bool) config('broadcasting.connections.reverb.options.useTLS'), 'provider' => (string) $provider->id] : null,
+                'tls' => (bool) config('broadcasting.connections.reverb.options.useTLS'), 'provider' => (string) $provider->id,
+                // Staff, patients (portal) and the waiting-room display each sign in to channels differently.
+                'auth' => $request->is('my', 'my/*') ? '/my/broadcasting/auth'
+                    : ($request->routeIs('display') ? '/display/'.$request->route('token').'/broadcasting/auth' : '/broadcasting/auth')] : null,
             'brand' => app(Brands::class)->forDisplay($provider instanceof Provider ? $provider : null,
                 is_string($request->cookie(Brands::COOKIE)) ? (string) $request->cookie(Brands::COOKIE) : null),
             'provider' => $provider instanceof Provider ? [

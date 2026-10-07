@@ -16,3 +16,5 @@ $isStaff = fn (User $user, string $providerId): bool => (string) tenant('id') ==
 Broadcast::channel('provider.{providerId}.queue', fn (User $user, string $providerId) => $isStaff($user, $providerId));
 
 Broadcast::channel('provider.{providerId}.chat.{threadId}', fn (User $user, string $providerId, string $threadId) => $isStaff($user, $providerId));
+
+Broadcast::channel('provider.{providerId}.call.{appointmentId}', fn (User $user, string $providerId, string $appointmentId) => $isStaff($user, $providerId));

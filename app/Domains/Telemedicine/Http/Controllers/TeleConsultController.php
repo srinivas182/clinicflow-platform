@@ -13,6 +13,7 @@ use App\Domains\Portal\Actions\PortalSignIn;
 use App\Domains\Scheduling\Enums\ConsultType;
 use App\Domains\Scheduling\Models\Appointment;
 use App\Domains\Telemedicine\Actions\OnlineBooking;
+use App\Domains\Telemedicine\Events\CallStateChanged;
 use App\Domains\Telemedicine\Models\ChatThread;
 use App\Domains\Telemedicine\Models\TeleSession;
 use App\Domains\Telemedicine\Support\LiveKit;
@@ -95,6 +96,8 @@ class TeleConsultController extends Controller
         $this->authorize(Permission::CONSULTS_WRITE);
         abort_unless($appointment->staff_id === $this->user($request)->id, 403);
         $booking->extend($appointment);
+
+        event(new CallStateChanged((string) tenant('id'), (string) $appointment->id));
 
         return back()->with('success', 'Extension sent to the patient for payment. Time is added as soon as they pay.');
     }
