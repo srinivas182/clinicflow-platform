@@ -8,7 +8,7 @@ return [
      * Platform release version. Bumped on every release (see CHANGELOG.md)
      * and reported by GET /api/v1/health.
      */
-    'version' => env('CLINICFLOW_VERSION', '0.50.0'),
+    'version' => env('CLINICFLOW_VERSION', '0.51.0'),
 
     /*
      * Hosting region. All patient data must stay in South Africa (POPIA s72).
@@ -77,6 +77,13 @@ return [
         // Content-security policy: null = on in production only; true/false to force. Report-only for a trial period.
         'csp' => env('CLINICFLOW_CSP') === null ? null : (bool) env('CLINICFLOW_CSP'),
         'csp_report_only' => (bool) env('CLINICFLOW_CSP_REPORT_ONLY', false),
+        // Virus scanning of every upload with ClamAV (clamd). Off until the scanner is deployed; refuses uploads if it is down.
+        'virus_scan' => [
+            'enabled' => (bool) env('CLINICFLOW_VIRUS_SCAN', false),
+            'host' => env('CLAMAV_HOST', 'clamav'),
+            'port' => (int) env('CLAMAV_PORT', 3310),
+            'fail_closed' => (bool) env('CLINICFLOW_VIRUS_SCAN_FAIL_CLOSED', true),
+        ],
         'check_leaked_passwords' => (bool) env('CLINICFLOW_CHECK_LEAKED_PASSWORDS', true),
         // One person opening this many different patient records in an hour alerts the owners; the hard limit refuses more.
         'record_views_alert' => (int) env('CLINICFLOW_RECORD_VIEWS_ALERT', 100),

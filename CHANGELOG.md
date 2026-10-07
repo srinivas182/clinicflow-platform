@@ -4,6 +4,14 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.51.0] — Sprint H1c-2: allowlist HTML sanitiser and upload virus scanning
+
+### Changed
+- The HTML sanitiser (website sections, CMS pages, document templates) is now an allowlist built on PHP 8.4's HTML5 parser: only known-safe tags and attributes are kept; scripts, styles, frames, forms, SVG/MathML, event handlers and style attributes are removed; every link is checked after decoding (relative, https/http, mailto, tel only) and images must be relative or embedded image data (no remote images). Document list blocks ({{#lines}}…{{/lines}}) stay intact inside tables. Closes bypasses of the previous filter (handlers without a space, unquoted or encoded javascript: links, SVG, nested tags).
+
+### Added
+- Virus scanning of every upload with ClamAV, before any page handles the file: infected files are refused, nothing is stored, and the attempt is logged and audited; if the scanner is down, uploads are refused (configurable). ClamAV runs as its own container (docker-compose); enable with CLINICFLOW_VIRUS_SCAN=true once it is running. security:check flags it when off.
+
 ## [0.50.0] — Sprint H1c-1: security headers, web-server rules and dependency scanning
 
 ### Added
