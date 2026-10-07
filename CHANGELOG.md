@@ -4,6 +4,13 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.55.0] — Sprint H2-2b: indexes, caching and the load-test plan
+
+### Added
+- Indexes for reports, analytics and retention (only added where missing): invoices, payments, appointments, visits (per doctor), lab orders, claims, prescriptions, message log (which had none), record views, webhook deliveries, audit and patient-access logs; platform sign-in history, sign-in codes and audit log.
+- Analytics dashboard figures and the group dashboard are cached for 5 minutes per practice/group, period and branch.
+- Load-test plan (docs/performance/load-test-plan.md) with targets (p95 under 400 ms reads, 800 ms writes, errors under 0.5 %, real-time within 2 s) and sizing (100,000 users ≈ 3,300 requests/second average), plus k6 scripts for public pages, the public API and staff screens (tests/load/), to run on staging at deployment.
+
 ## [0.54.0] — Sprint H2-2a: real-time updates for patients and the waiting-room display
 
 ### Added
