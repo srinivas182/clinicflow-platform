@@ -8,6 +8,7 @@ use App\Http\Middleware\CaptureResellerRef;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RequireAuthenticator;
 use App\Http\Middleware\RequireRecentConfirmation;
+use App\Http\Middleware\TrackRecordAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -49,6 +50,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'provider.writable' => EnsureProviderWritable::class,
             'api.key' => AuthenticateApiKey::class,
             'step-up' => RequireRecentConfirmation::class,
+            'record-access' => TrackRecordAccess::class,
         ]);
         $middleware->web(append: [
             HandleInertiaRequests::class,

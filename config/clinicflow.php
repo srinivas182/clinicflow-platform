@@ -8,7 +8,7 @@ return [
      * Platform release version. Bumped on every release (see CHANGELOG.md)
      * and reported by GET /api/v1/health.
      */
-    'version' => env('CLINICFLOW_VERSION', '0.48.0'),
+    'version' => env('CLINICFLOW_VERSION', '0.49.0'),
 
     /*
      * Hosting region. All patient data must stay in South Africa (POPIA s72).
@@ -73,5 +73,10 @@ return [
     // Super admins, owners and practice admins must use an authenticator app (off in the test configuration).
     'security' => [
         'require_authenticator_for_admins' => (bool) env('CLINICFLOW_REQUIRE_AUTHENTICATOR', true),
+        // Refuse passwords known from data breaches (privacy-preserving check: only 5 characters of the hash are sent).
+        'check_leaked_passwords' => (bool) env('CLINICFLOW_CHECK_LEAKED_PASSWORDS', true),
+        // One person opening this many different patient records in an hour alerts the owners; the hard limit refuses more.
+        'record_views_alert' => (int) env('CLINICFLOW_RECORD_VIEWS_ALERT', 100),
+        'record_views_hard_limit' => (int) env('CLINICFLOW_RECORD_VIEWS_LIMIT', 300),
     ],
 ];

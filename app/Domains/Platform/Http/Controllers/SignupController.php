@@ -45,7 +45,9 @@ class SignupController extends Controller
             'owner_name' => ['required', 'string', 'max:120'],
             'owner_email' => ['required', 'email', 'max:255'],
             'owner_phone' => ['required', 'regex:/^0\d{9}$/'],
-            'password' => ['required', 'confirmed', Password::min(10)->letters()->numbers()],
+            'password' => ['required', 'confirmed', config('clinicflow.security.check_leaked_passwords', true)
+                ? Password::min(10)->letters()->numbers()->uncompromised()
+                : Password::min(10)->letters()->numbers()],
             'references' => ['array'],
             'references.*' => ['nullable', 'string', 'max:60'],
             'accept_terms' => ['accepted'],
