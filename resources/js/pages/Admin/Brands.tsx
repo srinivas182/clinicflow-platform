@@ -212,7 +212,10 @@ export default function AdminBrands({ brands, resellers, providers }: Props) {
                         </label>
                     </div>
                     {Object.values(form.errors)[0] && (
-                        <p className="mt-2 text-xs text-status-danger">
+                        <p
+                            role="alert"
+                            className="mt-2 text-xs text-status-danger"
+                        >
                             {Object.values(form.errors)[0]}
                         </p>
                     )}

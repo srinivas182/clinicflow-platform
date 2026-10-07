@@ -55,7 +55,10 @@ export default function FeedbackForm({
                             ))}
                         </div>
                         {form.errors.rating && (
-                            <p className="text-xs text-status-danger">
+                            <p
+                                role="alert"
+                                className="text-xs text-status-danger"
+                            >
                                 {form.errors.rating}
                             </p>
                         )}
@@ -96,7 +99,10 @@ export default function FeedbackForm({
                             Send feedback
                         </Button>
                         {(form.errors as Record<string, string>).token && (
-                            <p className="text-xs text-status-danger">
+                            <p
+                                role="alert"
+                                className="text-xs text-status-danger"
+                            >
                                 {(form.errors as Record<string, string>).token}
                             </p>
                         )}

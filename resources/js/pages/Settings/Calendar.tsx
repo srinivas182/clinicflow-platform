@@ -40,7 +40,7 @@ export default function CalendarSettings({ connection, icalUrl, apps }: Props) {
                 className="mb-4"
             >
                 {connection.error && (
-                    <p className="mb-2 text-sm text-status-danger">
+                    <p role="alert" className="mb-2 text-sm text-status-danger">
                         {connection.error}
                     </p>
                 )}

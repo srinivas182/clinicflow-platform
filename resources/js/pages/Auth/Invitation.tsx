@@ -117,7 +117,10 @@ export default function Invitation({
                                     />
                                 </label>
                                 {Object.values(form.errors)[0] && (
-                                    <p className="text-xs text-status-danger">
+                                    <p
+                                        role="alert"
+                                        className="text-xs text-status-danger"
+                                    >
                                         {Object.values(form.errors)[0]}
                                     </p>
                                 )}

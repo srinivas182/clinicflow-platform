@@ -48,7 +48,7 @@ export default function ConfirmIdentity({
                     </Button>
                 </form>
                 {form.errors.secret && (
-                    <p className="mt-2 text-xs text-status-danger">
+                    <p role="alert" className="mt-2 text-xs text-status-danger">
                         {form.errors.secret}
                     </p>
                 )}

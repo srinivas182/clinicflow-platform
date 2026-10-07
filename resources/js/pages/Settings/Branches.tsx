@@ -106,11 +106,13 @@ export default function Branches({
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="text-left text-xs text-muted">
-                                <th>Item</th>
+                                <th scope="col">Item</th>
                                 {branches.map((b) => (
-                                    <th key={b.id}>{b.name}</th>
+                                    <th scope="col" key={b.id}>
+                                        {b.name}
+                                    </th>
                                 ))}
-                                <th />
+                                <th scope="col" />
                             </tr>
                         </thead>
                         <tbody>

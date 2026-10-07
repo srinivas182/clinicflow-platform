@@ -197,12 +197,22 @@ export default function FrontDesk({
                 <table className="w-full text-sm">
                     <thead className="text-left text-xs text-muted">
                         <tr>
-                            <th className="py-2 font-medium">Ticket</th>
-                            <th className="py-2 font-medium">Patient</th>
-                            <th className="py-2 font-medium">Stage</th>
-                            <th className="py-2 font-medium">Wait</th>
-                            <th className="py-2 font-medium">Balance</th>
-                            <th />
+                            <th scope="col" className="py-2 font-medium">
+                                Ticket
+                            </th>
+                            <th scope="col" className="py-2 font-medium">
+                                Patient
+                            </th>
+                            <th scope="col" className="py-2 font-medium">
+                                Stage
+                            </th>
+                            <th scope="col" className="py-2 font-medium">
+                                Wait
+                            </th>
+                            <th scope="col" className="py-2 font-medium">
+                                Balance
+                            </th>
+                            <th scope="col" />
                         </tr>
                     </thead>
                     <tbody>

@@ -79,7 +79,11 @@ export default function FinanceDashboard({
                                 "Other",
                                 "Total",
                             ].map((h) => (
-                                <th key={h} className="py-2 font-medium">
+                                <th
+                                    scope="col"
+                                    key={h}
+                                    className="py-2 font-medium"
+                                >
                                     {h}
                                 </th>
                             ))}

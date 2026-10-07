@@ -35,7 +35,9 @@ function ConnectionCard({
             className="mb-4"
         >
             {c.error && (
-                <p className="mb-2 text-sm text-status-danger">{c.error}</p>
+                <p role="alert" className="mb-2 text-sm text-status-danger">
+                    {c.error}
+                </p>
             )}
             <p className="mb-2 text-xs text-muted">
                 Exported up to {c.exportedUntil ?? "not yet"}.

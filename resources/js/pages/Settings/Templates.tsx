@@ -81,7 +81,10 @@ export default function Templates({
                             }
                         />
                         {form.errors.body && (
-                            <p className="text-xs text-status-danger">
+                            <p
+                                role="alert"
+                                className="text-xs text-status-danger"
+                            >
                                 {form.errors.body}
                             </p>
                         )}

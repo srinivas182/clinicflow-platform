@@ -211,12 +211,12 @@ export default function AnalyticsDashboard({
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="text-left text-xs text-muted">
-                                <th>Doctor</th>
-                                <th>Visits</th>
-                                <th>Appts</th>
-                                <th>No-shows</th>
-                                <th>Billed</th>
-                                <th>Utilisation</th>
+                                <th scope="col">Doctor</th>
+                                <th scope="col">Visits</th>
+                                <th scope="col">Appts</th>
+                                <th scope="col">No-shows</th>
+                                <th scope="col">Billed</th>
+                                <th scope="col">Utilisation</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -246,9 +246,9 @@ export default function AnalyticsDashboard({
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="text-left text-xs text-muted">
-                                    <th>Branch</th>
-                                    <th>Visits</th>
-                                    <th>Billed</th>
+                                    <th scope="col">Branch</th>
+                                    <th scope="col">Visits</th>
+                                    <th scope="col">Billed</th>
                                 </tr>
                             </thead>
                             <tbody>

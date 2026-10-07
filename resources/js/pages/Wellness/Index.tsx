@@ -212,7 +212,10 @@ export default function WellnessIndex({ accounts, events, services }: Props) {
                         ))}
                     </div>
                     {Object.values(ev.errors)[0] && (
-                        <p className="mt-1 text-xs text-status-danger">
+                        <p
+                            role="alert"
+                            className="mt-1 text-xs text-status-danger"
+                        >
                             {Object.values(ev.errors)[0]}
                         </p>
                     )}

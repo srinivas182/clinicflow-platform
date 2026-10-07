@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Link } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import {
     Activity,
     BadgeCheck,
@@ -12,6 +13,7 @@ import {
     HardDrive,
     Layers,
     LifeBuoy,
+    Menu,
     MessageCircle,
     MessageSquare,
     MessageSquareWarning,
@@ -23,6 +25,7 @@ import {
     Truck,
     Video,
     Wallet,
+    X,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Logo } from "@/components/Logo";
@@ -62,15 +65,47 @@ export function AdminShell({
     children: ReactNode;
     active: string;
 }) {
+    const [menuOpen, setMenuOpen] = useState(false);
+    // Close the mobile menu after moving to another page.
+    useEffect(() => router.on("navigate", () => setMenuOpen(false)), []);
+
     return (
         <div className="flex min-h-screen">
+            <button
+                type="button"
+                className="fixed right-3 top-3 z-30 rounded-md bg-chrome p-2 text-white shadow md:hidden"
+                aria-label="Open menu"
+                aria-expanded={menuOpen}
+                aria-controls="app-menu"
+                onClick={() => setMenuOpen(true)}
+            >
+                <Menu size={18} aria-hidden="true" />
+            </button>
+            {menuOpen && (
+                <div
+                    className="fixed inset-0 z-30 bg-black/40 md:hidden"
+                    aria-hidden="true"
+                    onClick={() => setMenuOpen(false)}
+                />
+            )}
             <a
                 href="#main-content"
                 className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:text-ink focus:shadow"
             >
                 Skip to main content
             </a>
-            <aside className="w-60 flex-none bg-[#1B1640] px-3.5 py-5 text-chrome-muted">
+            <aside
+                id="app-menu"
+                className={`fixed inset-y-0 left-0 z-40 flex w-60 flex-none flex-col overflow-y-auto bg-[#1B1640] px-3.5 py-5 text-chrome-muted transition-transform md:static md:translate-x-0 ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}
+            >
+                <button
+                    type="button"
+                    className="mb-2 self-end rounded p-1 text-chrome-muted hover:text-white md:hidden"
+                    aria-label="Close menu"
+                    onClick={() => setMenuOpen(false)}
+                >
+                    <X size={18} aria-hidden="true" />
+                </button>
                 <div className="px-1.5 pb-5">
                     <Logo tone="light" />
                     <div className="mt-1 text-xs text-[#B9AEF0]">
@@ -83,7 +118,7 @@ export function AdminShell({
                             key={label}
                             href={href}
                             aria-current={label === active ? "page" : undefined}
-                            className={`mb-0.5 flex items-center gap-3 rounded-md px-2.5 py-2 text-sm ${label === active ? "bg-surface/10 font-medium text-white" : "hover:bg-surface/5"}`}
+                            className={`mb-0.5 flex items-center gap-3 rounded-md px-2.5 py-2 text-sm ${label === active ? "bg-white/10 font-medium text-white" : "hover:bg-white/5"}`}
                         >
                             <Icon className="size-4" aria-hidden="true" />
                             {label}
@@ -95,7 +130,7 @@ export function AdminShell({
             <main
                 id="main-content"
                 tabIndex={-1}
-                className="flex-1 bg-paper px-8 py-7"
+                className="max-md:pt-16 flex-1 bg-paper px-8 py-7"
             >
                 {children}
             </main>

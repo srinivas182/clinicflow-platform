@@ -62,7 +62,10 @@ export default function Vat({ settings, report, period }: Props) {
                         onChange={(e) => form.setData("number", e.target.value)}
                     />
                     {form.errors.number && (
-                        <p className="mb-2 text-xs text-status-danger">
+                        <p
+                            role="alert"
+                            className="mb-2 text-xs text-status-danger"
+                        >
                             {form.errors.number}
                         </p>
                     )}

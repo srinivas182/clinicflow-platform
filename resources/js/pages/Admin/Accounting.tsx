@@ -123,7 +123,9 @@ function AppCard({
             {a.platform && (
                 <div className="mt-3 border-t border-line pt-3 text-sm">
                     {a.platform.error && (
-                        <p className="text-status-danger">{a.platform.error}</p>
+                        <p role="alert" className="text-status-danger">
+                            {a.platform.error}
+                        </p>
                     )}
                     {accounts.map((k) => (
                         <label key={k} className="mb-1 flex items-center gap-2">

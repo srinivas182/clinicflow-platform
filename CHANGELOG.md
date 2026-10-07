@@ -4,6 +4,18 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.59.0] — Sprint UX-2: mobile menu, screen-reader announcements and dark-mode fixes
+
+### Added
+- Phones: the staff and admin sidebars become a slide-in menu (menu button with aria-expanded, close button, tap outside to close, closes after navigating); desktop and tablet are unchanged.
+- Screen readers: 26 inline form errors are announced when they appear (role="alert"); 60 table column headers are scoped so each cell is read with its column name.
+
+### Fixed
+- Dark mode: the active-menu highlight and hover glow on the sidebars, and the in-call scribe panel overlays, are translucent white again (UX-1 had turned them into the dark surface colour, making the highlight almost invisible). The public website header follows the theme.
+
+### Notes
+- Text/background pairs used across screens re-measured in both themes; flagged pairs were toggle states sharing one class string, not real combinations.
+
 ## [0.58.0] — Sprint UX-1: dark mode and accessibility basics
 
 ### Added

@@ -76,7 +76,9 @@ export default function Security({
                 </p>
             )}
             {error && (
-                <p className="mb-3 text-sm text-status-danger">{error}</p>
+                <p role="alert" className="mb-3 text-sm text-status-danger">
+                    {error}
+                </p>
             )}
             <Card
                 title="Authenticator app"

@@ -275,7 +275,7 @@ export default function LocumsPractice({ shifts, locums, branches }: Props) {
                     />
                 </div>
                 {Object.values(form.errors)[0] && (
-                    <p className="mt-2 text-xs text-status-danger">
+                    <p role="alert" className="mt-2 text-xs text-status-danger">
                         {Object.values(form.errors)[0]}
                     </p>
                 )}

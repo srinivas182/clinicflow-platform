@@ -71,15 +71,25 @@ export default function GroupShow({ group, period, practices }: Props) {
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="text-left text-xs text-muted">
-                            <th>Practice</th>
-                            <th>Visits</th>
-                            <th>Appointments</th>
-                            <th>New patients</th>
-                            <th className="text-right">Takings</th>
-                            <th className="text-right">Owed</th>
-                            <th className="text-right">Collected %</th>
-                            <th className="text-right">No-shows</th>
-                            <th className="text-right">Avg wait</th>
+                            <th scope="col">Practice</th>
+                            <th scope="col">Visits</th>
+                            <th scope="col">Appointments</th>
+                            <th scope="col">New patients</th>
+                            <th scope="col" className="text-right">
+                                Takings
+                            </th>
+                            <th scope="col" className="text-right">
+                                Owed
+                            </th>
+                            <th scope="col" className="text-right">
+                                Collected %
+                            </th>
+                            <th scope="col" className="text-right">
+                                No-shows
+                            </th>
+                            <th scope="col" className="text-right">
+                                Avg wait
+                            </th>
                         </tr>
                     </thead>
                     <tbody>

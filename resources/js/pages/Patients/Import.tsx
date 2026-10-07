@@ -57,7 +57,7 @@ export default function ImportPatients({
                     </Button>
                 </form>
                 {form.errors.file && (
-                    <p className="mt-2 text-xs text-status-danger">
+                    <p role="alert" className="mt-2 text-xs text-status-danger">
                         {form.errors.file}
                     </p>
                 )}

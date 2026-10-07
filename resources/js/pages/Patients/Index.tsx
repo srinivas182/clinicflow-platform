@@ -83,10 +83,16 @@ export default function PatientsIndex({
                 <table className="w-full text-sm">
                     <thead className="bg-paper text-left text-xs text-muted">
                         <tr>
-                            <th className="px-4 py-2.5 font-medium">Patient</th>
-                            <th className="px-4 py-2.5 font-medium">SA ID</th>
-                            <th className="px-4 py-2.5 font-medium">Cell</th>
-                            <th className="px-4 py-2.5 font-medium">
+                            <th scope="col" className="px-4 py-2.5 font-medium">
+                                Patient
+                            </th>
+                            <th scope="col" className="px-4 py-2.5 font-medium">
+                                SA ID
+                            </th>
+                            <th scope="col" className="px-4 py-2.5 font-medium">
+                                Cell
+                            </th>
+                            <th scope="col" className="px-4 py-2.5 font-medium">
                                 Medical aid
                             </th>
                         </tr>

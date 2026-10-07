@@ -188,7 +188,7 @@ export default function AdminAiScribe({ providers, prices, usage }: Props) {
                     </Button>
                 </div>
                 {Object.values(price.errors)[0] && (
-                    <p className="mt-2 text-xs text-status-danger">
+                    <p role="alert" className="mt-2 text-xs text-status-danger">
                         {Object.values(price.errors)[0]}
                     </p>
                 )}

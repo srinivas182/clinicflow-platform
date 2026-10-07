@@ -170,7 +170,7 @@ export default function ApiSettings({
                     ))}
                 </div>
                 {Object.values(form.errors)[0] && (
-                    <p className="mt-2 text-xs text-status-danger">
+                    <p role="alert" className="mt-2 text-xs text-status-danger">
                         {Object.values(form.errors)[0]}
                     </p>
                 )}
@@ -316,7 +316,7 @@ export default function ApiSettings({
                     ))}
                 </div>
                 {Object.values(hook.errors)[0] && (
-                    <p className="mt-1 text-xs text-status-danger">
+                    <p role="alert" className="mt-1 text-xs text-status-danger">
                         {Object.values(hook.errors)[0]}
                     </p>
                 )}
