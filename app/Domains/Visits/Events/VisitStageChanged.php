@@ -19,11 +19,11 @@ class VisitStageChanged implements ShouldBroadcast
     use Dispatchable;
     use InteractsWithSockets;
 
-    public function __construct(public string $providerId, public string $visitId, public string $ticket, public string $stage) {}
+    public function __construct(public string $providerId, public string $visitId, public string $ticket, public string $stage, public ?string $patientId = null) {}
 
     public static function fromVisit(Visit $visit): self
     {
-        return new self((string) tenant()?->getTenantKey(), $visit->id, $visit->ticket, $visit->stage->value);
+        return new self((string) tenant()?->getTenantKey(), $visit->id, $visit->ticket, $visit->stage->value, (string) $visit->patient_id);
     }
 
     public function broadcastAs(): string
@@ -36,6 +36,12 @@ class VisitStageChanged implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
-        return [new PrivateChannel("provider.{$this->providerId}.queue")];
+        // The queue (staff and the waiting-room display: ticket numbers only) and the patient's own channel (portal).
+        $channels = [new PrivateChannel("provider.{$this->providerId}.queue")];
+        if ($this->patientId !== null) {
+            $channels[] = new PrivateChannel("provider.{$this->providerId}.patient.{$this->patientId}");
+        }
+
+        return $channels;
     }
 }

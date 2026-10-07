@@ -46,6 +46,7 @@ use App\Domains\Platform\Http\Controllers\WebsiteSettingsController;
 use App\Domains\Portal\Http\Controllers\PortalCareController;
 use App\Domains\Portal\Http\Controllers\PortalController;
 use App\Domains\Portal\Http\Controllers\PortalResultsController;
+use App\Domains\Portal\Http\Controllers\RealtimeAuthController;
 use App\Domains\Portal\Http\Middleware\EnsurePortalPatient;
 use App\Domains\Prescribing\Http\Controllers\PrescriptionController;
 use App\Domains\Reports\AnalyticsController;
@@ -173,6 +174,7 @@ Route::middleware([
             Route::get('/pharmacies', [DeliveryController::class, 'portalCompare'])->name('pharmacies');
             Route::post('/care/sharing', [PortalCareController::class, 'sharing'])->name('care.sharing');
             Route::post('/care/connected', [PortalCareController::class, 'connected'])->name('care.connected');
+            Route::post('/broadcasting/auth', [RealtimeAuthController::class, 'portal'])->middleware('throttle:60,1')->name('broadcasting.auth');
             Route::post('/scribe/{session}/{answer}', [ScribeSessionController::class, 'patientAnswer'])->whereIn('answer', ['agree', 'decline'])->name('scribe.answer');
             Route::post('/whatsapp', [WhatsAppController::class, 'portalOptIn'])->middleware('throttle:10,1')->name('whatsapp');
             Route::post('/results/{order}/request', [PortalResultsController::class, 'request'])->middleware('throttle:10,1')->name('results.request');
@@ -188,6 +190,7 @@ Route::middleware([
     Route::get('/kiosk/{token}', [DeviceController::class, 'kiosk'])->name('kiosk');
     Route::post('/kiosk/{token}', [DeviceController::class, 'kioskCheckIn'])->middleware('throttle:20,1')->name('kiosk.checkin');
     Route::get('/display/{token}', [DeviceController::class, 'display'])->name('display');
+    Route::post('/display/{token}/broadcasting/auth', [RealtimeAuthController::class, 'display'])->middleware('throttle:30,1')->name('display.broadcasting');
 
     Route::middleware(['auth', 'workspace', 'provider.writable'])->group(function (): void {
         Route::get('/workspace', ProviderHomeController::class)->name('provider.home');

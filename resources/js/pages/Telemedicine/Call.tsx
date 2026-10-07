@@ -2,6 +2,7 @@ import { Head, router } from "@inertiajs/react";
 import { Room, RoomEvent, Track, type RemoteTrack } from "livekit-client";
 import { Mic, MicOff, PhoneOff, Video, VideoOff } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useRealtime } from "@/lib/realtime";
 import { CallScribe } from "@/components/CallScribe";
 import { Button } from "@/components/ui";
 
@@ -46,29 +47,42 @@ export default function Call({
     const preview = useRef<HTMLVideoElement>(null);
     const [deviceOk, setDeviceOk] = useState<boolean | null>(null);
 
+    const fetchState = () =>
+        fetch(stateUrl, { headers: { Accept: "application/json" } })
+            .then((r) => r.json())
+
+            .then(
+                (d: {
+                    endsAt: string;
+                    extensionPayUrl: string | null;
+                    scribe?: { id: string; status: string } | null;
+                }) => {
+                    setScribe(d.scribe ?? null);
+
+                    setEndsAt(d.endsAt);
+
+                    setExtensionPayUrl(d.extensionPayUrl);
+                },
+            )
+
+            .catch(() => undefined);
+
+    // Scribe consent/progress and extensions arrive instantly; a slower check remains as a safety net.
+
+    const live = useRealtime(
+        `call.${appointmentId}`,
+        "call.changed",
+        fetchState,
+    );
+
     useEffect(() => {
         const t = setInterval(() => setNow(Date.now()), 1000);
-        const s = setInterval(() => {
-            fetch(stateUrl, { headers: { Accept: "application/json" } })
-                .then((r) => r.json())
-                .then(
-                    (d: {
-                        endsAt: string;
-                        extensionPayUrl: string | null;
-                        scribe?: { id: string; status: string } | null;
-                    }) => {
-                        setScribe(d.scribe ?? null);
-                        setEndsAt(d.endsAt);
-                        setExtensionPayUrl(d.extensionPayUrl);
-                    },
-                )
-                .catch(() => undefined);
-        }, 5000);
+        const s = setInterval(fetchState, live ? 30000 : 5000);
         return () => {
             clearInterval(t);
             clearInterval(s);
         };
-    }, [stateUrl]);
+    }, [stateUrl, live]);
 
     const testDevices = async () => {
         try {

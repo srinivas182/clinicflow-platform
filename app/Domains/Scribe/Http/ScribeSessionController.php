@@ -9,6 +9,7 @@ use App\Domains\Identity\Enums\Permission;
 use App\Domains\Portal\Actions\PortalSignIn;
 use App\Domains\Scheduling\Models\Appointment;
 use App\Domains\Scribe\Actions\AiScribe;
+use App\Domains\Telemedicine\Events\CallStateChanged;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -39,6 +40,8 @@ class ScribeSessionController extends Controller
         $consultation = Consultation::query()->whereIn('visit_id', DB::table('visits')->where('appointment_id', $appointment->id)->pluck('id'))->latest()->firstOrFail();
         $id = $scribe->request($consultation, $appointment->id, $this->staffId($request), $request->string('source')->toString() === 'chat' ? 'chat' : 'call');
 
+        CallStateChanged::forScribeSession($id);
+
         return response()->json(['session' => $id, 'status' => 'awaiting']);
     }
 
@@ -51,6 +54,8 @@ class ScribeSessionController extends Controller
         abort_unless($file instanceof UploadedFile, 422);
         $scribe->queueAudio($session, (string) file_get_contents($file->getRealPath()), (string) $file->getMimeType(), $request->integer('seconds'));
         @unlink($file->getRealPath());
+
+        CallStateChanged::forScribeSession($session);
 
         return $this->show($request, $session, $scribe);
     }
@@ -66,6 +71,8 @@ class ScribeSessionController extends Controller
             'discard' => $scribe->close($session, false),
             default => abort(404),
         };
+
+        CallStateChanged::forScribeSession($session);
 
         return $this->show($request, $session, $scribe);
     }
@@ -86,6 +93,7 @@ class ScribeSessionController extends Controller
         $patientId = (string) DB::table('scribe_sessions')->where('id', $session)->value('patient_id');
         abort_unless($mine->contains($patientId), 403);
         $scribe->answer($session, $patientId, $answer === 'agree');
+        CallStateChanged::forScribeSession($session);
 
         return response()->json(['status' => $answer === 'agree' ? 'created' : 'declined']);
     }

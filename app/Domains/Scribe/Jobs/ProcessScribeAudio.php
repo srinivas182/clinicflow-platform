@@ -6,6 +6,7 @@ namespace App\Domains\Scribe\Jobs;
 
 use App\Domains\Platform\Storage\FileStore;
 use App\Domains\Scribe\Actions\AiScribe;
+use App\Domains\Telemedicine\Events\CallStateChanged;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -50,6 +51,7 @@ class ProcessScribeAudio implements ShouldQueue
         } catch (ValidationException) {
             // process() has already recorded the failure on the session; nothing was charged unless transcription succeeded.
         }
+        CallStateChanged::forScribeSession($this->sessionId);
     }
 
     public function failed(?\Throwable $e): void

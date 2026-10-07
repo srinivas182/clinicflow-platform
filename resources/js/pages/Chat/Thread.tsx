@@ -31,9 +31,7 @@ export default function Thread({
     messages,
     scribe,
 }: Props) {
-    // Staff get live updates; patients keep 4-second refresh until H2-2.
-    const isStaff = me === "doctor";
-    useLiveReload(isStaff ? `chat.${thread.id}` : "", "chat.posted", 4000, [
+    useLiveReload(`chat.${thread.id}`, "chat.posted", 4000, [
         "messages",
         "thread",
     ]);
