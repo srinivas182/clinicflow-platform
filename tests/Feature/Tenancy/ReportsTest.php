@@ -97,3 +97,22 @@ it('saves and schedules reports on higher packages, emailing only staff who may 
     $this->clinic->run(fn () => expect(DB::table('message_log')->where('recipient', 'owner@sunrise.test')->where('subject', 'like', 'Billing%')->exists())->toBeTrue()
         ->and(DB::table('report_definitions')->value('last_sent_at'))->not->toBeNull());
 });
+
+it('exports Excel files and keeps spreadsheet formulas out of exports', function (): void {
+    $this->doctorUser->forceFill(['name' => '=HYPERLINK("http://evil.test")'])->save();
+    $this->clinic->run(fn () => DB::table('staff')->where('id', $this->doctorUser->id)->update(['name' => '=HYPERLINK("http://evil.test")']));
+    $def = json_encode(['dataset' => 'visits', 'from' => now()->subDay()->toDateString(), 'to' => now()->toDateString(), 'groups' => ['doctor'], 'measures' => ['count']]);
+
+    $xlsx = $this->actingAs($this->ownerUser)->post("{$this->base}/reports/export/xlsx", ['definition' => $def, 'title' => 'Visits'])->assertOk()
+        ->assertHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    $path = tempnam(sys_get_temp_dir(), 'x');
+    file_put_contents($path, $xlsx->getContent());
+    $zip = new ZipArchive;
+    expect($zip->open($path))->toBeTrue();
+    $sheet = (string) $zip->getFromName('xl/worksheets/sheet1.xml');
+    expect($sheet)->toContain('<t>Doctor</t>')->toContain('<t>Visits</t>')->toContain('t="inlineStr"')->not->toContain('<f>')
+        ->and(simplexml_load_string($sheet))->not->toBeFalse();
+
+    $csv = $this->actingAs($this->ownerUser)->post("{$this->base}/reports/export/csv", ['definition' => $def])->assertOk()->getContent();
+    expect($csv)->toContain("'=HYPERLINK");
+});

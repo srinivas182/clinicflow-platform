@@ -2,6 +2,7 @@ import { Head, router, useForm } from "@inertiajs/react";
 import { Flash } from "@/components/Flash";
 import { Badge, Button, Card } from "@/components/ui";
 import { AppShell } from "@/layouts/AppShell";
+import { Pager, type Paginated } from "@/components/Pager";
 
 interface Review {
     id: number;
@@ -14,7 +15,7 @@ interface Review {
     date: string;
 }
 interface Props {
-    reviews: Review[];
+    reviews: Paginated<Review>;
     average: number;
     count: number;
     requested: number;
@@ -101,7 +102,7 @@ export default function Reviews({
                 </Button>
             </Card>
             <div className="flex flex-col gap-3">
-                {reviews.map((r) => (
+                {reviews.data.map((r) => (
                     <Card
                         key={r.id}
                         title={`${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)} · ${r.date}`}
@@ -167,6 +168,7 @@ export default function Reviews({
                     </Card>
                 ))}
             </div>
+            <Pager page={reviews} />
         </AppShell>
     );
 }

@@ -2,6 +2,7 @@ import { Head, router } from "@inertiajs/react";
 import { Flash } from "@/components/Flash";
 import { Badge, Button, Card } from "@/components/ui";
 import { AppShell } from "@/layouts/AppShell";
+import { Pager, type Paginated } from "@/components/Pager";
 
 interface Referral {
     id: string;
@@ -18,7 +19,11 @@ interface Referral {
     network: boolean;
 }
 
-export default function Referrals({ referrals }: { referrals: Referral[] }) {
+export default function Referrals({
+    referrals,
+}: {
+    referrals: Paginated<Referral>;
+}) {
     const act = (id: string, action: string, value?: string) =>
         router.post(
             `/referrals/${id}/${action}`,
@@ -32,7 +37,7 @@ export default function Referrals({ referrals }: { referrals: Referral[] }) {
             <h1 className="mb-5 text-2xl font-semibold">Referrals</h1>
             <Flash />
             <div className="flex flex-col gap-3">
-                {referrals.map((r) => (
+                {referrals.data.map((r) => (
                     <Card
                         key={r.id}
                         title={`${r.direction === "out" ? "To" : "From"} ${r.other} · ${r.patient}`}
@@ -137,6 +142,7 @@ export default function Referrals({ referrals }: { referrals: Referral[] }) {
                     </Card>
                 ))}
             </div>
+            <Pager page={referrals} />
         </AppShell>
     );
 }

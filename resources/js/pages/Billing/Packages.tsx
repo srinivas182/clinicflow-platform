@@ -4,6 +4,7 @@ import { Flash } from "@/components/Flash";
 import { Badge, Button, Card } from "@/components/ui";
 import { AppShell } from "@/layouts/AppShell";
 import { rand } from "@/lib/money";
+import { Pager, type Paginated } from "@/components/Pager";
 
 type Item = { service: string; label: string; quantity: number };
 interface Props {
@@ -15,14 +16,14 @@ interface Props {
         items: Item[];
         active: boolean;
     }[];
-    sold: {
+    sold: Paginated<{
         id: string;
         patient: string;
         package: string;
         status: string;
         remaining: Record<string, number>;
         expires: string | null;
-    }[];
+    }>;
     validYears: number;
 }
 
@@ -189,7 +190,7 @@ export default function Packages({ packages, sold, validYears }: Props) {
             <Card title="Sold packages" className="mt-4">
                 <table className="w-full text-sm">
                     <tbody>
-                        {sold.map((s) => (
+                        {sold.data.map((s) => (
                             <tr
                                 key={s.id}
                                 className="border-t border-[#EBF0EE]"
@@ -222,6 +223,7 @@ export default function Packages({ packages, sold, validYears }: Props) {
                     </tbody>
                 </table>
             </Card>
+            <Pager page={sold} />
         </AppShell>
     );
 }

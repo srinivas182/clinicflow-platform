@@ -151,7 +151,7 @@ class CareController extends Controller
                 'id' => $t->id, 'subject' => $t->subject, 'urgent' => $t->urgent, 'escalated' => $t->escalated_at !== null, 'external' => $t->other_tenant_id !== null,
                 'patient' => $t->patient_id === null ? null : Patient::query()->find($t->patient_id)?->fullName(),
                 'unread' => $t->messages()->get()->filter(fn (ThreadMessage $m) => ! in_array($me, $m->read_by ?? [], true))->count(),
-            ])->values(),
+            ]),
             'colleagues' => Staff::query()->whereKeyNot($me)->orderBy('name')->get(['id', 'name']),
         ]);
     }
@@ -207,7 +207,7 @@ class CareController extends Controller
         $this->authorize(Permission::CONSULTS_WRITE);
 
         return Inertia::render('Referrals/Index', [
-            'referrals' => Referral::query()->with('patient')->latest()->limit(200)->get()->map(fn (Referral $r) => [
+            'referrals' => Referral::query()->with('patient')->latest()->paginate(50)->withQueryString()->through(fn (Referral $r) => [
                 'id' => $r->id, 'direction' => $r->direction, 'patient' => $r->patient->fullName(), 'other' => $r->other_name, 'specialty' => $r->specialty,
                 'urgency' => $r->urgency, 'status' => $r->status, 'reason' => $r->reason, 'summary' => $r->summary, 'feedback' => $r->feedback,
                 'appointment' => $r->appointment_at?->format('j M Y H:i'), 'network' => $r->other_tenant_id !== null,

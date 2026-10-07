@@ -133,16 +133,21 @@ class LocumController extends Controller
         $this->authorize(Permission::STAFF_MANAGE);
         $provider = $this->provider();
 
+        // 25 shifts per page; their applications are loaded in one query (not one per shift).
+        $shifts = $this->db()->table('locum_shifts')->where('tenant_id', $provider->id)->orderByDesc('starts_at')->paginate(25)->withQueryString();
+        $applications = $this->db()->table('locum_applications')->join('locum_profiles', 'locum_profiles.id', '=', 'locum_applications.locum_profile_id')->join('users', 'users.id', '=', 'locum_profiles.user_id')
+            ->whereIn('locum_applications.locum_shift_id', collect($shifts->items())->pluck('id'))
+            ->get(['locum_applications.id', 'locum_applications.locum_shift_id', 'locum_applications.status', 'locum_applications.message', 'users.name', 'locum_profiles.qualifications', 'locum_profiles.languages', 'locum_profiles.hpcsa_number'])
+            ->groupBy('locum_shift_id')->map(fn ($group) => $group->map(fn ($a) => ['id' => $a->id, 'status' => $a->status, 'message' => $a->message, 'name' => $a->name,
+                'qualifications' => $a->qualifications, 'languages' => json_decode((string) $a->languages, true), 'hpcsa' => $a->hpcsa_number]));
+
         return Inertia::render('Locums/Practice', [
-            'shifts' => $this->db()->table('locum_shifts')->where('tenant_id', $provider->id)->orderByDesc('starts_at')->limit(100)->get()->map(fn ($s) => [
+            'shifts' => $shifts->through(fn ($s) => [
                 'id' => $s->id, 'title' => $s->title, 'starts' => $s->starts_at, 'ends' => $s->ends_at, 'rate' => $s->rate_cents / 100, 'basis' => $s->rate_basis, 'status' => $s->status,
                 'hours' => $s->hours_status, 'worked' => $s->worked_start === null ? null : substr((string) $s->worked_start, 11, 5).'–'.substr((string) $s->worked_end, 11, 5).' (break '.$s->break_minutes.' min)',
                 'invoice' => $s->invoice_number, 'total' => $s->invoice_total_cents === null ? null : $s->invoice_total_cents / 100, 'paid' => $s->invoice_paid_at !== null,
                 'rebook' => $s->rebook === null ? null : (bool) $s->rebook, 'late' => (bool) $s->late_cancellation, 'cancelledBy' => $s->cancelled_by,
-                'applications' => $this->db()->table('locum_applications')->join('locum_profiles', 'locum_profiles.id', '=', 'locum_applications.locum_profile_id')->join('users', 'users.id', '=', 'locum_profiles.user_id')
-                    ->where('locum_applications.locum_shift_id', $s->id)->get(['locum_applications.id', 'locum_applications.status', 'locum_applications.message', 'users.name', 'locum_profiles.qualifications', 'locum_profiles.languages', 'locum_profiles.hpcsa_number'])
-                    ->map(fn ($a) => ['id' => $a->id, 'status' => $a->status, 'message' => $a->message, 'name' => $a->name, 'qualifications' => $a->qualifications, 'languages' => json_decode((string) $a->languages, true), 'hpcsa' => $a->hpcsa_number])->values(),
-            ])->values(),
+                'applications' => $applications->get($s->id, collect())->values(),            ]),
             'locums' => $this->db()->table('locum_profiles')->join('users', 'users.id', '=', 'locum_profiles.user_id')->where('locum_profiles.status', 'verified')->orderBy('users.name')->limit(200)
                 ->get(['locum_profiles.id', 'users.name', 'locum_profiles.qualifications', 'locum_profiles.areas', 'locum_profiles.languages'])
                 ->map(fn ($l) => ['id' => $l->id, 'name' => $l->name, 'qualifications' => $l->qualifications, 'areas' => json_decode((string) $l->areas, true), 'languages' => json_decode((string) $l->languages, true)])->values(),
