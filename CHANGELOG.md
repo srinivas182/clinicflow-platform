@@ -4,6 +4,15 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.49.0] — Sprint H1b: protection against data theft
+
+### Added
+- Per-account lockout: 10 wrong passwords in 30 minutes, from any addresses, locks the account for 15 minutes (even the correct password is refused); the user is emailed once; a successful sign-in resets the count.
+- Patient-record access tracking on the care chart, triage, consultation, patient data export and break-glass pages. When one person opens 100 or more different patients in an hour the practice owners are emailed (at most once an hour per person) and it is audited; at 300 further records are refused. Thresholds are configurable.
+- Every patient data export emails the practice owners.
+- Patient search limited to 60 per minute per person.
+- Sign-up refuses passwords known from data breaches (privacy-preserving check: only the first 5 characters of the password's hash are sent).
+
 ## [0.48.0] — Sprint H1a-3: trusted devices and practice-wide authenticator rule
 
 ### Added

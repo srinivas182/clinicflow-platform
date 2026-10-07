@@ -200,7 +200,7 @@ Route::middleware([
         Route::post('/settings/website/feedback/{review}/{action}', [WebsiteToolsController::class, 'reviewAction'])->whereIn('action', ['reply', 'flag'])->name('website.reviews.act');
         Route::put('/settings/website/pages/{page}', [WebsiteSettingsController::class, 'updatePage'])->name('settings.website.page');
         Route::put('/settings/website/details', [WebsiteSettingsController::class, 'updateDetails'])->name('settings.website.details');
-        Route::get('/patients', [PatientController::class, 'index'])->name('patients.index');
+        Route::get('/patients', [PatientController::class, 'index'])->middleware('throttle:patient-search')->name('patients.index');
         Route::get('/patients/register', [PatientController::class, 'create'])->name('patients.create');
         Route::post('/patients', [PatientController::class, 'store'])->name('patients.store');
 
@@ -235,14 +235,14 @@ Route::middleware([
 
         Route::get('/triage', [TriageController::class, 'index'])->name('triage.index');
         Route::post('/triage/suggest', [TriageController::class, 'suggest'])->name('triage.suggest');
-        Route::get('/triage/{visit}', [TriageController::class, 'show'])->name('triage.show');
+        Route::get('/triage/{visit}', [TriageController::class, 'show'])->middleware('record-access')->name('triage.show');
         Route::post('/triage/{visit}', [TriageController::class, 'store'])->name('triage.store');
         Route::post('/patients/{patient}/allergies', [TriageController::class, 'addAllergy'])->name('allergies.store');
         Route::post('/allergies/{allergy}/remove', [TriageController::class, 'removeAllergy'])->name('allergies.remove');
 
         Route::get('/doctor', [DoctorQueueController::class, 'index'])->name('doctor.queue');
 
-        Route::get('/consults/{visit}', [ConsultController::class, 'show'])->name('consults.show');
+        Route::get('/consults/{visit}', [ConsultController::class, 'show'])->middleware('record-access')->name('consults.show');
         Route::put('/consultations/{consultation}', [ConsultController::class, 'save'])->name('consults.save');
         Route::post('/consultations/{consultation}/complete', [ConsultController::class, 'complete'])->name('consults.complete');
         Route::get('/reference/icd10', [ConsultController::class, 'icd10'])->name('reference.icd10');
@@ -295,7 +295,7 @@ Route::middleware([
         Route::post('/patients/{patient}/consent', [PatientAdminController::class, 'consent'])->name('patients.consent');
         Route::get('/compliance/audit', [PatientAdminController::class, 'audit'])->name('compliance.audit');
         Route::get('/compliance/audit/export', [PatientAdminController::class, 'auditExport'])->middleware('step-up')->name('compliance.audit.export');
-        Route::get('/compliance/patients/{patient}/export', [PatientAdminController::class, 'exportPatient'])->middleware('step-up')->name('compliance.patient.export');
+        Route::get('/compliance/patients/{patient}/export', [PatientAdminController::class, 'exportPatient'])->middleware('step-up')->middleware('record-access')->name('compliance.patient.export');
 
         Route::get('/settings/messaging', [MessagingSettingsController::class, 'index'])->name('settings.messaging');
         Route::put('/settings/messaging/sender', [MessagingSettingsController::class, 'saveSender'])->name('settings.messaging.sender');
@@ -375,7 +375,7 @@ Route::middleware([
         Route::post('/settings/accounting/export', [FinanceOpsController::class, 'exportNow'])->middleware('step-up')->name('settings.accounting.export');
         Route::get('/procurement', [ProcurementController::class, 'index'])->name('procurement.index');
         Route::post('/procurement/{action}', [ProcurementController::class, 'act'])->whereIn('action', ['supplier', 'order', 'send', 'receive', 'stock-take', 'write-off-expired'])->name('procurement.act');
-        Route::get('/patients/{patient}/care', [CareController::class, 'care'])->name('care.show');
+        Route::get('/patients/{patient}/care', [CareController::class, 'care'])->middleware('record-access')->name('care.show');
         Route::post('/patients/{patient}/connected', [CareController::class, 'connected'])->name('care.connected');
         Route::post('/patients/{patient}/care/{action}', [CareController::class, 'careAction'])->whereIn('action', ['problem', 'immunisation', 'pregnancy', 'antenatal', 'recall-done', 'registration', 'consent-code', 'consent-confirm'])->middleware('throttle:30,1')->name('care.action');
         Route::post('/problems/{problem}/resolve', [CareController::class, 'resolveProblem'])->name('problems.resolve');
@@ -393,7 +393,7 @@ Route::middleware([
         Route::get('/referrals/{referral}/letter', [CareController::class, 'letter'])->name('referrals.letter');
         Route::get('/compliance/break-glass', [CareController::class, 'breakGlass'])->name('breakglass.index');
         Route::post('/compliance/break-glass/{action}', [CareController::class, 'breakGlassAction'])->whereIn('action', ['request', 'approve'])->middleware('step-up')->name('breakglass.act');
-        Route::get('/compliance/break-glass/patients/{patient}', [CareController::class, 'breakGlassRead'])->name('breakglass.read');
+        Route::get('/compliance/break-glass/patients/{patient}', [CareController::class, 'breakGlassRead'])->middleware('record-access')->name('breakglass.read');
         Route::get('/reference/pharmacies', [EscriptController::class, 'pharmacies'])->name('reference.pharmacies');
         Route::post('/prescriptions/{prescription}/escript', [EscriptController::class, 'send'])->name('escripts.send');
         Route::get('/escripts', [EscriptController::class, 'inbox'])->name('escripts.inbox');

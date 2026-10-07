@@ -107,5 +107,7 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by(strtolower($request->string('login')->toString()).'|'.$request->ip()));
         RateLimiter::for('login-code', fn (Request $request) => Limit::perMinute(10)->by((string) $request->ip()));
+        // Patient search: 60 per minute per user (against scripted scraping).
+        RateLimiter::for('patient-search', fn (Request $request) => Limit::perMinute(60)->by('u:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
     }
 }
