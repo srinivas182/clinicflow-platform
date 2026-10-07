@@ -1,7 +1,5 @@
 # Practice owner guide
 
-> Adding and managing staff from within the practice is being added (next release); until then the platform team adds staff on request.
-
 For practice owners and practice admins. Your practice runs at its own address (for example `sunrise.clinicflow.co.za`). As an owner or practice admin you must use an **authenticator app** (Account → Security).
 
 ## 1. Getting started
@@ -9,6 +7,7 @@ For practice owners and practice admins. Your practice runs at its own address (
 | Task | Where |
 |---|---|
 | Practice details, opening hours, branches | Settings, Branches |
+| Staff: invite your team, set roles and branches, suspend access when someone leaves | Staff |
 | Doctor rosters and appointment slots | Rosters |
 | Prices, payments and medical aid billing | Settings, Settings → Payments, Claims |
 | Messages to patients (SMS, email, WhatsApp) | Settings → Messaging, WhatsApp |

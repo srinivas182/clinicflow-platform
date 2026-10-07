@@ -3,6 +3,7 @@
 use App\Domains\Finance\Http\Controllers\AccountingAdminController;
 use App\Domains\Finance\Http\Controllers\AccountingCallbackController;
 use App\Domains\Identity\Http\Controllers\ConfirmIdentityController;
+use App\Domains\Identity\Http\Controllers\InvitationController;
 use App\Domains\Identity\Http\Controllers\LoginController;
 use App\Domains\Identity\Http\Controllers\SecurityController;
 use App\Domains\Identity\Http\Controllers\WorkspaceController;
@@ -80,6 +81,7 @@ foreach ($centralDomains as $index => $domain) {
             Route::post('/locum/shifts/{shift}/apply', [LocumController::class, 'apply'])->middleware('throttle:30,1')->name('locum.apply');
             Route::match(['get', 'post'], '/locum/shifts/{shift}/{action}', [LocumController::class, 'locumAction'])->whereIn('action', ['hours', 'cancel', 'invoice'])->name('locum.shift.act');
             Route::get('/groups/{group}', [GroupController::class, 'show'])->name('groups.show');
+            Route::post('/invitations/{token}/accept', [InvitationController::class, 'accept'])->name('invitations.accept');
             Route::get('/workspaces', [WorkspaceController::class, 'index'])->name('workspaces');
             Route::get('/confirm-identity', [ConfirmIdentityController::class, 'show'])->name('identity.confirm');
             Route::post('/confirm-identity', [ConfirmIdentityController::class, 'store'])->middleware('throttle:10,1')->name('identity.confirm.store');
@@ -158,3 +160,9 @@ foreach ($centralDomains as $index => $domain) {
         });
     });
 }
+
+// Staff invitations (link from email or SMS).
+Route::middleware('web')->group(function (): void {
+    Route::get('/invitations/{token}', [InvitationController::class, 'show'])->middleware('throttle:30,1')->name('invitations.show');
+    Route::post('/invitations/{token}/register', [InvitationController::class, 'register'])->middleware('throttle:10,1')->name('invitations.register');
+});

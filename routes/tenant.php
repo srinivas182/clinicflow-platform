@@ -26,6 +26,7 @@ use App\Domains\Hub\Http\Controllers\NetworkController;
 use App\Domains\Identity\Http\Controllers\ConfirmIdentityController;
 use App\Domains\Identity\Http\Controllers\HandoffController;
 use App\Domains\Identity\Http\Controllers\PracticeSecurityController;
+use App\Domains\Identity\Http\Controllers\StaffController;
 use App\Domains\Lab\Http\Controllers\LabCatalogController;
 use App\Domains\Lab\Http\Controllers\LabController;
 use App\Domains\Lab\Inbound\LabInboundController;
@@ -329,6 +330,11 @@ Route::middleware([
         Route::get('/me/calendar', [CalendarController::class, 'show'])->name('calendar.show');
         Route::get('/me/calendar/{driver}/connect', [CalendarController::class, 'connect'])->whereIn('driver', ['google', 'microsoft'])->name('calendar.connect');
         Route::put('/me/calendar', [CalendarController::class, 'update'])->name('calendar.update');
+        Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
+        Route::post('/staff/invitations', [StaffController::class, 'invite'])->middleware(['step-up', 'throttle:20,1'])->name('staff.invite');
+        Route::post('/staff/invitations/{invitation}/{action}', [StaffController::class, 'invitation'])->whereIn('action', ['resend', 'revoke'])->middleware('step-up')->name('staff.invitation');
+        Route::post('/staff/{user}', [StaffController::class, 'update'])->middleware('step-up')->name('staff.update');
+        Route::post('/staff/{user}/{action}', [StaffController::class, 'status'])->whereIn('action', ['suspend', 'reactivate'])->middleware('step-up')->name('staff.status');
         Route::get('/settings/security', [PracticeSecurityController::class, 'show'])->name('settings.security');
         Route::post('/settings/security', [PracticeSecurityController::class, 'update'])->middleware('step-up')->name('settings.security.update');
         // Real-time channel sign-in (staff of this practice only; see routes/channels.php).
