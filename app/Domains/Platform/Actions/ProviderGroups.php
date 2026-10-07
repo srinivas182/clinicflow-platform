@@ -10,6 +10,7 @@ use App\Domains\Platform\Models\ProviderGroup;
 use App\Domains\Reports\Analytics;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -42,6 +43,15 @@ class ProviderGroups
      * @return list<array<string, mixed>>
      */
     public function dashboard(ProviderGroup $group, string $from, string $to): array
+    {
+        // Totals across member practices are expensive (one query set per practice); cached for 5 minutes.
+        return Cache::remember("group-dashboard:{$group->id}:{$from}:{$to}", 300, fn () => $this->computeDashboard($group, $from, $to));
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function computeDashboard(ProviderGroup $group, string $from, string $to): array
     {
         $range = [$from.' 00:00:00', $to.' 23:59:59'];
 

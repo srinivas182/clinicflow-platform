@@ -10,6 +10,7 @@ use App\Domains\Platform\Models\Subscription;
 use App\Http\Controllers\Controller;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -32,14 +33,18 @@ class AnalyticsController extends Controller
         $days = (int) $from->diffInDays($to) + 1;
         $branch = $request->filled('branch_id') ? $request->integer('branch_id') : null;
 
+        // Figures are cached for 5 minutes per practice, period and branch (they are expensive and need not be to-the-second).
+        $cache = fn (string $part, \Closure $fn): mixed => $this->cached('analytics:'.tenant('id').':'.$part.':'.$from->toDateString().':'.$to->toDateString().':'.($branch ?? 'all'), $fn);
+
         return Inertia::render('Analytics/Dashboard', [
             'available' => true,
+            'cachedFor' => 5,
             'period' => ['key' => $request->string('period')->toString() ?: 'this_month', 'from' => $from->toDateString(), 'to' => $to->toDateString(), 'branchId' => $branch],
-            'current' => $analytics->summary($from, $to, $branch),
-            'previous' => $analytics->summary($from->subDays($days), $from->subDay(), $branch),
-            'trend' => $analytics->trend($to),
-            'doctors' => $analytics->byDoctor($from, $to),
-            'branches' => $analytics->byBranch($from, $to),
+            'current' => $cache('current', fn () => $analytics->summary($from, $to, $branch)),
+            'previous' => $cache('previous', fn () => $analytics->summary($from->subDays($days), $from->subDay(), $branch)),
+            'trend' => $cache('trend', fn () => $analytics->trend($to)),
+            'doctors' => $cache('doctors', fn () => $analytics->byDoctor($from, $to)),
+            'branches' => $cache('branches', fn () => $analytics->byBranch($from, $to)),
             'branchOptions' => DB::table('branches')->where('active', true)->orderBy('name')->get(['id', 'name']),
         ]);
     }
@@ -66,5 +71,17 @@ class AnalyticsController extends Controller
             })(),
             default => [$now->startOfMonth(), $now],
         };
+    }
+
+    /** Cached for 5 minutes. */
+    private function cached(string $key, \Closure $compute): mixed
+    {
+        $value = Cache::get($key);
+        if ($value === null) {
+            $value = $compute();
+            Cache::put($key, $value, 300);
+        }
+
+        return $value;
     }
 }
