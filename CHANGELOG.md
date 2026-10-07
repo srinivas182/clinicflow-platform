@@ -4,6 +4,15 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.52.0] — Sprint H1d: key rotation, data retention and reseller page fix
+
+### Added
+- Encryption key rotation without downtime: set the new APP_KEY with the old one in APP_PREVIOUS_KEYS, then `security:reencrypt` (with `--dry-run` first) re-encrypts every stored encrypted value — platform, network hub and every practice database — under the new key. Values are found by their encrypted format, so new encrypted fields are covered automatically; it reports anything unreadable and fails if so. Guide: docs/security/key-rotation.md.
+- Data retention (`data:prune`, daily): sign-in and signing codes 7 days, failed jobs 30 days, API and webhook logs 90 days, sign-in history, record views and processed lab messages 1 year, message log 2 years, audit and patient-access logs 7 years; expired trusted devices removed. Clinical records are never removed. All periods configurable.
+
+### Fixed
+- The reseller admin and partner portal read platform tables through the platform connection explicitly.
+
 ## [0.51.0] — Sprint H1c-2: allowlist HTML sanitiser and upload virus scanning
 
 ### Changed

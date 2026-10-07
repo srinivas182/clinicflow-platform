@@ -21,7 +21,7 @@ class ResellerController extends Controller
     public function admin(ResellerProgramme $programme): Response
     {
         return Inertia::render('Admin/Resellers', [
-            'resellers' => DB::table('resellers')->orderBy('name')->get()->map(fn ($r) => [
+            'resellers' => DB::connection((string) config('tenancy.database.central_connection'))->table('resellers')->orderBy('name')->get()->map(fn ($r) => [
                 'id' => $r->id, 'name' => $r->name, 'email' => $r->email, 'code' => $r->code, 'percent' => (float) $r->commission_percent, 'months' => (int) $r->commission_months,
                 'link' => rtrim((string) config('app.url'), '/').'/?ref='.$r->code,
                 'referrals' => $programme->statement((int) $r->id)['referrals'], 'periods' => $programme->statement((int) $r->id)['months'],
@@ -47,7 +47,7 @@ class ResellerController extends Controller
 
     public function portal(Request $request, ResellerProgramme $programme): Response
     {
-        $reseller = DB::table('resellers')->where('user_id', $request->user()?->getAuthIdentifier())->first();
+        $reseller = DB::connection((string) config('tenancy.database.central_connection'))->table('resellers')->where('user_id', $request->user()?->getAuthIdentifier())->first();
         abort_if($reseller === null, 403, 'You are not a Clinic Flow reseller.');
 
         return Inertia::render('Reseller/Portal', [
@@ -56,12 +56,12 @@ class ResellerController extends Controller
             'referrals' => $programme->statement((int) $reseller->id)['referrals'],
             'periods' => $programme->statement((int) $reseller->id)['months'],
             // White-label partners: their brands, practices, sign-ups this month and AI use.
-            'brands' => DB::table('brands')->where('reseller_id', $reseller->id)->orderBy('name')->get()->map(function ($b) {
+            'brands' => DB::connection((string) config('tenancy.database.central_connection'))->table('brands')->where('reseller_id', $reseller->id)->orderBy('name')->get()->map(function ($b) {
                 $practices = Provider::query()->where('brand_id', $b->id)->orderBy('name')->get();
 
                 return ['name' => $b->name, 'signupLink' => rtrim((string) config('app.url'), '/').'/?brand='.$b->slug,
                     'signupsThisMonth' => $practices->filter(fn ($p) => $p->getAttribute('created_at') !== null && $p->getAttribute('created_at') >= now()->startOfMonth())->count(),
-                    'aiMinutesThisMonth' => (int) DB::table('ai_usage')->whereIn('tenant_id', $practices->pluck('id'))->where('period', now()->format('Y-m'))->sum(DB::raw('minutes_included_used + minutes_wallet')),
+                    'aiMinutesThisMonth' => (int) DB::connection((string) config('tenancy.database.central_connection'))->table('ai_usage')->whereIn('tenant_id', $practices->pluck('id'))->where('period', now()->format('Y-m'))->sum(DB::raw('minutes_included_used + minutes_wallet')),
                     'practices' => $practices->map(fn ($p) => ['name' => (string) $p->getAttribute('name'), 'status' => (string) ($p->getAttribute('status') instanceof \BackedEnum ? $p->getAttribute('status')->value : $p->getAttribute('status')),
                         'since' => substr((string) $p->getAttribute('created_at'), 0, 10)])->values()];
             })->values(),
