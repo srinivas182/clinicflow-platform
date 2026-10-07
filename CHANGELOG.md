@@ -4,6 +4,15 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.48.0] — Sprint H1a-3: trusted devices and practice-wide authenticator rule
+
+### Added
+- "Trust this device for 30 days" on the sign-in code screen: the password is still required, but the code is skipped on that device. Only a hash of the device token is stored; the cookie is encrypted and HTTP-only. Super admins always enter a code. Trusted devices are listed on Account → Security and can be removed one by one; "Sign out other devices" removes them all.
+- Practice Settings → Security (owner only, after confirming identity): require an authenticator app for all staff, with a count of staff not yet set up.
+
+### Fixed
+- The practice security page reads the rule fresh rather than from the cached practice record.
+
 ## [0.47.0] — Sprint H1a-2: step-up confirmation and session hardening
 
 ### Added

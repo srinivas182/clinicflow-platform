@@ -8,6 +8,12 @@ interface Props {
     enabled: boolean;
     required: boolean;
     recoveryLeft: number;
+    trustedDevices: {
+        id: number;
+        label: string;
+        lastUsed: string;
+        expires: string;
+    }[];
     signIns: {
         at: string;
         ip: string | null;
@@ -22,6 +28,7 @@ export default function Security({
     required,
     recoveryLeft,
     signIns,
+    trustedDevices,
 }: Props) {
     const [enabled, setEnabled] = useState(initiallyEnabled);
     const [setup, setSetup] = useState<{ secret: string; uri: string } | null>(
@@ -237,6 +244,41 @@ export default function Security({
                         </div>
                     </div>
                 )}
+            </Card>
+            <Card title="Trusted devices" className="mt-4">
+                {trustedDevices.length === 0 && (
+                    <p className="text-sm text-muted">
+                        No trusted devices. Tick “Trust this device” when
+                        entering a sign-in code to skip it for 30 days.
+                    </p>
+                )}
+                {trustedDevices.map((d) => (
+                    <div
+                        key={d.id}
+                        className="flex items-center gap-2 py-1 text-sm"
+                    >
+                        <span className="flex-1">
+                            {d.label || "Unknown browser"}{" "}
+                            <span className="text-muted">
+                                · last used {d.lastUsed} · until {d.expires}
+                            </span>
+                        </span>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() =>
+                                run(async () => {
+                                    await post(
+                                        `/account/security/devices/${d.id}/forget`,
+                                    );
+                                    window.location.reload();
+                                })
+                            }
+                        >
+                            Remove
+                        </Button>
+                    </div>
+                ))}
             </Card>
             <Card title="Recent sign-ins" className="mt-4">
                 {signIns.length === 0 && (

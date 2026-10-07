@@ -19,6 +19,12 @@ class StartLogin
 
     public function handle(string $login, string $password, ?string $ip = null): LoginChallenge
     {
+        return $this->challenge($this->checkPassword($login, $password, $ip), $ip);
+    }
+
+    /** Step one: the password (always required, even on a trusted device). */
+    public function checkPassword(string $login, string $password, ?string $ip = null): User
+    {
         $user = User::query()
             ->where('email', $login)
             ->orWhere('phone', $login)
@@ -30,6 +36,12 @@ class StartLogin
             throw ValidationException::withMessages(['login' => 'These details do not match our records.']);
         }
 
+        return $user;
+    }
+
+    /** Step two: the sign-in code (by message, or from the authenticator app). */
+    public function challenge(User $user, ?string $ip = null): LoginChallenge
+    {
         // Authenticator app set up: no SMS or email code is sent; the app's code (or a recovery code) is asked for.
         if ($user->totp_confirmed_at !== null) {
             return LoginChallenge::create(['user_id' => $user->id, 'code_hash' => '-', 'method' => 'authenticator', 'expires_at' => now()->addMinutes(5), 'ip' => $ip]);

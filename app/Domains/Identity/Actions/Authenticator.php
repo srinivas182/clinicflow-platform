@@ -7,6 +7,7 @@ namespace App\Domains\Identity\Actions;
 use App\Domains\Identity\Enums\StaffRole;
 use App\Domains\Identity\Models\Membership;
 use App\Domains\Identity\Support\Totp;
+use App\Domains\Platform\Models\Provider;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -106,8 +107,15 @@ class Authenticator
             return false;
         }
 
-        return (bool) $user->is_platform_admin || Membership::query()->where('user_id', $user->id)
-            ->whereIn('role', [StaffRole::Owner->value, StaffRole::PracticeAdmin->value])->usable()->exists();
+        if ((bool) $user->is_platform_admin || Membership::query()->where('user_id', $user->id)
+            ->whereIn('role', [StaffRole::Owner->value, StaffRole::PracticeAdmin->value])->usable()->exists()) {
+            return true;
+        }
+
+        // A practice can require it for all of its staff.
+        $practices = Membership::query()->where('user_id', $user->id)->usable()->pluck('tenant_id');
+
+        return $practices->isNotEmpty() && Provider::query()->whereIn('id', $practices)->where('require_authenticator', true)->exists();
     }
 
     private function useRecoveryCode(User $user, string $code): bool

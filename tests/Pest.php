@@ -26,12 +26,37 @@ use App\Domains\Visits\Actions\CheckInPatient;
 use App\Domains\Visits\Actions\TransitionVisit;
 use App\Domains\Visits\Enums\PayerType;
 use App\Domains\Visits\Enums\VisitStage;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /*
  * All feature, unit and architecture tests run on the Laravel TestCase.
  */
 pest()->extend(TestCase::class)->in('Feature', 'Unit', 'Arch');
+
+/*
+ * Feature tests: make sure the network hub database has its tables before each test. Registering
+ * or searching patients also touches the hub, and test files must not depend on an earlier file
+ * in the same CI part having created them (the check is cheap and does nothing once they exist).
+ */
+pest()->beforeEach(function (): void {
+    if (config('database.default') === 'mysql') {
+        ensureHubTables();
+    }
+})->in('Feature');
+
+function ensureHubTables(): void
+{
+    try {
+        if (Schema::connection('hub')->hasTable('hub_identities')) {
+            return;
+        }
+    } catch (Throwable) {
+        return; // no hub database configured for this run
+    }
+    Artisan::call('migrate', ['--database' => 'hub', '--path' => 'database/migrations/hub', '--force' => true]);
+}
 
 /**
  * Build a valid South African ID number (Luhn check digit computed).

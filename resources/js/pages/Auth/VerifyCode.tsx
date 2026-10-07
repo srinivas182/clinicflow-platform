@@ -9,7 +9,7 @@ export default function VerifyCode({
 }: {
     method?: string;
 }) {
-    const form = useForm({ code: "" });
+    const form = useForm({ code: "", trust_device: false });
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
@@ -47,6 +47,18 @@ export default function VerifyCode({
                     }
                     error={form.errors.code}
                 />
+                <label className="flex items-center gap-2 text-sm text-muted">
+                    <input
+                        type="checkbox"
+                        className="accent-teal"
+                        checked={form.data.trust_device}
+                        onChange={(e) =>
+                            form.setData("trust_device", e.target.checked)
+                        }
+                    />
+                    Trust this device for 30 days (don’t use on shared
+                    computers)
+                </label>
                 <Button
                     type="submit"
                     size="lg"

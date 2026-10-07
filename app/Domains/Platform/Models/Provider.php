@@ -38,7 +38,7 @@ class Provider extends BaseTenant implements TenantWithDatabase
      */
     public static function getCustomColumns(): array
     {
-        return ['id', 'name', 'type', 'status', 'brand_id'];
+        return ['id', 'name', 'type', 'status', 'brand_id', 'require_authenticator'];
     }
 
     /**
