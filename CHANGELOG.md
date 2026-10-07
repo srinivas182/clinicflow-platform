@@ -4,6 +4,15 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.60.0] — Sprint E1: branded error pages
+
+### Added
+- Branded pages for 403, 404, 419, 429, 500 and 503 in light and dark (device setting or the saved choice). They are self-contained (inline styles), so they also work during deployments and maintenance mode.
+- Inside the app, errors show as an in-app page instead of raw HTML in a pop-up. API and JSON requests keep JSON.
+- 403 shows the app's own reason (e.g. "Only the practice owner or a practice admin can manage staff."); 419 takes people back to the page they came from; 503 offers "Try again".
+- Production never shows internal details of server errors; debug mode keeps the developer debug page.
+- Buttons work under the content-security policy (no inline handlers or javascript: links; "Go back" uses a nonce script with a home-page fallback).
+
 ## [0.59.0] — Sprint UX-2: mobile menu, screen-reader announcements and dark-mode fixes
 
 ### Added
