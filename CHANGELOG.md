@@ -4,6 +4,21 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.56.0] — Sprint L1: Excel export, safer CSV and remaining pagination
+
+### Added
+- Report builder: Export Excel (.xlsx) — bold header, money formatted to 2 decimals, text stored as plain text (never as a formula). Built in, no extra library.
+
+### Security
+- CSV exports neutralise cells that a spreadsheet would run as a formula (starting with =, +, -, @), e.g. from names or free text; numbers are unchanged.
+
+### Changed
+- Pagination for referrals, patients' prepaid packages, website reviews and the practice's locum shifts.
+- Locum shifts: applications are loaded in one query per page instead of one per shift.
+
+### Notes
+- N+1 review: list pages already load related records up front; the remaining per-row queries (analytics per doctor, group dashboard) are inherent and cached.
+
 ## [0.55.0] — Sprint H2-2b: indexes, caching and the load-test plan
 
 ### Added

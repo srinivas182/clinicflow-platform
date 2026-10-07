@@ -28,9 +28,9 @@ class PrepaidController extends Controller
             'packages' => DB::table('prepaid_packages')->orderBy('name')->get()->map(fn ($p) => ['id' => $p->id, 'name' => $p->name, 'description' => $p->description,
                 'price' => $p->price_cents / 100, 'items' => json_decode((string) $p->items, true), 'active' => (bool) $p->active])->values(),
             'sold' => DB::table('patient_packages')->join('patients', 'patients.id', '=', 'patient_packages.patient_id')->join('prepaid_packages', 'prepaid_packages.id', '=', 'patient_packages.prepaid_package_id')
-                ->orderByDesc('patient_packages.created_at')->limit(100)->get(['patient_packages.*', 'patients.first_names', 'patients.surname', 'prepaid_packages.name as package'])
-                ->map(fn ($r) => ['id' => $r->id, 'patient' => "{$r->first_names} {$r->surname}", 'package' => $r->package, 'status' => $r->status,
-                    'remaining' => json_decode((string) $r->remaining, true), 'expires' => $r->expires_at === null ? null : substr((string) $r->expires_at, 0, 10)])->values(),
+                ->orderByDesc('patient_packages.created_at')->paginate(50, ['patient_packages.*', 'patients.first_names', 'patients.surname', 'prepaid_packages.name as package'])->withQueryString()
+                ->through(fn ($r) => ['id' => $r->id, 'patient' => "{$r->first_names} {$r->surname}", 'package' => $r->package, 'status' => $r->status,
+                    'remaining' => json_decode((string) $r->remaining, true), 'expires' => $r->expires_at === null ? null : substr((string) $r->expires_at, 0, 10)]),
             'validYears' => PrepaidPackages::VALID_YEARS,
         ]);
     }

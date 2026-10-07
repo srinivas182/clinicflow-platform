@@ -67,12 +67,16 @@ class ReportsController extends Controller
 
             return response((string) $pdf->output(), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => "attachment; filename=\"{$name}.pdf\""]);
         }
+        if ($format === 'xlsx') {
+            return response(XlsxWriter::build((string) ($request->input('title') ?: 'Report'), $result['columns'], $result['rows']), 200, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Content-Disposition' => "attachment; filename=\"{$name}.xlsx\""]);
+        }
         $out = fopen('php://temp', 'r+');
         abort_if($out === false, 500, 'Could not prepare the export.');
         fwrite($out, "\xEF\xBB\xBF"); // UTF-8 marker so Excel opens it correctly
-        fputcsv($out, array_map(fn ($c) => $c['label'], $result['columns']));
+        fputcsv($out, array_map(fn ($c) => XlsxWriter::safeCsvCell($c['label']), $result['columns']));
         foreach ($result['rows'] as $row) {
-            fputcsv($out, array_map(fn ($c) => self::cell($row[$c['key']] ?? ''), $result['columns']));
+            fputcsv($out, array_map(fn ($c) => XlsxWriter::safeCsvCell(self::cell($row[$c['key']] ?? '')), $result['columns']));
         }
         rewind($out);
 

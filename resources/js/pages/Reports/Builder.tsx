@@ -108,7 +108,7 @@ export default function ReportBuilder({
         setResult(data as Result);
     };
 
-    const download = async (format: "csv" | "pdf") => {
+    const download = async (format: "csv" | "pdf" | "xlsx") => {
         const res = await post(`/reports/export/${format}`, {
             definition: JSON.stringify(def),
             title: set?.label ?? "Report",
@@ -321,6 +321,15 @@ export default function ReportBuilder({
                     <Button size="sm" disabled={busy} onClick={run}>
                         {busy ? "Running…" : "Run report"}
                     </Button>
+                    {result && (
+                        <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => download("xlsx")}
+                        >
+                            Export Excel
+                        </Button>
+                    )}
                     {result && (
                         <Button
                             size="sm"

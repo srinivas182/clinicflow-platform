@@ -338,7 +338,7 @@ Route::middleware([
         Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
         Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
         Route::post('/reports/run', [ReportsController::class, 'run'])->middleware('throttle:60,1')->name('reports.run');
-        Route::post('/reports/export/{format}', [ReportsController::class, 'export'])->whereIn('format', ['csv', 'pdf'])->middleware('throttle:20,1')->middleware('step-up')->name('reports.export');
+        Route::post('/reports/export/{format}', [ReportsController::class, 'export'])->whereIn('format', ['csv', 'pdf', 'xlsx'])->middleware('throttle:20,1')->middleware('step-up')->name('reports.export');
         Route::post('/reports', [ReportsController::class, 'save'])->name('reports.save');
         Route::delete('/reports/{report}', [ReportsController::class, 'destroy'])->name('reports.destroy');
         Route::get('/settings/ai-scribe', [ScribeController::class, 'practice'])->name('ai-scribe.settings');

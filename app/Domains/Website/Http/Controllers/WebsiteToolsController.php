@@ -108,12 +108,12 @@ class WebsiteToolsController extends Controller
     public function reviews(): Response
     {
         $this->authorize(Permission::SETTINGS_MANAGE);
-        $rows = DB::table('reviews')->leftJoin('staff', 'staff.id', '=', 'reviews.staff_id')->orderByDesc('reviews.id')->limit(200)
-            ->get(['reviews.*', 'staff.name as doctor']);
+        $rows = DB::table('reviews')->leftJoin('staff', 'staff.id', '=', 'reviews.staff_id')->orderByDesc('reviews.id')
+            ->paginate(50, ['reviews.*', 'staff.name as doctor'])->withQueryString();
 
         return Inertia::render('Website/Reviews', [
-            'reviews' => $rows->map(fn ($r) => ['id' => $r->id, 'rating' => (int) $r->rating, 'comment' => $r->comment, 'doctor' => $r->doctor, 'publicOk' => (bool) $r->public_ok,
-                'reply' => $r->reply, 'flagged' => $r->flagged_at !== null, 'date' => substr((string) $r->created_at, 0, 10)])->values(),
+            'reviews' => $rows->through(fn ($r) => ['id' => $r->id, 'rating' => (int) $r->rating, 'comment' => $r->comment, 'doctor' => $r->doctor, 'publicOk' => (bool) $r->public_ok,
+                'reply' => $r->reply, 'flagged' => $r->flagged_at !== null, 'date' => substr((string) $r->created_at, 0, 10)]),
             'average' => round((float) DB::table('reviews')->whereNull('flagged_at')->avg('rating'), 1),
             'count' => DB::table('reviews')->count(),
             'requested' => DB::table('feedback_requests')->whereNotNull('sent_at')->count(),
