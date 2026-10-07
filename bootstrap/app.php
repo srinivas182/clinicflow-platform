@@ -8,6 +8,7 @@ use App\Http\Middleware\CaptureResellerRef;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RequireAuthenticator;
 use App\Http\Middleware\RequireRecentConfirmation;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\TrackRecordAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -59,6 +60,7 @@ return Application::configure(basePath: dirname(__DIR__))
             RequireAuthenticator::class,
             // "Sign out other devices" takes effect on their next request.
             AuthenticateSession::class,
+            SecurityHeaders::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

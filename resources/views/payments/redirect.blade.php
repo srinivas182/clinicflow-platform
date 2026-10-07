@@ -15,6 +15,6 @@
         <p>Taking you to the secure payment page…</p>
         <noscript><button type="submit">Continue to payment</button></noscript>
     </form>
-    <script>document.getElementById('pay').submit();</script>
+    <script nonce="{{ $cspNonce ?? '' }}">document.getElementById('pay').submit();</script>
 </body>
 </html>

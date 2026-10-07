@@ -53,6 +53,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Point the "files" disk at the super admin's active storage (S3, S3-compatible or local).
+        // Never show debug pages in production: they can reveal code and settings.
+        if ($this->app->isProduction() && (bool) config('app.debug')) {
+            config(['app.debug' => false]);
+            Log::critical('APP_DEBUG was on in production and has been forced off. Fix the environment settings.');
+        }
         FileStore::configure();
         // N+1 queries: logged in development and tests (never thrown), so they can be found and fixed.
         if (! $this->app->isProduction()) {

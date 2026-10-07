@@ -4,6 +4,17 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.50.0] — Sprint H1c-1: security headers, web-server rules and dependency scanning
+
+### Added
+- Security headers on every page: content-security policy (scripts only from this site or with the request's nonce; no plugins; no framing by other sites; video server allowed), HSTS in production, nosniff, referrer policy, frame protection, and a permissions policy allowing camera and microphone only for this site. The policy is on in production (CLINICFLOW_CSP to force, CLINICFLOW_CSP_REPORT_ONLY for a trial period). The payment redirect page carries the nonce so payments keep working.
+- `security:check`: deployment self-check (debug off, HTTPS, secure and encrypted sessions, session timeout, policy on, authenticator for admins); fails in production if anything is unsafe.
+- Production never shows debug pages: APP_DEBUG is forced off (and logged) if it is left on.
+- CI: dependency vulnerability scans — `composer audit` (backend) and `npm audit` for high/critical issues (front end).
+
+### Changed
+- nginx: only index.php can run (any other .php returns 404); backups, archives, logs, dumps and config files are never served; server version hidden; per-address request limit (20/s, burst 60).
+
 ## [0.49.0] — Sprint H1b: protection against data theft
 
 ### Added
