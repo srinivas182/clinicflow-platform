@@ -21,6 +21,8 @@ use App\Domains\Lab\Inbound\LabConnections;
 use App\Domains\Lab\Models\LabOrder;
 use App\Domains\Messaging\Contracts\MessageSender;
 use App\Domains\Messaging\Support\GatewayMessageSender;
+use App\Domains\Platform\Security\ClamdScanner;
+use App\Domains\Platform\Security\VirusScanner;
 use App\Domains\Platform\Storage\FileStore;
 use App\Domains\Prescribing\Contracts\DrugDatabase;
 use App\Domains\Prescribing\Support\DemoDrugDatabase;
@@ -40,6 +42,8 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(VirusScanner::class, fn () => new ClamdScanner(
+            (string) config('clinicflow.security.virus_scan.host'), (int) config('clinicflow.security.virus_scan.port')));
         // Demo implementations until the client licenses a drug database and chooses a switch.
         $this->app->singleton(DrugDatabase::class, DemoDrugDatabase::class);
         $this->app->singleton(ClaimsSwitch::class, DemoClaimsSwitch::class);

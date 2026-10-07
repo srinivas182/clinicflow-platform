@@ -26,6 +26,7 @@ class SecurityCheckCommand extends Command
             'Sessions time out within 60 minutes' => (int) config('session.lifetime') <= 60,
             'Content-security policy is on' => config('clinicflow.security.csp') === null ? $production : (bool) config('clinicflow.security.csp'),
             'Authenticator app required for admins' => (bool) config('clinicflow.security.require_authenticator_for_admins'),
+            'Uploads are checked for viruses' => (bool) config('clinicflow.security.virus_scan.enabled'),
         ];
         $failed = 0;
         foreach ($checks as $label => $ok) {

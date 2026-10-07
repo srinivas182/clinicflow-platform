@@ -53,6 +53,6 @@ it('flags unsafe production settings in the deployment check', function (): void
     config(['app.debug' => true, 'app.url' => 'http://clinicflow.test', 'session.secure' => false]);
     $this->artisan('security:check')->expectsOutputToContain('✗ Debug mode is off')->expectsOutputToContain('✗ Site address uses HTTPS')->assertSuccessful();
     config(['app.debug' => false, 'app.url' => 'https://clinicflow.co.za', 'session.secure' => true, 'session.encrypt' => true, 'session.lifetime' => 30,
-        'clinicflow.security.csp' => true, 'clinicflow.security.require_authenticator_for_admins' => true]);
+        'clinicflow.security.csp' => true, 'clinicflow.security.require_authenticator_for_admins' => true, 'clinicflow.security.virus_scan.enabled' => true]);
     $this->artisan('security:check')->expectsOutputToContain('All security settings are in place.')->assertSuccessful();
 });

@@ -1,6 +1,12 @@
 # Local development stack. Copy .env.example to .env and set
 # DB_HOST=mysql, DB_PASSWORD=secret, REDIS_HOST=redis, MAIL_HOST=mailpit, MAIL_PORT=1025.
 services:
+  # Virus scanning for uploads (clamd on port 3310). Set CLINICFLOW_VIRUS_SCAN=true once it is running.
+  clamav:
+    image: clamav/clamav:stable
+    restart: unless-stopped
+    volumes:
+      - clamav-db:/var/lib/clamav
   app:
     build:
       context: .
@@ -43,4 +49,5 @@ services:
       - "1025:1025"
 
 volumes:
+  clamav-db:
   mysql-data:
