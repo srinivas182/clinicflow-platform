@@ -8,7 +8,7 @@ return [
      * Platform release version. Bumped on every release (see CHANGELOG.md)
      * and reported by GET /api/v1/health.
      */
-    'version' => env('CLINICFLOW_VERSION', '0.51.0'),
+    'version' => env('CLINICFLOW_VERSION', '0.52.0'),
 
     /*
      * Hosting region. All patient data must stay in South Africa (POPIA s72).
@@ -88,5 +88,18 @@ return [
         // One person opening this many different patient records in an hour alerts the owners; the hard limit refuses more.
         'record_views_alert' => (int) env('CLINICFLOW_RECORD_VIEWS_ALERT', 100),
         'record_views_hard_limit' => (int) env('CLINICFLOW_RECORD_VIEWS_LIMIT', 300),
+    ],
+
+    // Data retention in days (operational logs only; clinical records are never removed by data:prune).
+    'retention' => [
+        'codes' => (int) env('RETENTION_CODES_DAYS', 7),
+        'failed_jobs' => (int) env('RETENTION_FAILED_JOBS_DAYS', 30),
+        'api_requests' => (int) env('RETENTION_API_REQUESTS_DAYS', 90),
+        'webhook_deliveries' => (int) env('RETENTION_WEBHOOK_DAYS', 90),
+        'sign_ins' => (int) env('RETENTION_SIGN_INS_DAYS', 365),
+        'record_views' => (int) env('RETENTION_RECORD_VIEWS_DAYS', 365),
+        'lab_messages' => (int) env('RETENTION_LAB_MESSAGES_DAYS', 365),
+        'messages' => (int) env('RETENTION_MESSAGES_DAYS', 730),
+        'audit' => (int) env('RETENTION_AUDIT_DAYS', 2555),
     ],
 ];

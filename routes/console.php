@@ -28,3 +28,4 @@ Schedule::command('webhooks:deliver')->everyMinute()->withoutOverlapping()->onOn
 Schedule::command('scribe:purge')->dailyAt('02:30')->onOneServer();
 Schedule::command('reports:send')->dailyAt('07:00')->onOneServer();
 Schedule::command('queue:alert')->hourly()->onOneServer();
+Schedule::command('data:prune')->dailyAt('03:15')->onOneServer();
