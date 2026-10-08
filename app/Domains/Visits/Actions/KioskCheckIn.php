@@ -26,7 +26,7 @@ class KioskCheckIn
         $appointment = Appointment::query()
             ->whereIn('patient_id', $patientIds)
             ->where('status', AppointmentStatus::Booked->value)
-            ->whereDate('starts_at', now()->toDateString())
+            ->withinDay('starts_at', now()->toDateString())
             ->orderBy('starts_at')
             ->first();
 

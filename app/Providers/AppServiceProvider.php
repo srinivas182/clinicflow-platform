@@ -9,6 +9,7 @@ use App\Domains\Billing\Gateways\GatewayFactory;
 use App\Domains\Billing\Models\Payment;
 use App\Domains\Billing\Prepaid\PrepaidPackages;
 use App\Domains\Billing\Support\FakePaymentGateway;
+use App\Domains\Branches\Models\Branch;
 use App\Domains\Branches\Support\BranchContext;
 use App\Domains\Claims\Contracts\ClaimsSwitch;
 use App\Domains\Claims\Support\DemoClaimsSwitch;
@@ -21,9 +22,11 @@ use App\Domains\Lab\Inbound\LabConnections;
 use App\Domains\Lab\Models\LabOrder;
 use App\Domains\Messaging\Contracts\MessageSender;
 use App\Domains\Messaging\Support\GatewayMessageSender;
+use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Security\ClamdScanner;
 use App\Domains\Platform\Security\VirusScanner;
 use App\Domains\Platform\Storage\FileStore;
+use App\Domains\Platform\Support\TenantLookupCache;
 use App\Domains\Prescribing\Contracts\DrugDatabase;
 use App\Domains\Prescribing\Support\DemoDrugDatabase;
 use App\Domains\Scheduling\Calendar\CalendarSync;
@@ -32,11 +35,15 @@ use App\Domains\Telemedicine\Support\OnlineConsultHooks;
 use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Stancl\Tenancy\Database\Models\Domain;
+use Stancl\Tenancy\Resolvers\DomainTenantResolver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -96,6 +103,41 @@ class AppServiceProvider extends ServiceProvider
          * Workspace permissions are answered by the provider-side Staff record
          * (provider database). Outside a workspace they are always denied.
          */
+        // Practice lookup by domain: cached for 5 minutes and cleared the moment a practice or its domains change
+        // (so suspending a practice takes effect immediately).
+        DomainTenantResolver::$shouldCache = (bool) config('clinicflow.performance.cache_tenant_lookup', true);
+        DomainTenantResolver::$cacheTTL = 300;
+        // Cleared in the platform context (inside a practice, the cache is scoped to that practice).
+        $forgetTenant = fn ($tenant) => $tenant instanceof Provider ? TenantLookupCache::forget($tenant) : null;
+        Provider::saved($forgetTenant);
+        Provider::deleted($forgetTenant);
+        Domain::saved(fn ($d) => $d->tenant !== null ? $forgetTenant($d->tenant) : null);
+        Domain::deleted(fn ($d) => $d->tenant !== null ? $forgetTenant($d->tenant) : null);
+        // Active-branch count is cached per practice; clear it whenever a branch changes.
+        Branch::saved(fn () => BranchContext::forgetCount());
+        Branch::deleted(fn () => BranchContext::forgetCount());
+
+        // Index-friendly day filters (whereDate wraps the column in DATE(), which stops MySQL using its index).
+
+        // onDate: DATE columns, compared to the value's date. withinDay: DATETIME columns, a start-to-end-of-day range.
+
+        Builder::macro('onDate', function (string $column, mixed $value) {
+
+            /** @var Builder $this */
+
+            return $this->where($column, Carbon::parse($value)->toDateString());
+
+        });
+
+        Builder::macro('withinDay', function (string $column, mixed $value) {
+
+            /** @var Builder $this */
+            $day = Carbon::parse($value);
+
+            return $this->whereBetween($column, [$day->copy()->startOfDay(), $day->copy()->endOfDay()]);
+
+        });
+
         Gate::before(function (User $user, string $ability): ?bool {
             if (! in_array($ability, Permission::all(), true)) {
                 return null;
@@ -110,7 +152,14 @@ class AppServiceProvider extends ServiceProvider
                 return in_array(request()->method(), ['GET', 'HEAD'], true);
             }
 
-            $staff = Staff::query()->find($user->id);
+            // Loaded once per request with roles and permissions (kept on the request, never in a static,
+            // so a long-running Octane worker can never carry one person's permissions into another request).
+            $key = 'cf.staff.'.tenant('id').'.'.$user->id;
+            $attributes = request()->attributes;
+            if (! $attributes->has($key)) {
+                $attributes->set($key, Staff::query()->with(['roles.permissions', 'permissions'])->find($user->id));
+            }
+            $staff = $attributes->get($key);
 
             return $staff instanceof Staff && $staff->checkPermissionTo($ability);
         });

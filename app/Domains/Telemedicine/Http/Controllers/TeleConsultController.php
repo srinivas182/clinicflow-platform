@@ -40,7 +40,7 @@ class TeleConsultController extends Controller
 
         return Inertia::render('Telemedicine/Index', [
             'consults' => TeleSession::query()->with('appointment.patient')
-                ->whereHas('appointment', fn ($q) => $q->where('staff_id', $me)->whereDate('starts_at', '>=', today()))
+                ->whereHas('appointment', fn ($q) => $q->where('staff_id', $me)->where('starts_at', '>=', today()->startOfDay()))
                 ->whereNull('ended_at')->get()->sortBy(fn (TeleSession $t) => $t->appointment->starts_at)->values()
                 ->map(fn (TeleSession $t) => [
                     'appointmentId' => $t->appointment_id, 'patient' => $t->appointment->patient->fullName(),

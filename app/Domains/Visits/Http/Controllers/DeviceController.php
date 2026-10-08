@@ -43,11 +43,11 @@ class DeviceController extends Controller
     {
         abort_unless($tokens->verify('display', $token), 404);
 
-        $today = Visit::query()->whereDate('visit_date', today())->whereNull('called_at')->get(['ticket', 'stage', 'stage_changed_at', 'called_at']);
+        $today = Visit::query()->onDate('visit_date', today())->whereNull('called_at')->get(['ticket', 'stage', 'stage_changed_at', 'called_at']);
 
         return Inertia::render('Devices/Display', [
             'provider' => $this->providerName(),
-            'calling' => Visit::query()->whereDate('visit_date', today())->where('stage', VisitStage::Doctor->value)
+            'calling' => Visit::query()->onDate('visit_date', today())->where('stage', VisitStage::Doctor->value)
                 ->whereNotNull('called_at')->where('called_at', '>', now()->subMinutes(10))
                 ->orderByDesc('called_at')->limit(3)->get()
                 ->map(fn (Visit $v) => ['ticket' => $v->ticket, 'to' => $v->room_id !== null ? (Room::query()->whereKey($v->room_id)->value('name') ?? 'Doctor') : 'Doctor'])->values(),

@@ -63,7 +63,7 @@ class ChronicCare
         }
 
         return DB::transaction(function () use ($previous, $doctor): Prescription {
-            $seq = Visit::query()->whereDate('visit_date', today())->where('ticket', 'like', 'R%')->lockForUpdate()->count() + 1;
+            $seq = Visit::query()->onDate('visit_date', today())->where('ticket', 'like', 'R%')->lockForUpdate()->count() + 1;
             $visit = Visit::create([
                 'patient_id' => $previous->patient_id, 'visit_date' => today(), 'ticket' => 'R'.str_pad((string) $seq, 3, '0', STR_PAD_LEFT),
                 'stage' => VisitStage::Done, 'payer_type' => PayerType::Cash, 'doctor_id' => $doctor->id, 'check_in_channel' => 'repeat', 'stage_changed_at' => now(),
