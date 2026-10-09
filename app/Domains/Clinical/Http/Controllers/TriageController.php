@@ -30,7 +30,7 @@ class TriageController extends Controller
         $this->authorize(Permission::TRIAGE_RECORD);
 
         return Inertia::render('Triage/Index', [
-            'visits' => Visit::query()->with('patient')->whereDate('visit_date', today())
+            'visits' => Visit::query()->with('patient')->onDate('visit_date', today())
                 ->where('stage', VisitStage::Triage->value)->orderBy('stage_changed_at')->get()
                 ->map(fn (Visit $v) => ['id' => $v->id, 'ticket' => $v->ticket, 'patient' => $v->patient->fullName(), 'age' => $v->patient->ageInYears(), 'minutes' => $v->minutesInStage()])->values(),
         ]);

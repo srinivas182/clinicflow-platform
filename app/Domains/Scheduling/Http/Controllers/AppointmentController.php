@@ -40,7 +40,7 @@ class AppointmentController extends Controller
                 'name' => $doctor->name,
                 'appointments' => Appointment::query()->with('patient')
                     ->where('staff_id', $doctor->id)
-                    ->whereDate('starts_at', $day)
+                    ->withinDay('starts_at', $day)
                     ->orderBy('starts_at')->get()
                     ->map(fn (Appointment $a): array => [
                         'id' => $a->id,

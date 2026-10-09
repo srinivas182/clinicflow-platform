@@ -37,7 +37,7 @@ class FrontDeskController extends Controller
     {
         $this->authorize(Permission::VISITS_MANAGE);
 
-        $visits = Visit::query()->with(['patient', 'invoice'])->whereDate('visit_date', today())->when(BranchContext::filterId(), fn ($q, int $b) => $q->where('branch_id', $b))->orderBy('created_at')->get();
+        $visits = Visit::query()->with(['patient', 'invoice'])->onDate('visit_date', today())->when(BranchContext::filterId(), fn ($q, int $b) => $q->where('branch_id', $b))->orderBy('created_at')->get();
         $term = $request->string('search')->toString();
 
         return Inertia::render('FrontDesk/Index', [
@@ -65,7 +65,7 @@ class FrontDeskController extends Controller
                 'name' => $p->fullName(),
                 'idNumber' => $p->maskedIdNumber(),
                 'medicalAid' => $p->medical_aid_scheme,
-                'appointmentId' => Appointment::query()->where('patient_id', $p->id)->where('status', AppointmentStatus::Booked->value)->whereDate('starts_at', today())->value('id'),
+                'appointmentId' => Appointment::query()->where('patient_id', $p->id)->where('status', AppointmentStatus::Booked->value)->withinDay('starts_at', today())->value('id'),
             ])->values(),
             'doctors' => Staff::role(['doctor', 'locum_doctor'])->orderBy('name')->get(['id', 'name']),
             'leftReasons' => array_map(fn (LeftReason $r) => $r->value, LeftReason::cases()),

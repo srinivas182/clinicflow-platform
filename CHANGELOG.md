@@ -4,6 +4,17 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.61.0] — Sprint P1: performance
+
+### Changed
+- Every request makes fewer database queries (about 8 → 5): staff permissions load once per request (kept on the request, never shared between requests under Octane); the practice lookup by domain is cached for 5 minutes and cleared immediately in the platform context whenever a practice or its domains change (including bulk updates), so suspensions and brand changes apply on the next request; the active-branch count is cached and cleared when branches change.
+- Reports page: 30 → 10 queries.
+- Queue, booking and portal queries no longer wrap dates in DATE() (which stops MySQL using its index): 13 visit-date filters, 4 appointment-day filters and 1 "from today" filter now use the indexes, so they stay fast as visit history grows.
+- nginx: gzip compression (text responses 3–5x smaller) and pre-compressed files; built assets cached for a year (immutable), other static files for a week; keep-alive tuning, open-file cache, larger FastCGI buffers.
+
+### Measured (250 patients, 120 in today's queue, local, without Octane)
+- Busiest screens respond in 11–43 ms with 6–14 queries; nothing grows with the number of patients.
+
 ## [0.60.0] — Sprint E1: branded error pages
 
 ### Added

@@ -8,7 +8,7 @@ return [
      * Platform release version. Bumped on every release (see CHANGELOG.md)
      * and reported by GET /api/v1/health.
      */
-    'version' => env('CLINICFLOW_VERSION', '0.60.0'),
+    'version' => env('CLINICFLOW_VERSION', '0.61.0'),
 
     /*
      * Hosting region. All patient data must stay in South Africa (POPIA s72).
@@ -101,5 +101,10 @@ return [
         'lab_messages' => (int) env('RETENTION_LAB_MESSAGES_DAYS', 365),
         'messages' => (int) env('RETENTION_MESSAGES_DAYS', 730),
         'audit' => (int) env('RETENTION_AUDIT_DAYS', 2555),
+    ],
+
+    'performance' => [
+        // Cache the practice lookup by domain (cleared immediately when a practice or its domains change).
+        'cache_tenant_lookup' => (bool) env('CLINICFLOW_CACHE_TENANT_LOOKUP', true),
     ],
 ];

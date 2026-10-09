@@ -1,11 +1,17 @@
 <?php
 
+use App\Domains\Branches\Models\Branch;
+use App\Domains\Branches\Support\BranchContext;
+use App\Domains\Identity\Actions\AddStaffMember;
+use App\Domains\Identity\Enums\StaffRole;
 use App\Domains\Platform\Actions\ProviderGroups;
 use App\Domains\Platform\Enums\ProviderType;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\ProviderGroup;
+use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\Schema;
+use Stancl\Tenancy\Resolvers\DomainTenantResolver;
 
 uses(DatabaseMigrations::class);
 
@@ -41,4 +47,24 @@ it('caches the group dashboard for five minutes', function (): void {
     $this->travel(6)->minutes();
     $fresh = app(ProviderGroups::class)->dashboard($group->fresh(), now()->startOfMonth()->toDateString(), now()->toDateString());
     expect($fresh[0]['new_patients'])->toBe($first[0]['new_patients'] + 1);
+});
+
+it('caches the practice lookup but shows a changed practice on the very next request', function (): void {
+    expect(DomainTenantResolver::$shouldCache)->toBeTrue();
+    $owner = User::factory()->create();
+    app(AddStaffMember::class)->handle($this->clinic, $owner, StaffRole::Owner);
+    $this->actingAs($owner)->get('http://sunrise.clinicflow.test/workspace')->assertInertia(fn ($p) => $p->where('provider.name', 'Sunrise Medical Centre'));
+
+    $this->clinic->forceFill(['name' => 'Sunrise Family Practice'])->save();
+    tenancy()->end();
+    $this->actingAs($owner)->get('http://sunrise.clinicflow.test/workspace')->assertInertia(fn ($p) => $p->where('provider.name', 'Sunrise Family Practice'));
+});
+
+it('updates the cached branch count as soon as a branch is added', function (): void {
+    $this->clinic->run(function (): void {
+        // Every practice starts with a "Main" branch; adding one must show up immediately.
+        $before = BranchContext::activeCount();
+        Branch::query()->create(['name' => 'Northside', 'active' => true]);
+        expect(BranchContext::activeCount())->toBe($before + 1);
+    });
 });
