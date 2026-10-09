@@ -11,6 +11,10 @@ Suited to a pilot or staging site. National production needs the infrastructure 
 | Code updates | `bash deploy.sh` (pulls the `deploy` branch: code + built front end) |
 | Settings template | `.env.cpanel.example` |
 
+## First super admin
+
+`php artisan clinicflow:create-admin` — asks for name, email, mobile and a password (typed hidden). Never run the demo seeder on a live site; `php artisan db:seed --force` is safe (production loads packages and website pages only).
+
 ## Cron jobs (cPanel → Cron Jobs)
 
 | When | Command |
