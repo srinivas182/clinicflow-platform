@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Domains\Platform\Models\Provider;
+use App\Domains\Platform\Tenancy\CpanelDatabaseManager;
 use Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper;
 use Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper;
 use Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper;
@@ -67,8 +68,9 @@ return [
          */
         'managers' => [
             'sqlite' => SQLiteDatabaseManager::class,
-            'mysql' => MySQLDatabaseManager::class,
-            'mariadb' => MySQLDatabaseManager::class,
+            // TENANCY_DB_MANAGER=cpanel on shared cPanel hosting (databases created through cPanel's API).
+            'mysql' => env('TENANCY_DB_MANAGER') === 'cpanel' ? CpanelDatabaseManager::class : MySQLDatabaseManager::class,
+            'mariadb' => env('TENANCY_DB_MANAGER') === 'cpanel' ? CpanelDatabaseManager::class : MySQLDatabaseManager::class,
             'pgsql' => PostgreSQLDatabaseManager::class,
 
         /**

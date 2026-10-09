@@ -4,6 +4,15 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.62.0] — Sprint D0: cPanel hosting compatibility
+
+### Added
+- Practice databases on shared cPanel hosting: created and granted through cPanel's API (TENANCY_DB_MANAGER=cpanel, CPANEL_* settings), since shared accounts may not run CREATE DATABASE.
+- "deploy" branch built automatically after every merge (code + built front end), so hosting without Node can run the app; `deploy.sh` updates a cPanel install in one command (pull, install, migrate all databases, refresh caches, security check).
+- Apache/LiteSpeed security rules in public/.htaccess mirroring nginx: hidden files, PHP files other than index.php, and backups, archives, logs, dumps and config files are refused; long-term caching for built assets; compression.
+- `.env.cpanel.example` and docs/deploy/cpanel.md (paths, cron jobs, limits on shared hosting).
+- Manual "Compatibility" workflow: full test suite on MariaDB 10.11 + PHP 8.4 and MySQL 8.4 + PHP 8.5.
+
 ## [0.61.0] — Sprint P1: performance
 
 ### Changed
