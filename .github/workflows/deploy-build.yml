@@ -1,0 +1,42 @@
+name: Deploy build
+
+# Publishes the "deploy" branch = main + the built front end (public/build), for hosting without Node
+# (cPanel). The server pulls this branch with deploy.sh. Runs after every merge to main.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+
+      - name: Publish the deploy branch
+        run: |
+          git config user.name "clinicflow-build"
+          git config user.email "clinicflow-build@users.noreply.github.com"
+          git checkout -B deploy
+          git add -f public/build
+          git commit -m "build: front end for ${GITHUB_SHA::8}"
+          git push -f origin deploy
