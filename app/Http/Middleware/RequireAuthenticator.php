@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Domains\Identity\Actions\Authenticator;
+use App\Domains\Identity\Support\TwoFactorPolicy;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
@@ -21,7 +22,8 @@ class RequireAuthenticator
     public function handle(Request $request, Closure $next): Response
     {
         $user = Auth::guard('web')->user();
-        if (! $user instanceof User || $user->totp_confirmed_at !== null || $request->routeIs('account.security*', 'logout', 'login*')
+        if (! TwoFactorPolicy::enabled() || ! in_array('authenticator', TwoFactorPolicy::methods(), true)
+            || ! $user instanceof User || $user->totp_confirmed_at !== null || $request->routeIs('account.security*', 'logout', 'login*')
             || ! app(Authenticator::class)->required($user)) {
             return $next($request);
         }

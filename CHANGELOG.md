@@ -11,8 +11,10 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 - Free packages, listed first with no trial: Clinic Free, Doctor Free, Pharmacy Free, Lab Free.
 - `clinicflow:create-admin` now sets up the authenticator app in the terminal (setup key, one confirming code, ten recovery codes shown once), so the first sign-in needs no SMS or email. `clinicflow:setup-authenticator <email>` does the same for an existing account.
 
+- Admin → Security: two-step sign-in on or off (off by default, CLINICFLOW_TWO_FACTOR) and the order of methods (authenticator app, email, SMS); each person gets the first method that works for them. Changing it needs step-up confirmation, is audited, and is refused if the admin could not sign in with the new settings. When off, staff sign in with a password only and no authenticator set-up is forced; security:check flags it.
+
 ### Changed
-- Staff sign-in codes go by SMS when an SMS supplier is set up, otherwise by email (CLINICFLOW_SIGNIN_CODE_CHANNEL=auto|sms|email). Previously SMS only, which blocked sign-in before SMS was configured.
+- Staff sign-in codes follow the chosen method order and go by email until an SMS supplier is set up (previously SMS only, which blocked sign-in before SMS was configured).
 
 ## [0.63.0] — Sprint D0-2: create the first super admin
 

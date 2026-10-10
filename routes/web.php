@@ -22,6 +22,7 @@ use App\Domains\Platform\Http\Controllers\GroupController;
 use App\Domains\Platform\Http\Controllers\PricingController;
 use App\Domains\Platform\Http\Controllers\PublicSiteController;
 use App\Domains\Platform\Http\Controllers\ResellerController;
+use App\Domains\Platform\Http\Controllers\SecuritySettingsController;
 use App\Domains\Platform\Http\Controllers\SignupController;
 use App\Domains\Platform\Http\Controllers\StatusController;
 use App\Domains\Platform\Http\Controllers\StorageController;
@@ -109,6 +110,8 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/locums', [LocumController::class, 'admin'])->name('locums.index');
             Route::get('/ai-scribe', [ScribeController::class, 'admin'])->name('ai-scribe.index');
             Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
+            Route::get('/security', [SecuritySettingsController::class, 'index'])->name('security.index');
+            Route::post('/security', [SecuritySettingsController::class, 'update'])->middleware('step-up')->name('security.update');
             Route::get('/storage', [StorageController::class, 'index'])->name('storage.index');
             Route::post('/storage', [StorageController::class, 'save'])->name('storage.save');
             Route::post('/storage/{target}/{action}', [StorageController::class, 'act'])->whereIn('action', ['test', 'activate'])->name('storage.act');

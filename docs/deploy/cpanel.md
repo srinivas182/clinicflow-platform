@@ -15,6 +15,10 @@ Suited to a pilot or staging site. National production needs the infrastructure 
 
 `php artisan clinicflow:create-admin` — asks for name, email, mobile and a password (typed hidden), then sets up the authenticator app so the first sign-in needs no SMS or email. Never run the demo seeder on a live site; `php artisan db:seed --force` is safe (production loads packages and website pages only).
 
+## Two-step sign-in
+
+Off by default (good for a demo). Admin → Security switches it on and sets the method order (authenticator app, email, SMS). Switch it on before real patient data; `security:check` reminds you while it is off.
+
 ## Demo data
 
 `php artisan clinicflow:demo --email=you@example.com` creates a demo clinic, pharmacy and lab (free packages, every role, sample patients); `--remove` deletes them. Sign-in codes go by email until an SMS supplier is added (cPanel mailbox as an SMTP provider in Admin → Messaging).

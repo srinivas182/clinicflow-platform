@@ -72,8 +72,9 @@ return [
 
     // Super admins, owners and practice admins must use an authenticator app (off in the test configuration).
     'security' => [
-        // Where staff sign-in codes go: auto (SMS if an SMS supplier is set up, otherwise email), sms or email.
-        'signin_code_channel' => env('CLINICFLOW_SIGNIN_CODE_CHANNEL', 'auto'),
+        // Two-step sign-in default until the super admin sets it (Admin → Security). Off suits a demo;
+        // switch it on before real patient data.
+        'two_factor_default' => (bool) env('CLINICFLOW_TWO_FACTOR', false),
         'require_authenticator_for_admins' => (bool) env('CLINICFLOW_REQUIRE_AUTHENTICATOR', true),
         // Refuse passwords known from data breaches (privacy-preserving check: only 5 characters of the hash are sent).
         // Content-security policy: null = on in production only; true/false to force. Report-only for a trial period.

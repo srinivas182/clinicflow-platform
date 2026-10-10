@@ -2,6 +2,7 @@
 
 use App\Domains\Identity\Contracts\OtpSender;
 use App\Domains\Messaging\Contracts\MessageSender;
+use App\Domains\Wallet\Support\WalletSettings;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 
@@ -30,8 +31,8 @@ it('emails sign-in codes while no SMS supplier is set up', function (): void {
     expect($this->outbox->sent)->toBe([['email', 'nurse@drbusinessflow.com']]);
 });
 
-it('can be told to always use SMS', function (): void {
-    config(['clinicflow.security.signin_code_channel' => 'sms']);
+it('follows the method order set by the super admin', function (): void {
+    WalletSettings::put('security.two_factor_methods', ['sms', 'email']);
     app(OtpSender::class)->send($this->user, '123456');
     expect($this->outbox->sent)->toBe([['sms', '0821234567']]);
 });
