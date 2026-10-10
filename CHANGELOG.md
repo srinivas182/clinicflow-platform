@@ -4,6 +4,16 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.64.0] — Sprint DEMO: demo data, free packages and first sign-in without SMS
+
+### Added
+- `php artisan clinicflow:demo --email=you@example.com`: a demo clinic, pharmacy and lab on the free packages with an account for every role (emails use plus-addressing on your address, so every sign-in code reaches your inbox), six sample patients, one generated password shown once. `--remove` deletes the demo practices, their databases and the demo accounts only.
+- Free packages, listed first with no trial: Clinic Free, Doctor Free, Pharmacy Free, Lab Free.
+- `clinicflow:create-admin` now sets up the authenticator app in the terminal (setup key, one confirming code, ten recovery codes shown once), so the first sign-in needs no SMS or email. `clinicflow:setup-authenticator <email>` does the same for an existing account.
+
+### Changed
+- Staff sign-in codes go by SMS when an SMS supplier is set up, otherwise by email (CLINICFLOW_SIGNIN_CODE_CHANNEL=auto|sms|email). Previously SMS only, which blocked sign-in before SMS was configured.
+
 ## [0.63.0] — Sprint D0-2: create the first super admin
 
 ### Added

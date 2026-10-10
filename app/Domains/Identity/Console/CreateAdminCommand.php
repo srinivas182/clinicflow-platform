@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Identity\Console;
 
+use App\Domains\Identity\Console\Concerns\SetsUpAuthenticator;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Validator;
@@ -18,7 +19,9 @@ use function Laravel\Prompts\text;
  */
 class CreateAdminCommand extends Command
 {
-    protected $signature = 'clinicflow:create-admin {--name=} {--email=} {--phone=}';
+    use SetsUpAuthenticator;
+
+    protected $signature = 'clinicflow:create-admin {--name=} {--email=} {--phone=} {--skip-authenticator : Set up the authenticator app later (first sign-in then needs an SMS or email code)}';
 
     protected $description = 'Create a platform super admin';
 
@@ -49,7 +52,11 @@ class CreateAdminCommand extends Command
         $user = new User;
         $user->forceFill(['name' => $name, 'email' => $email, 'phone' => $phone, 'password' => $secret, 'is_platform_admin' => true])->save();
         activity('auth')->causedBy($user)->log('Super admin created from the command line');
-        $this->info("Super admin {$email} created. Sign in at ".rtrim((string) config('app.url'), '/').'/login — you will be asked to set up an authenticator app.');
+        $this->info("Super admin {$email} created.");
+        if (! $this->option('skip-authenticator')) {
+            $this->setUpAuthenticator($user);
+        }
+        $this->info('Sign in at '.rtrim((string) config('app.url'), '/').'/login');
 
         return self::SUCCESS;
     }

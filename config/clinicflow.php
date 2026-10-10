@@ -8,7 +8,7 @@ return [
      * Platform release version. Bumped on every release (see CHANGELOG.md)
      * and reported by GET /api/v1/health.
      */
-    'version' => env('CLINICFLOW_VERSION', '0.63.0'),
+    'version' => env('CLINICFLOW_VERSION', '0.64.0'),
 
     /*
      * Hosting region. All patient data must stay in South Africa (POPIA s72).
@@ -72,6 +72,8 @@ return [
 
     // Super admins, owners and practice admins must use an authenticator app (off in the test configuration).
     'security' => [
+        // Where staff sign-in codes go: auto (SMS if an SMS supplier is set up, otherwise email), sms or email.
+        'signin_code_channel' => env('CLINICFLOW_SIGNIN_CODE_CHANNEL', 'auto'),
         'require_authenticator_for_admins' => (bool) env('CLINICFLOW_REQUIRE_AUTHENTICATOR', true),
         // Refuse passwords known from data breaches (privacy-preserving check: only 5 characters of the hash are sent).
         // Content-security policy: null = on in production only; true/false to force. Report-only for a trial period.
