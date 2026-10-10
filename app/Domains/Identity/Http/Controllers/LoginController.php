@@ -10,8 +10,11 @@ use App\Domains\Identity\Actions\TrustedDevices;
 use App\Domains\Identity\Actions\VerifyLoginChallenge;
 use App\Domains\Identity\Http\Requests\LoginRequest;
 use App\Domains\Identity\Models\LoginChallenge;
+use App\Domains\Identity\Models\Membership;
 use App\Domains\Identity\Support\TwoFactorPolicy;
+use App\Domains\Platform\Models\Provider;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,9 +26,35 @@ use Inertia\Response;
  */
 class LoginController extends Controller
 {
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return Inertia::render('Auth/Login');
+        // "Staff sign in" from a practice's own address: remember it, and show its name.
+        $practice = null;
+        $id = $request->query('practice');
+        if (is_string($id) && $id !== '') {
+            $provider = Provider::query()->whereKey($id)->first();
+            if ($provider instanceof Provider) {
+                $request->session()->put('login.practice', (string) $provider->id);
+                $practice = (string) $provider->getAttribute('name');
+            }
+        }
+
+        return Inertia::render('Auth/Login', ['practice' => $practice]);
+    }
+
+    /** Where to go after signing in: the practice they came from, the admin area, or the workspace chooser. */
+    private function home(Request $request, User $user): RedirectResponse
+    {
+        $practice = (string) $request->session()->pull('login.practice', '');
+        $memberships = Membership::query()->where('user_id', $user->id)->usable();
+        if ($practice !== '' && (clone $memberships)->where('tenant_id', $practice)->exists()) {
+            return redirect()->route('workspaces', ['open' => $practice]);
+        }
+        if ((bool) $user->is_platform_admin && ! (clone $memberships)->exists()) {
+            return redirect()->route('admin.providers.index');
+        }
+
+        return redirect()->route('workspaces');
     }
 
     public function store(LoginRequest $request, StartLogin $action): RedirectResponse
@@ -42,7 +71,7 @@ class LoginController extends Controller
             activity('auth')->causedBy($user)->log($twoStepOff ? 'Signed in (two-step sign-in is off)' : 'Signed in on a trusted device');
             app(RecordSignIn::class)->handle($user, (string) $request->ip(), (string) $request->userAgent());
 
-            return redirect()->route('workspaces');
+            return $this->home($request, $user);
         }
         $challenge = $action->challenge($user, $request->ip());
 
@@ -73,7 +102,7 @@ class LoginController extends Controller
         $request->session()->forget('login_challenge');
         $request->session()->regenerate();
         app(RecordSignIn::class)->handle($user, (string) $request->ip(), (string) $request->userAgent());
-        $response = redirect()->route('workspaces');
+        $response = $this->home($request, $user);
         $devices = app(TrustedDevices::class);
         if ($request->boolean('trust_device') && $devices->allowed($user)) {
             $response->withCookie($devices->remember($user, (string) $request->userAgent()));

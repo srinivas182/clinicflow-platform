@@ -70,7 +70,7 @@ final class PlatformWebsite
                         ]],
                     ['type' => 'split', 'heading' => 'Your data stays yours — and stays in South Africa', 'image' => '/images/site/secure-data.svg',
                         'text' => 'Each provider has a separate database. Patient records, scripts and money never mix with another practice.',
-                        'bullets' => ['Hosted in AWS Cape Town (af-south-1)', 'A separate database for every provider', 'Append-only audit trail of every sensitive action', 'POPIA export of everything held about a patient', 'Read-only, never deleted, if a subscription lapses']],
+                        'bullets' => ['Hosted in South Africa', 'A separate database for every provider', 'Append-only audit trail of every sensitive action', 'POPIA export of everything held about a patient', 'Read-only, never deleted, if a subscription lapses']],
                     ['type' => 'faq', 'heading' => 'Questions practices ask',
                         'items' => [
                             ['question' => 'Do patient payments go through Clinic Flow?', 'answer' => 'No. Patients pay your practice directly through your own merchant account. Clinic Flow only charges your subscription and the add-ons you switch on.'],

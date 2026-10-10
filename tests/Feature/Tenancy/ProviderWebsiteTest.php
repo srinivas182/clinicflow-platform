@@ -38,7 +38,8 @@ it('gives every new provider a default website suited to its type', function ():
             ->where('sections.0.heading', 'Welcome to Sunrise Medical Centre')
             ->where('sections.0.primary.href', '/portal')
             ->where('site.menu.1.href', '/p/services')
-            ->where('site.footer.0.href', '/workspace'));
+            // Staff sign in goes to the central sign-in for this practice (it opens the practice afterwards).
+            ->where('site.footer.0.href', fn ($href) => str_contains((string) $href, '/login?practice=')));
 
     $this->get('http://vilakazi.clinicflow.test/')
         ->assertInertia(fn (AssertableInertia $page) => $page->where('sections.0.primary.label', 'Track my medicine'));

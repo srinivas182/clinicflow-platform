@@ -18,7 +18,8 @@ it('publishes a complete default clinicflow.co.za with menus and images', functi
             ->where('sections.0.image', '/images/site/hero-network.svg')
             ->where('site.menu.0.label', 'For clinics')
             ->where('site.cta.href', '/start')
-            ->has('site.menu', 8));
+            ->has('site.menu', 9)
+            ->where('site.menu.8.href', '/login'));
 
     $this->get('http://localhost/pages/for-doctors')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->component('Public/Site'));
     expect(file_exists(public_path('images/site/hero-network.svg')))->toBeTrue();

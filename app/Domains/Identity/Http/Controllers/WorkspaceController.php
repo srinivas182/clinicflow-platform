@@ -40,6 +40,9 @@ class WorkspaceController extends Controller
         return Inertia::render('Auth/Workspaces', [
             'userName' => $user->name,
             'workspaces' => $workspaces,
+            'isPlatformAdmin' => (bool) $user->is_platform_admin,
+            // Arriving from a practice's "Staff sign in": open that practice straight away.
+            'autoOpen' => is_string($request->query('open')) && $workspaces->contains('providerId', $request->query('open')) ? $request->query('open') : null,
         ]);
     }
 

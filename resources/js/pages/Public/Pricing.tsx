@@ -1,9 +1,10 @@
-import { Head, Link } from "@inertiajs/react";
+import { Link } from "@inertiajs/react";
 import { Check } from "lucide-react";
 import { useState } from "react";
-import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui";
 import { rand } from "@/lib/money";
+import { SiteLayout } from "@/components/site/SiteLayout";
+import type { SiteInfo } from "@/components/site/types";
 
 export interface PackageOption {
     id: number;
@@ -27,22 +28,23 @@ const types = [
 export const featureLabel = (f: string) =>
     f.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 
-export default function Pricing({ packages }: { packages: PackageOption[] }) {
+export default function Pricing({
+    packages,
+    site,
+}: {
+    packages: PackageOption[];
+    site: SiteInfo;
+}) {
     const [type, setType] = useState("clinic");
     const [annual, setAnnual] = useState(false);
     const shown = packages.filter((p) => p.providerType === type);
 
     return (
-        <div className="min-h-screen bg-surface">
-            <Head title="Pricing" />
-            <header className="flex items-center border-b border-line-soft px-10 py-4">
-                <Link href="/">
-                    <Logo />
-                </Link>
-                <Link href="/login" className="ml-auto text-sm">
-                    Sign in
-                </Link>
-            </header>
+        <SiteLayout
+            site={site}
+            title="Pricing"
+            description="Clinic Flow packages and prices, including free packages."
+        >
             <main className="mx-auto max-w-6xl px-6 py-12">
                 <h1 className="text-4xl font-semibold tracking-tight">
                     Pricing that grows with your practice
@@ -121,6 +123,6 @@ export default function Pricing({ packages }: { packages: PackageOption[] }) {
                     ))}
                 </div>
             </main>
-        </div>
+        </SiteLayout>
     );
 }

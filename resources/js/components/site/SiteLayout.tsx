@@ -53,6 +53,13 @@ export function SiteLayout({
                                 {m.label}
                             </a>
                         ))}
+                        <a
+                            href={site.cta.href}
+                            className="mt-2 rounded-lg px-4 py-2 text-center text-sm font-semibold text-white md:hidden"
+                            style={{ background: site.colour }}
+                        >
+                            {site.cta.label}
+                        </a>
                     </nav>
                     <a
                         href={site.cta.href}
