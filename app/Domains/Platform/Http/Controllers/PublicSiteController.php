@@ -50,7 +50,7 @@ class PublicSiteController extends Controller
             }
         }
 
-        return Inertia::render('Public/Directory', ['providers' => $rows, 'q' => $term, 'type' => $type]);
+        return Inertia::render('Public/Directory', ['providers' => $rows, 'q' => $term, 'type' => $type, 'site' => SiteData::platformSite()]);
     }
 
     private function render(CmsPage $page): Response
@@ -60,6 +60,7 @@ class PublicSiteController extends Controller
         }
 
         return Inertia::render('Public/Page', [
+            'site' => SiteData::platformSite(),
             'title' => $page->title,
             'description' => $page->meta_description,
             'html' => TemplateRenderer::sanitise($page->body),

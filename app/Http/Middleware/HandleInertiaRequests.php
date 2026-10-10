@@ -33,6 +33,7 @@ class HandleInertiaRequests extends Middleware
                 'name' => config('app.name'),
                 'version' => config('clinicflow.version'),
             ],
+            'centralUrl' => rtrim((string) config('app.url'), '/'),
             'auth' => [
                 'user' => $user instanceof User ? ['name' => $user->name, 'email' => $user->email] : null,
             ],

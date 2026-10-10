@@ -1,7 +1,7 @@
 import { Head } from "@inertiajs/react";
-import { Menu } from "lucide-react";
+import { ChevronDown, Menu } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import type { SiteInfo } from "./types";
+import type { SiteInfo, SiteLink } from "./types";
 
 export function SiteLayout({
     site,
@@ -42,17 +42,19 @@ export function SiteLayout({
                     </a>
                     <nav
                         aria-label="Main"
-                        className={`${open ? "flex" : "hidden"} absolute top-16 right-0 left-0 flex-col gap-1 border-b border-line bg-surface p-4 md:static md:flex md:flex-row md:border-0 md:p-0`}
+                        className={`${open ? "flex" : "hidden"} absolute top-16 right-0 left-0 flex-col gap-1 border-b border-line bg-surface p-4 md:static md:flex md:flex-1 md:flex-row md:items-center md:border-0 md:p-0`}
                     >
                         {site.menu.map((m) => (
-                            <a
-                                key={m.href}
-                                href={m.href}
-                                className="rounded-md px-3 py-2 text-sm text-muted hover:text-ink"
-                            >
-                                {m.label}
-                            </a>
+                            <NavItem key={m.label} item={m} />
                         ))}
+                        {site.signIn && (
+                            <a
+                                href={site.signIn.href}
+                                className="rounded-md px-3 py-2 text-sm font-medium text-muted hover:text-ink md:hidden"
+                            >
+                                {site.signIn.label}
+                            </a>
+                        )}
                         <a
                             href={site.cta.href}
                             className="mt-2 rounded-lg px-4 py-2 text-center text-sm font-semibold text-white md:hidden"
@@ -61,16 +63,27 @@ export function SiteLayout({
                             {site.cta.label}
                         </a>
                     </nav>
-                    <a
-                        href={site.cta.href}
-                        className="ml-auto hidden rounded-lg px-4 py-2 text-sm font-semibold text-white md:inline-block"
-                        style={{ background: site.colour }}
-                    >
-                        {site.cta.label}
-                    </a>
+                    <div className="ml-auto hidden items-center gap-2 md:flex">
+                        {site.signIn && (
+                            <a
+                                href={site.signIn.href}
+                                className="rounded-md px-3 py-2 text-sm font-medium text-muted hover:text-ink"
+                            >
+                                {site.signIn.label}
+                            </a>
+                        )}
+                        <a
+                            href={site.cta.href}
+                            className="rounded-lg px-4 py-2 text-sm font-semibold text-white"
+                            style={{ background: site.colour }}
+                        >
+                            {site.cta.label}
+                        </a>
+                    </div>
                     <button
                         type="button"
                         aria-label="Menu"
+                        aria-expanded={open}
                         className="ml-auto md:hidden"
                         onClick={() => setOpen(!open)}
                     >
@@ -100,6 +113,58 @@ export function SiteLayout({
                     )}
                 </div>
             </footer>
+        </div>
+    );
+}
+
+/** A menu entry; with children it opens a dropdown (hover or click on desktop, tap on phones). */
+function NavItem({ item }: { item: SiteLink }) {
+    const [open, setOpen] = useState(false);
+    const link =
+        "rounded-md px-3 py-2 text-sm font-medium text-muted hover:text-ink";
+    if (!item.children?.length) {
+        return (
+            <a href={item.href} className={link}>
+                {item.label}
+            </a>
+        );
+    }
+
+    return (
+        <div
+            className="relative"
+            onMouseEnter={() => setOpen(true)}
+            onMouseLeave={() => setOpen(false)}
+            onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
+        >
+            <button
+                type="button"
+                aria-expanded={open}
+                aria-haspopup="true"
+                onClick={() => setOpen((o) => !o)}
+                className={`flex w-full items-center gap-1 ${link}`}
+            >
+                {item.label}
+                <ChevronDown
+                    className={`size-4 transition-transform ${open ? "rotate-180" : ""}`}
+                    aria-hidden="true"
+                />
+            </button>
+            <div
+                className={`${open ? "block" : "hidden"} pl-3 md:absolute md:top-full md:left-0 md:z-30 md:pt-2 md:pl-0`}
+            >
+                <div className="md:min-w-56 md:rounded-xl md:border md:border-line md:bg-surface md:p-2 md:shadow-lg">
+                    {item.children.map((c) => (
+                        <a
+                            key={c.href}
+                            href={c.href}
+                            className="block rounded-md px-3 py-2 text-sm text-muted hover:bg-line-soft hover:text-ink"
+                        >
+                            {c.label}
+                        </a>
+                    ))}
+                </div>
+            </div>
         </div>
     );
 }

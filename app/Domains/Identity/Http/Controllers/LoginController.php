@@ -119,4 +119,18 @@ class LoginController extends Controller
 
         return redirect()->route('login');
     }
+
+    /** Ends the central session after a practice sign-out (signed link, only for the person it was made for). */
+    public function signedOut(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        if ($user instanceof User && (string) $user->id === (string) $request->query('user')) {
+            activity('auth')->causedBy($user)->log('Signed out');
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
+        return redirect('/login')->with('success', 'You have been signed out.');
+    }
 }

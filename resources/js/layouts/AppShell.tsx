@@ -1,3 +1,4 @@
+import { AccountMenu } from "@/components/AccountMenu";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Link, router, usePage } from "@inertiajs/react";
@@ -227,6 +228,7 @@ export function AppShell({
                     ))}
                 </nav>
                 <ThemeToggle className="mt-3 self-start" />
+                <AccountMenu area="practice" />
             </aside>
             <div className="flex min-w-0 flex-1 flex-col">
                 <header className="flex h-15 items-center gap-3 border-b border-line bg-surface px-6">
