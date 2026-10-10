@@ -1,0 +1,1 @@
+function e(e,t=0){let[n,r]=e.toFixed(t).split(`.`);return`R${(n??`0`).replace(/\B(?=(\d{3})+(?!\d))/g,` `)}${r?`.${r}`:``}`}export{e as t};

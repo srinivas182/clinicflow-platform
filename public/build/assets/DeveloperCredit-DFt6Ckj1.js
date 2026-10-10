@@ -1,0 +1,1 @@
+import{o as e,t}from"./app-DFFivq0v.js";var n=t();function r({className:t=``}){let r=e().props.credit;return r?.text?(0,n.jsx)(`p`,{className:`text-center text-xs text-muted ${t}`,children:(0,n.jsx)(`a`,{href:r.url,target:`_blank`,rel:`noopener`,className:`hover:text-ink hover:underline`,children:r.text})}):null}export{r as t};
