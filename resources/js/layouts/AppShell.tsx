@@ -1,3 +1,4 @@
+import { ResponsiveTables } from "@/components/ResponsiveTables";
 import { DeveloperCredit } from "@/components/DeveloperCredit";
 import { AccountMenu } from "@/components/AccountMenu";
 import { useEffect, useState } from "react";
@@ -268,6 +269,7 @@ export function AppShell({
                     className="min-w-0 flex-1 px-4 py-5 md:px-6 md:py-6"
                 >
                     {children}
+                    <ResponsiveTables />
                     <DeveloperCredit className="mt-10 pb-2" />
                 </main>
             </div>
