@@ -151,7 +151,7 @@ Route::middleware([
     // Patient portal (patients sign in with their cell number and an SMS code).
     Route::prefix('my')->name('portal.')->group(function (): void {
         Route::get('/login', [PortalController::class, 'login'])->name('login');
-        Route::post('/login', [PortalController::class, 'start'])->middleware('throttle:5,1')->name('start');
+        Route::post('/login', [PortalController::class, 'start'])->middleware(['throttle:5,1', 'human'])->name('start');
         Route::get('/verify', [PortalController::class, 'verifyForm'])->name('verify');
         Route::post('/verify', [PortalController::class, 'verify'])->middleware('throttle:10,1')->name('verify.store');
         Route::middleware(EnsurePortalPatient::class)->group(function (): void {

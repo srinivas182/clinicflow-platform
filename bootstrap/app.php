@@ -11,6 +11,7 @@ use App\Http\Middleware\RequireRecentConfirmation;
 use App\Http\Middleware\ScanUploads;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\TrackRecordAccess;
+use App\Http\Middleware\VerifyHuman;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -56,6 +57,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api.key' => AuthenticateApiKey::class,
             'step-up' => RequireRecentConfirmation::class,
             'record-access' => TrackRecordAccess::class,
+            'human' => VerifyHuman::class,
         ]);
         $middleware->web(append: [
             HandleInertiaRequests::class,

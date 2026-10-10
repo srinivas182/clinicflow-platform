@@ -1,3 +1,4 @@
+import { HumanCheck } from "@/components/HumanCheck";
 import { Head, useForm } from "@inertiajs/react";
 import type { FormEvent } from "react";
 import { Checkbox, Field } from "@/components/form/Field";
@@ -25,6 +26,7 @@ export default function Start({
     const initial = packages.find((p) => p.id === preselected) ?? packages[0];
 
     const form = useForm({
+        "cf-turnstile-response": "",
         name: "",
         type: initial?.providerType ?? "clinic",
         subdomain: "",
@@ -246,6 +248,12 @@ export default function Start({
                         checked={form.data.accept_terms}
                         onChange={(v) => form.setData("accept_terms", v)}
                         error={e.accept_terms}
+                    />
+                    <HumanCheck
+                        onToken={(t) =>
+                            form.setData("cf-turnstile-response", t)
+                        }
+                        error={(form.errors as Record<string, string>).human}
                     />
                     <Button
                         type="submit"

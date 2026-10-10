@@ -21,6 +21,7 @@ export interface SharedProps {
         newApiKey?: string | null;
     };
     errors: Record<string, string>;
+    botProtection?: { siteKey: string } | null;
     brand?: {
         name: string;
         logo: string | null;

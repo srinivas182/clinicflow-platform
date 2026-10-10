@@ -7,6 +7,7 @@ namespace App\Http\Middleware;
 use App\Domains\Branches\Support\BranchContext;
 use App\Domains\Platform\Branding\Brands;
 use App\Domains\Platform\Models\Provider;
+use App\Domains\Platform\Security\BotProtection;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -49,6 +50,8 @@ class HandleInertiaRequests extends Middleware
                 // Staff, patients (portal) and the waiting-room display each sign in to channels differently.
                 'auth' => $request->is('my', 'my/*') ? '/my/broadcasting/auth'
                     : ($request->routeIs('display') ? '/display/'.$request->route('token').'/broadcasting/auth' : '/broadcasting/auth')] : null,
+            // Cloudflare Turnstile on public forms (Admin → Security).
+            'botProtection' => BotProtection::enabled() ? ['siteKey' => BotProtection::siteKey()] : null,
             'brand' => app(Brands::class)->forDisplay($provider instanceof Provider ? $provider : null,
                 is_string($request->cookie(Brands::COOKIE)) ? (string) $request->cookie(Brands::COOKIE) : null),
             'provider' => $provider instanceof Provider ? [

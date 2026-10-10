@@ -18,6 +18,7 @@ interface Props {
     methods: Method[];
     suppliers: { email: boolean; sms: boolean };
     me: { authenticator: boolean; email: boolean; sms: boolean };
+    bot: { enabled: boolean; siteKey: string; secretSet: boolean };
 }
 
 /** Admin → Security: two-step sign-in on or off, and the order of methods. */
@@ -26,6 +27,7 @@ export default function SecuritySettings({
     methods: initialMethods,
     suppliers,
     me,
+    bot,
 }: Props) {
     const [enabled, setEnabled] = useState(initialEnabled);
     const [order, setOrder] = useState<Method[]>([
@@ -34,6 +36,19 @@ export default function SecuritySettings({
     ]);
     const [included, setIncluded] = useState<Method[]>(initialMethods);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [botOn, setBotOn] = useState(bot.enabled);
+    const [siteKey, setSiteKey] = useState(bot.siteKey);
+    const [secret, setSecret] = useState("");
+    const saveBot = () =>
+        router.post(
+            "/admin/security/bot",
+            { enabled: botOn, site_key: siteKey, secret },
+            {
+                preserveScroll: true,
+                onSuccess: () => setSecret(""),
+                onError: (err) => setErrors(err),
+            },
+        );
     const move = (i: number, d: -1 | 1) =>
         setOrder((o) => {
             const n = [...o];
@@ -154,6 +169,72 @@ export default function SecuritySettings({
                 )}
                 <div className="mt-4">
                     <Button onClick={save}>Save</Button>
+                </div>
+            </Card>
+            <Card
+                title="Bot protection"
+                className="mt-4"
+                aside={
+                    <Badge tone={bot.enabled ? "success" : "neutral"}>
+                        {bot.enabled ? "on" : "off"}
+                    </Badge>
+                }
+            >
+                <p className="mb-3 text-sm text-muted">
+                    Cloudflare Turnstile on sign-in, sign-up, forgot password
+                    and patient portal sign-in — for the main website and every
+                    practice website. Usually invisible to real people. If
+                    Cloudflare cannot be reached, forms keep working.
+                </p>
+                <label className="mb-3 flex items-center gap-2 text-sm">
+                    <input
+                        type="checkbox"
+                        className="accent-teal"
+                        checked={botOn}
+                        onChange={(e) => setBotOn(e.target.checked)}
+                    />
+                    Require the security check on public forms
+                </label>
+                <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="text-sm">
+                        Site key
+                        <input
+                            aria-label="Turnstile site key"
+                            className="mt-1 w-full rounded-md border border-line px-2 py-1 font-mono text-xs"
+                            value={siteKey}
+                            onChange={(e) => setSiteKey(e.target.value)}
+                        />
+                    </label>
+                    <label className="text-sm">
+                        Secret key
+                        <input
+                            aria-label="Turnstile secret key"
+                            type="password"
+                            autoComplete="off"
+                            className="mt-1 w-full rounded-md border border-line px-2 py-1 font-mono text-xs"
+                            placeholder={
+                                bot.secretSet
+                                    ? "Saved — leave empty to keep"
+                                    : ""
+                            }
+                            value={secret}
+                            onChange={(e) => setSecret(e.target.value)}
+                        />
+                    </label>
+                </div>
+                <p className="mt-2 text-xs text-muted">
+                    Get both keys free at dash.cloudflare.com → Turnstile → Add
+                    site (add drbusinessflow.com; practice subdomains are
+                    covered). The secret key is stored encrypted and never shown
+                    again.
+                </p>
+                {errors.bot && (
+                    <p role="alert" className="mt-3 text-sm text-status-danger">
+                        {errors.bot}
+                    </p>
+                )}
+                <div className="mt-4">
+                    <Button onClick={saveBot}>Save bot protection</Button>
                 </div>
             </Card>
         </AdminShell>

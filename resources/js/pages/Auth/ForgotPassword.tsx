@@ -1,10 +1,11 @@
+import { HumanCheck } from "@/components/HumanCheck";
 import { Head, Link, useForm } from "@inertiajs/react";
 import { Flash } from "@/components/Flash";
 import { Button, Card } from "@/components/ui";
 
 /** "Forgot your password?" — sends a single-use reset link by email. */
 export default function ForgotPassword() {
-    const form = useForm({ email: "" });
+    const form = useForm({ "cf-turnstile-response": "", email: "" });
 
     return (
         <div className="mx-auto max-w-md px-6 py-16">
@@ -40,6 +41,12 @@ export default function ForgotPassword() {
                             {form.errors.email}
                         </p>
                     )}
+                    <HumanCheck
+                        onToken={(t) =>
+                            form.setData("cf-turnstile-response", t)
+                        }
+                        error={(form.errors as Record<string, string>).human}
+                    />
                     <Button disabled={form.processing || !form.data.email}>
                         Send the link
                     </Button>

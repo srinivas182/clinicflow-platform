@@ -4,6 +4,11 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.68.0] — Sprint W2: bot protection
+
+### Added
+- Bot protection with Cloudflare Turnstile (Admin → Security): one switch for the main website and every practice website, covering sign-in, sign-up, forgot password and patient portal sign-in (each portal attempt sends an SMS code). Usually invisible to real people. The secret key is stored encrypted; switching on needs both keys, step-up confirmation, and is audited. If Cloudflare cannot be reached, forms keep working (logged). The security policy allows Cloudflare's address only while it is on.
+
 ## [0.67.0] — Sprint W1: website and sign-in fixes
 
 ### Fixed

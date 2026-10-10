@@ -1,3 +1,4 @@
+import { HumanCheck } from "@/components/HumanCheck";
 import { Head, Link, useForm } from "@inertiajs/react";
 import type { FormEvent } from "react";
 import { Field } from "@/components/form/Field";
@@ -5,7 +6,11 @@ import { Button } from "@/components/ui";
 import { AuthLayout } from "@/layouts/AuthLayout";
 
 export default function Login({ practice }: { practice?: string | null }) {
-    const form = useForm({ login: "", password: "" });
+    const form = useForm({
+        "cf-turnstile-response": "",
+        login: "",
+        password: "",
+    });
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
@@ -43,6 +48,10 @@ export default function Login({ practice }: { practice?: string | null }) {
                     value={form.data.password}
                     onChange={(e) => form.setData("password", e.target.value)}
                     error={form.errors.password}
+                />
+                <HumanCheck
+                    onToken={(t) => form.setData("cf-turnstile-response", t)}
+                    error={(form.errors as Record<string, string>).human}
                 />
                 <Button type="submit" size="lg" disabled={form.processing}>
                     Continue

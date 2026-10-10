@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Domains\Platform\Security\BotProtection;
 use App\Domains\Telemedicine\Models\VideoConfig;
 use Closure;
 use Illuminate\Http\Request;
@@ -63,14 +64,14 @@ class SecurityHeaders
 
         return implode('; ', array_filter([
             "default-src 'self'",
-            "script-src 'self' 'nonce-{$nonce}'",
+            "script-src 'self' 'nonce-{$nonce}'".$this->turnstile(),
             // React sets some inline style attributes; styles cannot run code.
             "style-src 'self' 'unsafe-inline'",
             "img-src 'self' data: blob: https:",
             "media-src 'self' blob:",
             "font-src 'self' data:",
-            trim("connect-src 'self' {$video} ".$this->realtimeOrigin()),
-            "frame-src 'self'",
+            trim("connect-src 'self' {$video} ".$this->realtimeOrigin()).$this->turnstile(),
+            "frame-src 'self'".$this->turnstile(),
             "frame-ancestors 'self'",
             "object-src 'none'",
             "base-uri 'self'",
@@ -78,6 +79,12 @@ class SecurityHeaders
             "form-action 'self' https:",
             app()->isProduction() ? 'upgrade-insecure-requests' : null,
         ]));
+    }
+
+    /** Cloudflare Turnstile's address, only while bot protection is on. */
+    private function turnstile(): string
+    {
+        return BotProtection::enabled() ? ' '.BotProtection::SCRIPT_HOST : '';
     }
 
     private function realtimeOrigin(): string

@@ -58,15 +58,15 @@ foreach ($centralDomains as $index => $domain) {
         Route::get('/billing/topup/{token}', [WalletController::class, 'pay'])->middleware('throttle:30,1')->name('wallet.pay');
 
         Route::get('/start', [SignupController::class, 'create'])->name('signup');
-        Route::post('/start', [SignupController::class, 'store'])->middleware('throttle:10,1')->name('signup.store');
+        Route::post('/start', [SignupController::class, 'store'])->middleware(['throttle:10,1', 'human'])->name('signup.store');
         Route::get('/start/suggest', [SignupController::class, 'suggest'])->name('signup.suggest');
         Route::get('/start/done/{provider}', [SignupController::class, 'done'])->name('signup.done');
 
         Route::middleware('guest')->group(function (): void {
             Route::get('/login', [LoginController::class, 'create'])->name('login');
-            Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:login')->name('login.store');
+            Route::post('/login', [LoginController::class, 'store'])->middleware(['throttle:login', 'human'])->name('login.store');
             Route::get('/forgot-password', [PasswordResetController::class, 'request'])->name('password.request');
-            Route::post('/forgot-password', [PasswordResetController::class, 'send'])->middleware('throttle:5,1')->name('password.email');
+            Route::post('/forgot-password', [PasswordResetController::class, 'send'])->middleware(['throttle:5,1', 'human'])->name('password.email');
             Route::get('/reset-password/{token}', [PasswordResetController::class, 'edit'])->name('password.reset');
             Route::post('/reset-password', [PasswordResetController::class, 'update'])->middleware('throttle:10,1')->name('password.update');
             Route::get('/login/verify', [LoginController::class, 'verifyForm'])->name('login.verify');
@@ -118,6 +118,7 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/ai-scribe', [ScribeController::class, 'admin'])->name('ai-scribe.index');
             Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
             Route::get('/security', [SecuritySettingsController::class, 'index'])->name('security.index');
+            Route::post('/security/bot', [SecuritySettingsController::class, 'updateBot'])->middleware('step-up')->name('security.bot');
             Route::post('/security', [SecuritySettingsController::class, 'update'])->middleware('step-up')->name('security.update');
             Route::get('/storage', [StorageController::class, 'index'])->name('storage.index');
             Route::post('/storage', [StorageController::class, 'save'])->name('storage.save');

@@ -23,6 +23,12 @@ Off by default (good for a demo). Admin → Security switches it on and sets the
 
 `php artisan clinicflow:demo` (no questions) creates a demo super admin plus a demo clinic, pharmacy and lab (free packages, every role, sample patients) and prints the accounts and one password; `--remove` deletes them all. Sign-in codes go by email until an SMS supplier is added (cPanel mailbox as an SMTP provider in Admin → Messaging).
 
+## Bot protection
+
+Admin → Security → Bot protection: add the Cloudflare Turnstile site key and secret key (dash.cloudflare.com → Turnstile → Add site, domain drbusinessflow.com) and switch it on. It covers sign-in, sign-up, forgot password and patient portal sign-in on the main site and every practice site. Cloudflare's test keys (site 1x00000000000000000000AA, secret 1x0000000000000000000000000000000AA) always pass, for trying it out.
+
+Optional, later: put the domain behind Cloudflare's proxy (DNS) for DDoS and attack filtering — plan the SSL change for the wildcard first.
+
 ## Passwords
 
 People change their own password in Account → Security, or use "Forgot your password?" on the sign-in page (needs an email supplier). On the server: `php artisan clinicflow:set-password <email>`.
