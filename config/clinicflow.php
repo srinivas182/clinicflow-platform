@@ -8,7 +8,7 @@ return [
      * Platform release version. Bumped on every release (see CHANGELOG.md)
      * and reported by GET /api/v1/health.
      */
-    'version' => env('CLINICFLOW_VERSION', '0.62.0'),
+    'version' => env('CLINICFLOW_VERSION', '0.63.0'),
 
     /*
      * Hosting region. All patient data must stay in South Africa (POPIA s72).

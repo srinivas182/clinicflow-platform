@@ -4,6 +4,15 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.63.0] — Sprint D0-2: create the first super admin
+
+### Added
+- `php artisan clinicflow:create-admin`: creates a platform super admin with the password typed hidden and checked against the sign-up rules (length, letters and numbers, breached passwords). Super admins set up an authenticator app at first sign-in.
+
+### Fixed
+- Tables are always created as InnoDB (platform, network hub and every practice database), even where the server defaults to MyISAM/Aria — needed for transactions, row locks and foreign keys (seen on Afrihost MariaDB: "max key length is 1000 bytes").
+- Routes can be cached in production: the practice-side "confirm it's you" routes had the same names as the platform's. CI now checks route caching on every change.
+
 ## [0.62.0] — Sprint D0: cPanel hosting compatibility
 
 ### Added

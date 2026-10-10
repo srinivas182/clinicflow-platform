@@ -11,6 +11,10 @@ Suited to a pilot or staging site. National production needs the infrastructure 
 | Code updates | `bash deploy.sh` (pulls the `deploy` branch: code + built front end) |
 | Settings template | `.env.cpanel.example` |
 
+## First super admin
+
+`php artisan clinicflow:create-admin` — asks for name, email, mobile and a password (typed hidden). Never run the demo seeder on a live site; `php artisan db:seed --force` is safe (production loads packages and website pages only).
+
 ## Cron jobs (cPanel → Cron Jobs)
 
 | When | Command |
@@ -20,6 +24,9 @@ Suited to a pilot or staging site. National production needs the infrastructure 
 
 ## Practice databases
 Created through cPanel's API (`TENANCY_DB_MANAGER=cpanel`). Create an API token in cPanel → Manage API Tokens and set `CPANEL_API_TOKEN`; names start with `TENANT_DB_PREFIX` (`drbusinessflow_cf_`).
+
+## Database engine
+The app always creates InnoDB tables (`DB_ENGINE`, default InnoDB); some cPanel MariaDB servers default to MyISAM, which has no transactions or foreign keys.
 
 ## Limits on shared hosting
 No Redis, queue workers, real-time server or virus scanner: cache, sessions and queues use the database, background jobs run by cron each minute, screens refresh by polling, and upload scanning stays off.
