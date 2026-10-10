@@ -116,6 +116,9 @@ jobs:
       - name: PHPStan (level 8)
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G 2>&1 | tee .ci-phpstan.txt
 
+      - name: Routes can be cached (production does this; duplicate route names would fail)
+        run: php artisan route:cache && php artisan route:clear
+
       - name: Dependency vulnerabilities (Composer)
         run: composer audit --locked --no-interaction --abandoned=ignore
 

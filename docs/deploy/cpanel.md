@@ -25,5 +25,8 @@ Suited to a pilot or staging site. National production needs the infrastructure 
 ## Practice databases
 Created through cPanel's API (`TENANCY_DB_MANAGER=cpanel`). Create an API token in cPanel → Manage API Tokens and set `CPANEL_API_TOKEN`; names start with `TENANT_DB_PREFIX` (`drbusinessflow_cf_`).
 
+## Database engine
+The app always creates InnoDB tables (`DB_ENGINE`, default InnoDB); some cPanel MariaDB servers default to MyISAM, which has no transactions or foreign keys.
+
 ## Limits on shared hosting
 No Redis, queue workers, real-time server or virus scanner: cache, sessions and queues use the database, background jobs run by cron each minute, screens refresh by polling, and upload scanning stays off.
