@@ -1,0 +1,104 @@
+name: Phone layout
+
+# Loads every public page and every admin page in Chromium at phone width (375 px) and fails if any
+# page is wider than the screen. Screenshots of failures are uploaded. Runs on ready PRs that touch
+# the front end, and by hand.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'resources/js/**'
+      - 'resources/css/**'
+      - 'resources/views/**'
+      - 'routes/**'
+      - 'tests/phone/**'
+      - '.github/workflows/phone-layout.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: phone-layout-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  phone:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      database:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: clinicflow_platform
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+
+    env:
+      APP_URL: http://localhost:8000
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: clinicflow_platform
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      HUB_DB_DATABASE: clinicflow_hub
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      BROADCAST_CONNECTION: log
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_mysql, intl, bcmath, pcntl, posix, zip, gd
+          coverage: none
+          tools: composer:v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Prepare the app (seeded demo data includes a platform admin)
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS clinicflow_hub CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+          cp .env.example .env
+          php artisan key:generate --ansi
+          php artisan migrate --force
+          php artisan migrate --database=hub --path=database/migrations/hub --force
+          php artisan db:seed --force
+          php artisan route:list --json --method=GET > tests/phone/routes.json
+
+      - name: Start the app
+        run: |
+          php artisan serve --host=127.0.0.1 --port=8000 > storage/logs/serve.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://localhost:8000/login && break; sleep 1; done
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Check every page at phone width
+        run: npx playwright test --config tests/phone/playwright.config.ts
+
+      - name: Upload screenshots and logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phone-layout-failures
+          path: |
+            test-results/phone
+            storage/logs
+          retention-days: 7

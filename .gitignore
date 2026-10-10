@@ -27,3 +27,8 @@ Homestead.yaml
 Thumbs.db
 .ci-*.txt
 .ci-report.md
+
+# Phone layout checks
+/tests/phone/.admin-session.json
+/tests/phone/routes.json
+/test-results/
