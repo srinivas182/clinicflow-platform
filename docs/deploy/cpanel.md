@@ -23,6 +23,10 @@ Off by default (good for a demo). Admin → Security switches it on and sets the
 
 `php artisan clinicflow:demo` (no questions) creates a demo super admin plus a demo clinic, pharmacy and lab (free packages, every role, sample patients) and prints the accounts and one password; `--remove` deletes them all. Sign-in codes go by email until an SMS supplier is added (cPanel mailbox as an SMTP provider in Admin → Messaging).
 
+## Passwords
+
+People change their own password in Account → Security, or use "Forgot your password?" on the sign-in page (needs an email supplier). On the server: `php artisan clinicflow:set-password <email>`.
+
 ## Cron jobs (cPanel → Cron Jobs)
 
 | When | Command |

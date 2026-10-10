@@ -4,6 +4,17 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.66.0] — Sprint D0-4: passwords, safer deploys, manager label
+
+### Added
+- Change password (Account → Security): current password plus the new one (sign-up rules incl. breached-password check); other browsers and devices are signed out, trusted devices cleared, and an email notice is sent.
+- "Forgot your password?" on the sign-in page: a single-use emailed link valid for 60 minutes; the reply is the same whether or not the email has an account; rate-limited; a reset also clears any sign-in lockout.
+- `php artisan clinicflow:set-password <email>`: set a password from the server (typed hidden, same rules).
+
+### Fixed
+- deploy.sh: if a step fails, caches are cleared and the site is brought back up (previously it could stay in maintenance mode).
+- The manager role is named for the kind of practice (Pharmacy manager, Lab manager, Practice manager).
+
 ## [0.65.0] — Sprint D0-3: database cache, sessions and queue on shared hosting
 
 ### Fixed
