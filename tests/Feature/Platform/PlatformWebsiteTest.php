@@ -21,7 +21,8 @@ it('publishes a complete default clinicflow.co.za with menus and images', functi
             ->where('site.menu.1.children', fn ($c) => collect($c)->pluck('label')->all() === ['Clinics', 'Individual Doctors', 'Pharmacies & Labs', 'Patients'])
             ->where('site.menu.2.label', 'Find Care')
             ->where('site.menu.3.label', 'Pricing')
-            ->has('site.menu', 4)
+            ->where('site.menu.4.label', 'Contact Us')
+            ->has('site.menu', 5)
             ->where('site.signIn.href', '/login')
             ->where('site.cta.label', 'Start Free Trial')
             ->where('site.cta.href', '/start'));

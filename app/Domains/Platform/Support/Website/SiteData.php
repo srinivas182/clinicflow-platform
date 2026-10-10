@@ -88,6 +88,7 @@ final class SiteData
                 $solutions === [] ? null : ['label' => 'Solutions', 'href' => $solutions[0]['href'], 'children' => $solutions],
                 ['label' => 'Find Care', 'href' => '/find-care'],
                 ['label' => 'Pricing', 'href' => '/pricing'],
+                $page('contact', 'Contact Us'),
             ])),
             'signIn' => ['label' => 'Sign In', 'href' => '/login'],
             'cta' => ['label' => 'Start Free Trial', 'href' => '/start'],
@@ -97,7 +98,7 @@ final class SiteData
             ],
             'footer' => array_values(array_filter([
                 ...$solutions,
-                $page('about', 'About'), $page('contact', 'Contact'), $page('privacy', 'Privacy'), $page('terms', 'Terms'),
+                $page('about', 'About'), $page('contact', 'Contact Us'), $page('privacy', 'Privacy'), $page('terms', 'Terms'),
                 ['label' => 'Sign In', 'href' => '/login'],
             ])),
             'poweredBy' => false,
