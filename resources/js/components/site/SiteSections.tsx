@@ -1,4 +1,27 @@
-import { Check, ChevronDown } from "lucide-react";
+import { usePage } from "@inertiajs/react";
+import {
+    Activity,
+    BarChart3,
+    CalendarCheck,
+    Check,
+    ChevronDown,
+    ClipboardList,
+    Clock,
+    FileCheck2,
+    FlaskConical,
+    Globe,
+    type LucideIcon,
+    MessageCircle,
+    Pill,
+    Receipt,
+    ShieldCheck,
+    Smartphone,
+    Stethoscope,
+    Truck,
+    Users,
+    Video,
+    Wallet,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import type { SiteInfo, SiteLink, SiteSection } from "./types";
@@ -124,7 +147,13 @@ function Section({ s, site }: { s: SiteSection; site: SiteInfo }) {
                             )}
                         </div>
                     </div>
-                    {s.image && <img src={s.image} alt="" className="w-full" />}
+                    {s.image && (
+                        <img
+                            src={versioned(s.image)}
+                            alt=""
+                            className="w-full"
+                        />
+                    )}
                 </section>
             );
         case "cards":
@@ -145,7 +174,7 @@ function Section({ s, site }: { s: SiteSection; site: SiteInfo }) {
                                 >
                                     {i.image && (
                                         <img
-                                            src={i.image}
+                                            src={versioned(i.image)}
                                             alt=""
                                             className="mb-4 w-full rounded-xl"
                                         />
@@ -180,10 +209,7 @@ function Section({ s, site }: { s: SiteSection; site: SiteInfo }) {
                                     className="mb-3 grid size-9 place-items-center rounded-lg text-white"
                                     style={{ background: site.colour }}
                                 >
-                                    <Check
-                                        className="size-4"
-                                        aria-hidden="true"
-                                    />
+                                    <FeatureIcon name={i.icon} />
                                 </span>
                                 <h3 className="font-semibold">{i.title}</h3>
                                 <p className="mt-1 text-sm text-muted">
@@ -196,7 +222,7 @@ function Section({ s, site }: { s: SiteSection; site: SiteInfo }) {
             );
         case "steps":
             return (
-                <section className="bg-paper py-16">
+                <section id={anchor(s.heading)} className="bg-paper py-16">
                     <div className="mx-auto max-w-6xl px-6">
                         {s.heading && (
                             <h2 className="mb-8 text-3xl font-semibold">
@@ -230,7 +256,13 @@ function Section({ s, site }: { s: SiteSection; site: SiteInfo }) {
         case "split":
             return (
                 <section className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-16 md:grid-cols-2">
-                    {s.image && <img src={s.image} alt="" className="w-full" />}
+                    {s.image && (
+                        <img
+                            src={versioned(s.image)}
+                            alt=""
+                            className="w-full"
+                        />
+                    )}
                     <div>
                         <h2 className="text-3xl font-semibold">{s.heading}</h2>
                         {s.text && <p className="mt-3 text-muted">{s.text}</p>}
@@ -473,6 +505,8 @@ export function SiteSections({
     sections: SiteSection[];
     site: SiteInfo;
 }) {
+    appVersion =
+        usePage<{ app?: { version?: string } }>().props.app?.version ?? "";
     return (
         <>
             {sections.map((s, i) => (
@@ -480,4 +514,53 @@ export function SiteSections({
             ))}
         </>
     );
+}
+
+const ICONS: Record<string, LucideIcon> = {
+    users: Users,
+    activity: Activity,
+    stethoscope: Stethoscope,
+    pill: Pill,
+    receipt: Receipt,
+    chart: BarChart3,
+    calendar: CalendarCheck,
+    video: Video,
+    globe: Globe,
+    phone: Smartphone,
+    truck: Truck,
+    flask: FlaskConical,
+    file: FileCheck2,
+    shield: ShieldCheck,
+    message: MessageCircle,
+    clipboard: ClipboardList,
+    wallet: Wallet,
+    clock: Clock,
+    check: Check,
+};
+
+/** The current release, read once per render of the sections (see SiteSections). */
+let appVersion = "";
+
+/** The icon named in a feature item (falls back to a tick). */
+function FeatureIcon({ name }: { name?: string }) {
+    const Icon = (name && ICONS[name]) || Check;
+    return <Icon className="size-4" aria-hidden="true" />;
+}
+
+/** Adds the release number to site pictures so browsers fetch the new version after every deploy. */
+function versioned(src?: string): string | undefined {
+    if (!src || !src.startsWith("/images/")) return src;
+    return appVersion
+        ? `${src}${src.includes("?") ? "&" : "?"}v=${encodeURIComponent(appVersion)}`
+        : src;
+}
+
+/** "How it works" → "how-it-works" (in-page links such as #how-it-works). */
+function anchor(heading?: string): string | undefined {
+    return heading
+        ? heading
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/^-|-$/g, "")
+        : undefined;
 }
