@@ -32,17 +32,17 @@ class StaffController extends Controller
 
         return Inertia::render('Staff/Index', [
             'members' => $members->sortBy(fn (Membership $m) => $m->user->name)->values()->map(fn (Membership $m) => [
-                'id' => $m->user_id, 'name' => $m->user->name, 'email' => $m->user->email, 'phone' => $m->user->phone, 'role' => $m->role->value, 'roleLabel' => $m->role->label(),
+                'id' => $m->user_id, 'name' => $m->user->name, 'email' => $m->user->email, 'phone' => $m->user->phone, 'role' => $m->role->value, 'roleLabel' => $m->role->labelFor($provider->type),
                 'active' => $m->status->value === 'active', 'expires' => $m->expires_at?->toDateString(), 'authenticator' => $m->user->totp_confirmed_at !== null,
                 'branches' => $branches->get($m->user_id, collect())->all(), 'lastSignIn' => isset($lastSignIn[$m->user_id]) ? substr((string) $lastSignIn[$m->user_id], 0, 16) : null,
                 'self' => $m->user_id === $actor->id, 'owner' => $m->role === StaffRole::Owner,
             ]),
             'invitations' => DB::connection((string) config('tenancy.database.central_connection'))->table('staff_invitations')->where('tenant_id', $provider->id)
                 ->whereNull('accepted_at')->whereNull('revoked_at')->orderByDesc('created_at')->get()
-                ->map(fn ($i) => ['id' => $i->id, 'name' => $i->name, 'contact' => $i->email ?? $i->phone, 'role' => StaffRole::from((string) $i->role)->label(),
+                ->map(fn ($i) => ['id' => $i->id, 'name' => $i->name, 'contact' => $i->email ?? $i->phone, 'role' => StaffRole::from((string) $i->role)->labelFor($provider->type),
                     'expired' => now()->greaterThan($i->expires_at), 'expires' => substr((string) $i->expires_at, 0, 10)])->values(),
             'roles' => collect(StaffRole::forProviderType($provider->type))->reject(fn (StaffRole $r) => $r === StaffRole::Owner)
-                ->map(fn (StaffRole $r) => ['value' => $r->value, 'label' => $r->label()])->values(),
+                ->map(fn (StaffRole $r) => ['value' => $r->value, 'label' => $r->labelFor($provider->type)])->values(),
             'branches' => DB::table('branches')->where('active', true)->orderBy('name')->get(['id', 'name']),
         ]);
     }

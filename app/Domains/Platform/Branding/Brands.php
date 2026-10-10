@@ -6,6 +6,7 @@ namespace App\Domains\Platform\Branding;
 
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Support\DnsResolver;
+use App\Domains\Platform\Support\TenantLookupCache;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -147,6 +148,7 @@ class Brands
             throw ValidationException::withMessages(['brand_id' => 'Choose a brand.']);
         }
         Provider::query()->whereKey($providerId)->update(['brand_id' => $brandId]);
+        TenantLookupCache::forget((string) $providerId);
     }
 
     /** The active brand for a sign-up link's short name. */

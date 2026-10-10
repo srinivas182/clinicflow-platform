@@ -34,7 +34,7 @@ final class OnlineSlots
         $buffer = TeleSettings::get('buffer_minutes');
         $busy = Appointment::query()->where('staff_id', $staffId)->whereIn('status', AppointmentStatus::occupying())
             ->where(fn ($q) => $q->whereNull('payment_status')->orWhereIn('payment_status', ['paid'])->orWhere(fn ($h) => $h->where('payment_status', 'pending')->where('hold_expires_at', '>', now())))
-            ->whereDate('starts_at', $day)->get(['starts_at', 'ends_at']);
+            ->withinDay('starts_at', $day)->get(['starts_at', 'ends_at']);
 
         $slots = [];
         foreach ($windows as [$from, $to]) {

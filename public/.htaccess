@@ -13,6 +13,13 @@
     RewriteCond %{HTTP:x-xsrf-token} .
     RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
 
+    # Security (Apache/LiteSpeed, mirrors docker/nginx/default.conf):
+    # hidden files except .well-known, any PHP file other than index.php, and backups, archives,
+    # logs, dumps and config files are never served.
+    RewriteRule (^|/)\.(?!well-known/) - [F,L]
+    RewriteRule ^(?!index\.php$).+\.php$ - [F,L,NC]
+    RewriteRule \.(zip|tar|gz|tgz|rar|7z|sql|sqlite|bak|old|orig|save|swp|log|ini|conf|env|sh|yml|yaml|lock|md)$ - [F,L,NC]
+
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$
@@ -22,4 +29,19 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+</IfModule>
+
+# Built assets carry a content hash in their names: cache for a year.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(js|css|woff2?)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    <FilesMatch "\.(ico|png|jpe?g|gif|webp|svg)$">
+        Header set Cache-Control "public, max-age=604800"
+    </FilesMatch>
+</IfModule>
+
+# Compression (LiteSpeed also compresses automatically).
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript application/json image/svg+xml
 </IfModule>

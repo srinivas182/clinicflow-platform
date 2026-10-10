@@ -40,7 +40,7 @@ class CheckInPatient
         $payer ??= $patient->medical_aid_scheme !== null ? PayerType::MedicalAid : PayerType::Cash;
         $today = now()->startOfDay();
 
-        $open = Visit::query()->where('patient_id', $patient->id)->whereDate('visit_date', $today)
+        $open = Visit::query()->where('patient_id', $patient->id)->onDate('visit_date', $today)
             ->whereNotIn('stage', [VisitStage::Done->value, VisitStage::Left->value])->exists();
 
         if ($open) {

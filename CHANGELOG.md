@@ -4,6 +4,64 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.66.0] — Sprint D0-4: passwords, safer deploys, manager label
+
+### Added
+- Change password (Account → Security): current password plus the new one (sign-up rules incl. breached-password check); other browsers and devices are signed out, trusted devices cleared, and an email notice is sent.
+- "Forgot your password?" on the sign-in page: a single-use emailed link valid for 60 minutes; the reply is the same whether or not the email has an account; rate-limited; a reset also clears any sign-in lockout.
+- `php artisan clinicflow:set-password <email>`: set a password from the server (typed hidden, same rules).
+
+### Fixed
+- deploy.sh: if a step fails, caches are cleared and the site is brought back up (previously it could stay in maintenance mode).
+- The manager role is named for the kind of practice (Pharmacy manager, Lab manager, Practice manager).
+
+## [0.65.0] — Sprint D0-3: database cache, sessions and queue on shared hosting
+
+### Fixed
+- With the database cache, sessions and queue (shared cPanel hosting, no Redis), all three now always use the platform database. Inside a practice they used the practice's database, which has no cache, sessions or jobs table (seen when creating demo practices on Afrihost).
+- Practices' caches stay separate on any cache store: tags where the store supports them (Redis, array — unchanged), a per-practice key prefix where it does not (database, file).
+
+## [0.64.0] — Sprint DEMO: demo data, free packages and first sign-in without SMS
+
+### Added
+- `php artisan clinicflow:demo`: no questions — a demo super admin plus a demo clinic, pharmacy and lab on the free packages with an account for every role (addresses like clinic-doctor@demo.<platform domain>), six sample patients, one generated password shown once. Optional `--email=you@example.com` puts the accounts on your inbox with plus-addressing, for when two-step sign-in is on. `--remove` deletes the demo practices, their databases and every demo account, including the demo super admin.
+- Free packages, listed first with no trial: Clinic Free, Doctor Free, Pharmacy Free, Lab Free.
+- `clinicflow:create-admin` now sets up the authenticator app in the terminal (setup key, one confirming code, ten recovery codes shown once), so the first sign-in needs no SMS or email. `clinicflow:setup-authenticator <email>` does the same for an existing account.
+
+- Admin → Security: two-step sign-in on or off (off by default, CLINICFLOW_TWO_FACTOR) and the order of methods (authenticator app, email, SMS); each person gets the first method that works for them. Changing it needs step-up confirmation, is audited, and is refused if the admin could not sign in with the new settings. When off, staff sign in with a password only and no authenticator set-up is forced; security:check flags it.
+
+### Changed
+- Staff sign-in codes follow the chosen method order and go by email until an SMS supplier is set up (previously SMS only, which blocked sign-in before SMS was configured).
+
+## [0.63.0] — Sprint D0-2: create the first super admin
+
+### Added
+- `php artisan clinicflow:create-admin`: creates a platform super admin with the password typed hidden and checked against the sign-up rules (length, letters and numbers, breached passwords). Super admins set up an authenticator app at first sign-in.
+
+### Fixed
+- Tables are always created as InnoDB (platform, network hub and every practice database), even where the server defaults to MyISAM/Aria — needed for transactions, row locks and foreign keys (seen on Afrihost MariaDB: "max key length is 1000 bytes").
+- Routes can be cached in production: the practice-side "confirm it's you" routes had the same names as the platform's. CI now checks route caching on every change.
+
+## [0.62.0] — Sprint D0: cPanel hosting compatibility
+
+### Added
+- Practice databases on shared cPanel hosting: created and granted through cPanel's API (TENANCY_DB_MANAGER=cpanel, CPANEL_* settings), since shared accounts may not run CREATE DATABASE.
+- "deploy" branch built automatically after every merge (code + built front end), so hosting without Node can run the app; `deploy.sh` updates a cPanel install in one command (pull, install, migrate all databases, refresh caches, security check).
+- Apache/LiteSpeed security rules in public/.htaccess mirroring nginx: hidden files, PHP files other than index.php, and backups, archives, logs, dumps and config files are refused; long-term caching for built assets; compression.
+- `.env.cpanel.example` and docs/deploy/cpanel.md (paths, cron jobs, limits on shared hosting).
+- Manual "Compatibility" workflow: full test suite on MariaDB 10.11 + PHP 8.4 and MySQL 8.4 + PHP 8.5.
+
+## [0.61.0] — Sprint P1: performance
+
+### Changed
+- Every request makes fewer database queries (about 8 → 5): staff permissions load once per request (kept on the request, never shared between requests under Octane); the practice lookup by domain is cached for 5 minutes and cleared immediately in the platform context whenever a practice or its domains change (including bulk updates), so suspensions and brand changes apply on the next request; the active-branch count is cached and cleared when branches change.
+- Reports page: 30 → 10 queries.
+- Queue, booking and portal queries no longer wrap dates in DATE() (which stops MySQL using its index): 13 visit-date filters, 4 appointment-day filters and 1 "from today" filter now use the indexes, so they stay fast as visit history grows.
+- nginx: gzip compression (text responses 3–5x smaller) and pre-compressed files; built assets cached for a year (immutable), other static files for a week; keep-alive tuning, open-file cache, larger FastCGI buffers.
+
+### Measured (250 patients, 120 in today's queue, local, without Octane)
+- Busiest screens respond in 11–43 ms with 6–14 queries; nothing grows with the number of patients.
+
 ## [0.60.0] — Sprint E1: branded error pages
 
 ### Added

@@ -32,7 +32,7 @@ class CallNextPatient
 
         return DB::transaction(function () use ($doctor): ?Visit {
             $waiting = fn (): Builder => Visit::query()
-                ->whereDate('visit_date', today())
+                ->where('visit_date', today()->toDateString())
                 ->where('stage', VisitStage::Doctor->value)
                 ->whereNull('called_at')
                 ->lockForUpdate();
@@ -64,7 +64,7 @@ class CallNextPatient
      */
     public function current(Staff $doctor): ?Visit
     {
-        return Visit::query()->whereDate('visit_date', today())
+        return Visit::query()->onDate('visit_date', today())
             ->where('stage', VisitStage::Doctor->value)
             ->where('doctor_id', $doctor->id)
             ->whereNotNull('called_at')

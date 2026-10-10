@@ -1,4 +1,4 @@
-import { Head, useForm } from "@inertiajs/react";
+import { Head, Link, useForm } from "@inertiajs/react";
 import type { FormEvent } from "react";
 import { Field } from "@/components/form/Field";
 import { Button } from "@/components/ui";
@@ -45,6 +45,14 @@ export default function Login() {
                     Continue
                 </Button>
             </form>
+            <p className="mt-3 text-sm">
+                <Link
+                    href="/forgot-password"
+                    className="text-teal-deep underline"
+                >
+                    Forgot your password?
+                </Link>
+            </p>
         </AuthLayout>
     );
 }

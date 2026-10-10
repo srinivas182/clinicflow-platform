@@ -76,7 +76,7 @@ class OnlineBooking
         }
 
         return DB::transaction(function () use ($patient, $doctor, $mode, $duration, $start, $by, $price, $provider): Appointment {
-            $seq = Visit::query()->whereDate('visit_date', $start)->where('ticket', 'like', 'V%')->lockForUpdate()->count() + 1;
+            $seq = Visit::query()->onDate('visit_date', $start)->where('ticket', 'like', 'V%')->lockForUpdate()->count() + 1;
             $visit = Visit::create([
                 'patient_id' => $patient->id, 'visit_date' => $start->toDateString(), 'ticket' => 'V'.str_pad((string) $seq, 3, '0', STR_PAD_LEFT),
                 'stage' => VisitStage::Done, 'payer_type' => PayerType::Cash, 'doctor_id' => $doctor->id,

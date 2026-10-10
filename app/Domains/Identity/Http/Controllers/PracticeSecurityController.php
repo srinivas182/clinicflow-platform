@@ -7,6 +7,7 @@ namespace App\Domains\Identity\Http\Controllers;
 use App\Domains\Identity\Enums\StaffRole;
 use App\Domains\Identity\Models\Membership;
 use App\Domains\Platform\Models\Provider;
+use App\Domains\Platform\Support\TenantLookupCache;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -37,6 +38,7 @@ class PracticeSecurityController extends Controller
         $provider = $this->ownerPractice($request);
         $on = $request->boolean('required');
         Provider::query()->whereKey($provider->id)->update(['require_authenticator' => $on]);
+        TenantLookupCache::forget($provider->id);
         activity('security')->withProperties(['require_authenticator' => $on])->log($on ? 'Authenticator app required for all staff' : 'Authenticator app no longer required for all staff');
 
         return back()->with('success', $on ? 'All staff must now use an authenticator app. Those without one are asked to set it up when they next open Clinic Flow.' : 'Saved.');

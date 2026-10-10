@@ -339,8 +339,8 @@ Route::middleware([
         Route::post('/settings/security', [PracticeSecurityController::class, 'update'])->middleware('step-up')->name('settings.security.update');
         // Real-time channel sign-in (staff of this practice only; see routes/channels.php).
         Route::post('/broadcasting/auth', fn (Request $request) => Broadcast::auth($request))->name('broadcasting.auth');
-        Route::get('/confirm-identity', [ConfirmIdentityController::class, 'show'])->name('identity.confirm');
-        Route::post('/confirm-identity', [ConfirmIdentityController::class, 'store'])->middleware('throttle:10,1')->name('identity.confirm.store');
+        Route::get('/confirm-identity', [ConfirmIdentityController::class, 'show'])->name('tenant.identity.confirm');
+        Route::post('/confirm-identity', [ConfirmIdentityController::class, 'store'])->middleware('throttle:10,1')->name('tenant.identity.confirm.store');
         Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
         Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
         Route::post('/reports/run', [ReportsController::class, 'run'])->middleware('throttle:60,1')->name('reports.run');

@@ -25,7 +25,7 @@ class DoctorQueueController extends Controller
     public function index(Request $request, CallNextPatient $calls): Response
     {
         $doctor = $this->doctor($request);
-        $waiting = Visit::query()->with('patient')->whereDate('visit_date', today())
+        $waiting = Visit::query()->with('patient')->onDate('visit_date', today())
             ->where('stage', VisitStage::Doctor->value)->whereNull('called_at')->get();
 
         $row = fn (Visit $v) => [
@@ -40,7 +40,7 @@ class DoctorQueueController extends Controller
             'mine' => $waiting->filter(fn (Visit $v) => $v->preferred_staff_id === $doctor->id)->map($row)->values(),
             'pool' => $waiting->filter(fn (Visit $v) => $v->preferred_staff_id === null)
                 ->sortBy(fn (Visit $v) => [TriageColour::tryFrom((string) $v->triage_colour)?->priority() ?? 9, $v->created_at->getTimestamp()])->map($row)->values(),
-            'redAlerts' => Visit::query()->with('patient')->whereDate('visit_date', today())->where('stage', VisitStage::Doctor->value)
+            'redAlerts' => Visit::query()->with('patient')->onDate('visit_date', today())->where('stage', VisitStage::Doctor->value)
                 ->where('triage_colour', 'red')->whereNull('alert_accepted_at')->get()->map($row)->values(),
         ]);
     }

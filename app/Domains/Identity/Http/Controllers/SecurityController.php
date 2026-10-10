@@ -6,6 +6,8 @@ namespace App\Domains\Identity\Http\Controllers;
 
 use App\Domains\Identity\Actions\Authenticator;
 use App\Domains\Identity\Actions\TrustedDevices;
+use App\Domains\Identity\Support\PasswordRules;
+use App\Domains\Messaging\Actions\SendMessage;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\SessionGuard;
@@ -70,6 +72,28 @@ class SecurityController extends Controller
     public function forgetDevice(Request $request, int $device): JsonResponse
     {
         app(TrustedDevices::class)->forget($this->user($request), $device);
+
+        return response()->json(['ok' => true]);
+    }
+
+    /** Changes the person's own password; other browsers and devices are signed out. */
+    public function changePassword(Request $request): JsonResponse
+    {
+        $user = $this->user($request);
+        $data = $request->validate(['current_password' => ['required', 'string'], 'password' => ['required', 'confirmed', PasswordRules::make()]]);
+        if (! Hash::check($data['current_password'], (string) $user->password)) {
+            throw ValidationException::withMessages(['current_password' => 'Your current password is not correct.']);
+        }
+        $user->forceFill(['password' => $data['password']])->save();
+        $guard = Auth::guard('web');
+        abort_unless($guard instanceof SessionGuard, 500);
+        $guard->logoutOtherDevices($data['password']);
+        app(TrustedDevices::class)->forget($user);
+        activity('auth')->causedBy($user)->log('Password changed');
+        if ($user->email !== '') {
+            app(SendMessage::class)->handle('email', (string) $user->email,
+                'Your Clinic Flow password was changed at '.now()->format('Y-m-d H:i').". If this wasn't you, reset it now from the sign-in page and contact your practice owner.", 'Your password was changed');
+        }
 
         return response()->json(['ok' => true]);
     }

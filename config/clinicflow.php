@@ -8,7 +8,7 @@ return [
      * Platform release version. Bumped on every release (see CHANGELOG.md)
      * and reported by GET /api/v1/health.
      */
-    'version' => env('CLINICFLOW_VERSION', '0.60.0'),
+    'version' => env('CLINICFLOW_VERSION', '0.66.0'),
 
     /*
      * Hosting region. All patient data must stay in South Africa (POPIA s72).
@@ -72,6 +72,9 @@ return [
 
     // Super admins, owners and practice admins must use an authenticator app (off in the test configuration).
     'security' => [
+        // Two-step sign-in default until the super admin sets it (Admin → Security). Off suits a demo;
+        // switch it on before real patient data.
+        'two_factor_default' => (bool) env('CLINICFLOW_TWO_FACTOR', false),
         'require_authenticator_for_admins' => (bool) env('CLINICFLOW_REQUIRE_AUTHENTICATOR', true),
         // Refuse passwords known from data breaches (privacy-preserving check: only 5 characters of the hash are sent).
         // Content-security policy: null = on in production only; true/false to force. Report-only for a trial period.
@@ -101,5 +104,19 @@ return [
         'lab_messages' => (int) env('RETENTION_LAB_MESSAGES_DAYS', 365),
         'messages' => (int) env('RETENTION_MESSAGES_DAYS', 730),
         'audit' => (int) env('RETENTION_AUDIT_DAYS', 2555),
+    ],
+
+    'performance' => [
+        // Cache the practice lookup by domain (cleared immediately when a practice or its domains change).
+        'cache_tenant_lookup' => (bool) env('CLINICFLOW_CACHE_TENANT_LOOKUP', true),
+    ],
+
+    // Shared cPanel hosting: practice databases are created through cPanel's API (TENANCY_DB_MANAGER=cpanel).
+    'cpanel' => [
+        'host' => env('CPANEL_HOST', ''),
+        'port' => (int) env('CPANEL_PORT', 2083),
+        'user' => env('CPANEL_USER', ''),
+        'token' => env('CPANEL_API_TOKEN', ''),
+        'db_user' => env('CPANEL_DB_USER', env('DB_USERNAME')),
     ],
 ];

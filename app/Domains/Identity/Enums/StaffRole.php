@@ -24,6 +24,21 @@ enum StaffRole: string
     case BillingClerk = 'billing_clerk';
     case LabTechnician = 'lab_technician';
 
+    /** The role's name for this kind of practice (e.g. "Pharmacy manager"). */
+    public function labelFor(?ProviderType $type): string
+    {
+        if ($this !== self::Manager || $type === null) {
+            return $this->label();
+        }
+
+        return match ($type) {
+            ProviderType::Pharmacy => 'Pharmacy manager',
+            ProviderType::Lab => 'Lab manager',
+            ProviderType::IndependentDoctor => 'Practice manager',
+            default => $this->label(),
+        };
+    }
+
     public function label(): string
     {
         return match ($this) {

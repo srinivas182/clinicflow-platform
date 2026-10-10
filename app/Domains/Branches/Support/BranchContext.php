@@ -12,6 +12,7 @@ use App\Domains\Scheduling\Models\Appointment;
 use App\Domains\Scheduling\Models\RosterSession;
 use App\Domains\Visits\Models\Visit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -49,7 +50,7 @@ final class BranchContext
      */
     public static function filterId(): ?int
     {
-        return tenant() !== null && DB::table('branches')->where('active', true)->count() > 1 ? self::current() : null;
+        return tenant() !== null && self::activeCount() > 1 ? self::current() : null;
     }
 
     public static function register(): void
@@ -70,5 +71,16 @@ final class BranchContext
     {
         return array_values(Branch::query()->where('active', true)->orderByDesc('is_main')->orderBy('name')->get(['id', 'name'])
             ->map(fn (Branch $b) => ['id' => $b->id, 'name' => $b->name])->all());
+    }
+
+    /** Active branches for this practice (cached; cleared when branches change). */
+    public static function activeCount(): int
+    {
+        return (int) Cache::remember('branches:active:'.tenant('id'), 600, fn () => DB::table('branches')->where('active', true)->count());
+    }
+
+    public static function forgetCount(): void
+    {
+        Cache::forget('branches:active:'.tenant('id'));
     }
 }

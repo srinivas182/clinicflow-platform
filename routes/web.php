@@ -5,6 +5,7 @@ use App\Domains\Finance\Http\Controllers\AccountingCallbackController;
 use App\Domains\Identity\Http\Controllers\ConfirmIdentityController;
 use App\Domains\Identity\Http\Controllers\InvitationController;
 use App\Domains\Identity\Http\Controllers\LoginController;
+use App\Domains\Identity\Http\Controllers\PasswordResetController;
 use App\Domains\Identity\Http\Controllers\SecurityController;
 use App\Domains\Identity\Http\Controllers\WorkspaceController;
 use App\Domains\Locums\Http\Controllers\LocumController;
@@ -22,6 +23,7 @@ use App\Domains\Platform\Http\Controllers\GroupController;
 use App\Domains\Platform\Http\Controllers\PricingController;
 use App\Domains\Platform\Http\Controllers\PublicSiteController;
 use App\Domains\Platform\Http\Controllers\ResellerController;
+use App\Domains\Platform\Http\Controllers\SecuritySettingsController;
 use App\Domains\Platform\Http\Controllers\SignupController;
 use App\Domains\Platform\Http\Controllers\StatusController;
 use App\Domains\Platform\Http\Controllers\StorageController;
@@ -63,6 +65,10 @@ foreach ($centralDomains as $index => $domain) {
         Route::middleware('guest')->group(function (): void {
             Route::get('/login', [LoginController::class, 'create'])->name('login');
             Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:login')->name('login.store');
+            Route::get('/forgot-password', [PasswordResetController::class, 'request'])->name('password.request');
+            Route::post('/forgot-password', [PasswordResetController::class, 'send'])->middleware('throttle:5,1')->name('password.email');
+            Route::get('/reset-password/{token}', [PasswordResetController::class, 'edit'])->name('password.reset');
+            Route::post('/reset-password', [PasswordResetController::class, 'update'])->middleware('throttle:10,1')->name('password.update');
             Route::get('/login/verify', [LoginController::class, 'verifyForm'])->name('login.verify');
             Route::post('/login/verify', [LoginController::class, 'verify'])->middleware('throttle:login-code')->name('login.verify.store');
         });
@@ -85,6 +91,7 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/workspaces', [WorkspaceController::class, 'index'])->name('workspaces');
             Route::get('/confirm-identity', [ConfirmIdentityController::class, 'show'])->name('identity.confirm');
             Route::post('/confirm-identity', [ConfirmIdentityController::class, 'store'])->middleware('throttle:10,1')->name('identity.confirm.store');
+            Route::post('/account/security/password', [SecurityController::class, 'changePassword'])->middleware('throttle:5,1')->name('account.security.password');
             Route::post('/account/security/sign-out-others', [SecurityController::class, 'signOutOthers'])->middleware('throttle:5,1')->name('account.security.signout');
             Route::post('/account/security/devices/{device}/forget', [SecurityController::class, 'forgetDevice'])->name('account.security.device.forget');
             Route::get('/account/security', [SecurityController::class, 'show'])->name('account.security');
@@ -109,6 +116,8 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/locums', [LocumController::class, 'admin'])->name('locums.index');
             Route::get('/ai-scribe', [ScribeController::class, 'admin'])->name('ai-scribe.index');
             Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
+            Route::get('/security', [SecuritySettingsController::class, 'index'])->name('security.index');
+            Route::post('/security', [SecuritySettingsController::class, 'update'])->middleware('step-up')->name('security.update');
             Route::get('/storage', [StorageController::class, 'index'])->name('storage.index');
             Route::post('/storage', [StorageController::class, 'save'])->name('storage.save');
             Route::post('/storage/{target}/{action}', [StorageController::class, 'act'])->whereIn('action', ['test', 'activate'])->name('storage.act');

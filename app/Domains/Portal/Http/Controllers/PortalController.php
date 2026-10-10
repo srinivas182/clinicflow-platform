@@ -80,9 +80,9 @@ class PortalController extends Controller
         $patient = $this->current($request, $profiles->all());
         $day = CarbonImmutable::parse($request->string('date')->toString() ?: 'tomorrow');
 
-        $visit = Visit::query()->where('patient_id', $patient->id)->whereDate('visit_date', today())->latest()->first();
+        $visit = Visit::query()->where('patient_id', $patient->id)->onDate('visit_date', today())->latest()->first();
         $ahead = $visit !== null && $visit->stage->isWaiting()
-            ? Visit::query()->whereDate('visit_date', today())->where('stage', $visit->stage->value)->whereNull('doctor_id')->where('stage_changed_at', '<', $visit->stage_changed_at)->count()
+            ? Visit::query()->onDate('visit_date', today())->where('stage', $visit->stage->value)->whereNull('doctor_id')->where('stage_changed_at', '<', $visit->stage_changed_at)->count()
             : null;
 
         return Inertia::render('Portal/Home', [
