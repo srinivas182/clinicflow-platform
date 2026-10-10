@@ -21,7 +21,7 @@ Off by default (good for a demo). Admin → Security switches it on and sets the
 
 ## Demo data
 
-`php artisan clinicflow:demo --email=you@example.com` creates a demo clinic, pharmacy and lab (free packages, every role, sample patients); `--remove` deletes them. Sign-in codes go by email until an SMS supplier is added (cPanel mailbox as an SMTP provider in Admin → Messaging).
+`php artisan clinicflow:demo` (no questions) creates a demo super admin plus a demo clinic, pharmacy and lab (free packages, every role, sample patients) and prints the accounts and one password; `--remove` deletes them all. Sign-in codes go by email until an SMS supplier is added (cPanel mailbox as an SMTP provider in Admin → Messaging).
 
 ## Cron jobs (cPanel → Cron Jobs)
 

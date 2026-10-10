@@ -7,6 +7,7 @@ namespace App\Domains\Platform\Console;
 use App\Domains\Identity\Actions\AddStaffMember;
 use App\Domains\Identity\Enums\StaffRole;
 use App\Domains\Identity\Models\Membership;
+use App\Domains\Identity\Support\TwoFactorPolicy;
 use App\Domains\Patients\Actions\RegisterPatient;
 use App\Domains\Patients\Enums\Channel;
 use App\Domains\Patients\Enums\ConsentGivenBy;
@@ -22,6 +23,7 @@ use App\Domains\Platform\Models\Subscription;
 use App\Domains\Platform\Support\SubdomainPolicy;
 use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 /**
@@ -32,7 +34,7 @@ use Illuminate\Support\Str;
  */
 class DemoDataCommand extends Command
 {
-    protected $signature = 'clinicflow:demo {--email= : Your real email; demo accounts use plus-addressing on it} {--remove : Delete the demo practices and accounts}';
+    protected $signature = 'clinicflow:demo {--email= : Optional: your real email, so codes reach you if two-step sign-in is switched on} {--remove : Delete the demo practices and accounts}';
 
     protected $description = 'Create (or remove) demo practices with an account for every role';
 
@@ -49,20 +51,26 @@ class DemoDataCommand extends Command
             return $this->remove();
         }
         $email = strtolower(trim((string) $this->option('email')));
-        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $this->error('Give your real email: php artisan clinicflow:demo --email=you@example.com');
+        if ($email !== '' && ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $this->error('That email does not look right. Leave --email out to use demo addresses.');
 
             return self::FAILURE;
         }
-        if (Provider::query()->where('data->demo', true)->exists()) {
+        if (Provider::query()->where('data->demo', true)->exists() || $this->demoUsers()->exists()) {
             $this->error('Demo practices already exist. Remove them first: php artisan clinicflow:demo --remove');
 
             return self::FAILURE;
         }
-        [$local, $domain] = explode('@', $email, 2);
+        // With --email: you+demo-clinic-doctor@your-domain (codes reach you). Without: clinic-doctor@demo.<platform domain>.
+        $address = fn (string $who): string => $email !== ''
+            ? str_replace('@', '+demo-'.$who.'@', $email)
+            : $who.'@demo.'.config('clinicflow.provider_domain');
         $password = Str::password(16, symbols: false);
         $rows = [];
         $phone = 600000000;
+        $admin = new User;
+        $admin->forceFill(['name' => 'Demo Super Admin', 'email' => $address('superadmin'), 'phone' => '0'.($phone++), 'password' => $password, 'is_platform_admin' => true])->save();
+        $rows[] = ['Platform', 'Super admin', $admin->email, rtrim((string) config('app.url'), '/').'/admin'];
         foreach (self::PRACTICES as [$name, $type, $slug, $packageCode, $tag]) {
             $package = Package::query()->where('code', $packageCode)->first();
             if (! $package instanceof Package) {
@@ -76,11 +84,10 @@ class DemoDataCommand extends Command
             $provider->domains()->create(['domain' => $host]);
             Subscription::create(['tenant_id' => $provider->id, 'package_id' => $package->id, 'status' => SubscriptionStatus::Active, 'current_period_ends_at' => now()->addYear()]);
             foreach (StaffRole::forProviderType($type) as $role) {
-                $address = "{$local}+demo-{$tag}-".str_replace('_', '-', $role->value)."@{$domain}";
                 $user = new User;
-                $user->forceFill(['name' => "Demo {$role->label()}", 'email' => $address, 'phone' => '0'.($phone++), 'password' => $password])->save();
+                $user->forceFill(['name' => "Demo {$role->label()}", 'email' => $address($tag.'-'.str_replace('_', '-', $role->value)), 'phone' => '0'.($phone++), 'password' => $password])->save();
                 $add->handle($provider, $user, $role);
-                $rows[] = [$name, $role->label(), $address, "https://{$host}"];
+                $rows[] = [$name, $role->label(), $user->email, "https://{$host}"];
             }
             if ($type === ProviderType::Clinic) {
                 $provider->run(fn () => $this->patients());
@@ -89,7 +96,10 @@ class DemoDataCommand extends Command
         $this->newLine();
         $this->table(['Practice', 'Role', 'Email (sign in with this)', 'Practice address'], $rows);
         $this->warn("Password for every demo account (shown once): {$password}");
-        $this->line('Sign in at '.rtrim((string) config('app.url'), '/').'/login. Owners, practice admins and managers set up an authenticator app at first sign-in.');
+        $this->line('Sign in at '.rtrim((string) config('app.url'), '/').'/login with any email above and this password.');
+        if (TwoFactorPolicy::enabled()) {
+            $this->warn('Two-step sign-in is on: demo accounts need a code'.($email === '' ? ' — run with --email=you@example.com so codes reach your inbox.' : ' (sent to your inbox).'));
+        }
         $this->line('Practice addresses need the *.'.config('clinicflow.provider_domain').' subdomain on your hosting.');
 
         return self::SUCCESS;
@@ -123,16 +133,24 @@ class DemoDataCommand extends Command
     private function remove(): int
     {
         $providers = Provider::query()->where('data->demo', true)->get();
-        $userIds = Membership::query()->whereIn('tenant_id', $providers->pluck('id'))->pluck('user_id')->unique();
         foreach ($providers as $provider) {
             $this->line("Removing {$provider->getAttribute('name')} and its database…");
             $provider->delete();
         }
         // Only demo accounts that no longer belong to any practice.
-        $removed = User::query()->whereIn('id', $userIds)->where('email', 'like', '%+demo-%')->where('is_platform_admin', false)
-            ->whereNotIn('id', Membership::query()->select('user_id'))->delete();
+        $removed = $this->demoUsers()->whereNotIn('id', Membership::query()->select('user_id'))->delete();
         $this->info("Removed {$providers->count()} demo practice(s) and {$removed} demo account(s).");
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Demo accounts only: addresses this command creates (never real accounts).
+     *
+     * @return Builder<User>
+     */
+    private function demoUsers(): Builder
+    {
+        return User::query()->where(fn ($q) => $q->where('email', 'like', '%+demo-%')->orWhere('email', 'like', '%@demo.'.config('clinicflow.provider_domain')));
     }
 }
