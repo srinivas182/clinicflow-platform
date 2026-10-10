@@ -13,6 +13,11 @@
         @inertiaHead
     </head>
     <body class="font-sans antialiased bg-paper text-ink">
+        <div id="boot" class="boot" role="status" aria-label="Loading">
+            <svg class="boot-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0F7C74"/><polyline points="27 16 22 16 19 25 13 7 10 16 5 16" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="boot-name">{{ config('app.name') }}</span>
+            <span class="boot-bar"><span></span></span>
+        </div>
         @inertia
     </body>
 </html>

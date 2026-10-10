@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 import { Logo } from "@/components/Logo";
 
 /**
- * Central sign-in pages: brand panel on the left, form on the right.
+ * Central sign-in pages. Large screens: brand panel on the left, form on the right.
+ * Phones and tablets: logo at the top, form in the middle, developer credit at the bottom.
  */
 export function AuthLayout({ children }: { children: ReactNode }) {
     return (
@@ -20,10 +21,15 @@ export function AuthLayout({ children }: { children: ReactNode }) {
                     </p>
                 </div>
             </aside>
-            <main className="flex flex-1 items-center justify-center p-8">
-                <div className="w-full max-w-md">{children}</div>
-            </main>
-            <DeveloperCredit className="pb-4" />
+            <div className="flex min-w-0 flex-1 flex-col">
+                <header className="px-6 pt-6 lg:hidden">
+                    <Logo />
+                </header>
+                <main className="flex flex-1 items-center justify-center px-6 py-8 sm:p-8">
+                    <div className="w-full max-w-md">{children}</div>
+                </main>
+                <DeveloperCredit className="px-6 pb-5" />
+            </div>
         </div>
     );
 }

@@ -25,9 +25,14 @@ void createInertiaApp({
     setup({ el, App, props }) {
         if (el) {
             createRoot(el).render(<App {...props} />);
+            requestAnimationFrame(() =>
+                document.getElementById("boot")?.remove(),
+            );
         }
     },
     progress: {
         color: "#0F7C74",
+        delay: 100,
+        showSpinner: true,
     },
 });
