@@ -4,6 +4,15 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.70.0] — Sprint W3b: detailed Solutions pages
+
+### Added
+- Detailed, feature-led Solutions pages for Clinics, Individual Doctors, Pharmacies & Labs and Patients (7–8 sections each: hero with clear actions, six features with icons, two in-depth sections, getting started in four steps, security and POPIA, FAQs, closing call to action). Every claim describes something the platform does today. Existing pages are refreshed on deploy unless edited in the CMS.
+- Feature sections show their own icons.
+
+### Fixed
+- Website pictures carry the release number in their address, so browsers fetch the new version after every deploy (an old cached picture still showed "Hosted in South Africa" over the shield).
+
 ## [0.69.0] — Sprint W3a: account menu, sign out everywhere, website menu
 
 ### Added

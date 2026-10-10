@@ -82,14 +82,7 @@ final class PlatformWebsite
                     ['type' => 'cta', 'heading' => 'Start with a 30-day free trial', 'text' => 'Set up your practice in minutes. We verify your registrations before you appear in search.', 'primary' => $start, 'secondary' => ['label' => 'Talk to us', 'href' => '/pages/contact']],
                 ],
             ],
-            self::audiencePage('for-clinics', 'For clinics', 1, 'Run a busy multi-doctor clinic without the paper.', '/images/site/clinic.svg',
-                ['Live queue across doctors, with red-triage alerts to every doctor on shift', 'Rosters, rooms and online bookings', 'In-house pharmacy with an owing list and S5/S6 register', 'In-house lab with verification and a results inbox', 'Revenue by doctor and source, cash-ups and claims ageing']),
-            self::audiencePage('for-doctors', 'For doctors', 2, 'Your own practice, your own address, your own patients.', '/images/site/doctor.svg',
-                ['Bookings and a patient portal on your own subdomain', 'Notes with ICD-10 coding and safe prescribing', 'Scripts signed with a PIN on your phone', 'Payments straight into your merchant account', 'Video, audio and chat consults (add-on)']),
-            self::audiencePage('for-pharmacies-and-labs', 'Pharmacies & labs', 3, 'Receive work from the network and send it back verified.', '/images/site/pharmacy.svg',
-                ['Dispense only the newest signed version of a script', 'Collection codes and delivery hand-over', 'Append-only S5/S6 register', 'Lab orders, barcoded samples and second-person verification', 'Critical results flagged to the ordering doctor']),
-            self::audiencePage('for-patients', 'For patients', 4, 'One login for your clinic, pharmacy and lab.', '/images/site/patient-app.svg',
-                ['Book and see your place in the queue from your phone', 'Results released to you by your doctor', 'Pay invoices online', 'Manage your children\'s profiles', 'Your records are kept by your practice, in South Africa']),
+            ...RolePages::all(),
             [
                 'slug' => 'about', 'title' => 'About Clinic Flow', 'menu_label' => 'About', 'menu_order' => 5, 'published' => true,
                 'meta_description' => 'Why Clinic Flow exists and how it is built.',
@@ -116,23 +109,6 @@ final class PlatformWebsite
                 'slug' => 'terms', 'title' => 'Terms of service', 'menu_label' => null, 'menu_order' => null, 'published' => false,
                 'meta_description' => 'Terms for using Clinic Flow.',
                 'sections' => [['type' => 'richtext', 'html' => '<p><strong>Draft for legal review — publish only after approval.</strong></p><p>These terms will set out subscriptions, trials, acceptable use, data processing, availability and liability.</p>']],
-            ],
-        ];
-    }
-
-    /**
-     * @param  list<string>  $bullets
-     * @return array{slug: string, title: string, meta_description: string, menu_label: ?string, menu_order: ?int, published: bool, sections: list<array<string, mixed>>}
-     */
-    private static function audiencePage(string $slug, string $label, int $order, string $heading, string $image, array $bullets): array
-    {
-        return [
-            'slug' => $slug, 'title' => "Clinic Flow {$label}", 'menu_label' => $label, 'menu_order' => $order, 'published' => true,
-            'meta_description' => $heading,
-            'sections' => [
-                ['type' => 'hero', 'eyebrow' => $label, 'heading' => $heading, 'image' => $image, 'primary' => ['label' => 'Start free trial', 'href' => '/start'], 'secondary' => ['label' => 'See pricing', 'href' => '/pricing']],
-                ['type' => 'split', 'heading' => 'What you get', 'image' => '/images/site/secure-data.svg', 'bullets' => $bullets, 'text' => 'Included in every package for this type of practice, with add-ons you can switch on later.'],
-                ['type' => 'cta', 'heading' => 'Try it with your own team', 'text' => '30 days free. No card needed.', 'primary' => ['label' => 'Start free trial', 'href' => '/start']],
             ],
         ];
     }
