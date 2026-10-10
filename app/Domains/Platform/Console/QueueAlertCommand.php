@@ -27,7 +27,7 @@ class QueueAlertCommand extends Command
         $byJob = $failed->groupBy(fn ($f) => (string) (json_decode((string) $f->payload, true)['displayName'] ?? 'job'))->map->count();
         $body = $failed->count()." background job(s) failed in the last hour:\n".$byJob->map(fn ($n, $job) => "- {$job}: {$n}")->implode("\n")."\n\nReview them in Admin → Queues (Horizon) and retry once the cause is fixed.";
         foreach (User::query()->where('is_platform_admin', true)->pluck('email') as $email) {
-            app(SendMessage::class)->handle('email', (string) $email, $body, 'Clinic Flow: background jobs failed');
+            app(SendMessage::class)->handle('email', (string) $email, $body, 'Dr Business Flow: background jobs failed');
         }
         $this->info("Alerted about {$failed->count()} failed job(s).");
 

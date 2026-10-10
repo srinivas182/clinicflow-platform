@@ -95,7 +95,7 @@ class ApiKeysController extends Controller
             'on' => $webhooks->setActive($id, true),
             'off' => $webhooks->setActive($id, false),
             'test' => DB::table('webhook_endpoints')->where('id', $id)->where('active', true)->exists()
-                ? $webhooks->dispatch('webhook.test', ['message' => 'Test from Clinic Flow'])
+                ? $webhooks->dispatch('webhook.test', ['message' => 'Test from Dr Business Flow'])
                 : abort(422, 'Switch the webhook on first.'),
             default => abort(404),
         };

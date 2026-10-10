@@ -29,7 +29,7 @@ class FhirR4Controller extends Controller
 
         return $this->fhir([
             'resourceType' => 'CapabilityStatement', 'status' => 'active', 'date' => now()->toDateString(), 'kind' => 'instance', 'fhirVersion' => '4.0.1', 'format' => ['json'],
-            'software' => ['name' => 'Clinic Flow', 'version' => (string) config('clinicflow.version')],
+            'software' => ['name' => 'Dr Business Flow', 'version' => (string) config('clinicflow.version')],
             'implementation' => ['description' => 'Read-only clinical record, per-patient consent required for each connected system. Clinical notes are never available.', 'url' => url('/api/fhir/r4')],
             'rest' => [['mode' => 'server', 'security' => ['description' => 'Authorization: Bearer <practice API key with the fhir:read permission>'],
                 'resource' => [$read('Patient'), $read('AllergyIntolerance', ['patient']), $read('Condition', ['patient']), $read('MedicationRequest', ['patient']),

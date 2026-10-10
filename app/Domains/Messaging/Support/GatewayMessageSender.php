@@ -20,7 +20,7 @@ class GatewayMessageSender implements MessageSender
     /** @var list<array{channel: string, recipient: string, body: string, status: string}> */
     public array $sent = [];
 
-    public string $fromName = 'Clinic Flow';
+    public string $fromName = 'Dr Business Flow';
 
     public ?string $replyTo = null;
 

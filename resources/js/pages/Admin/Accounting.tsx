@@ -50,7 +50,7 @@ function AppCard({
             className="mb-4"
         >
             <p className="mb-2 text-xs text-muted">
-                Register Clinic Flow as an app with {a.label} using this
+                Register Dr Business Flow as an app with {a.label} using this
                 redirect URL: <code>{callback}</code>
             </p>
             <div className="grid grid-cols-3 gap-2 text-sm">

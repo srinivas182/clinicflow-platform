@@ -1,3 +1,4 @@
+import { DeveloperCredit } from "@/components/DeveloperCredit";
 import type { ReactNode } from "react";
 import { Logo } from "@/components/Logo";
 
@@ -22,6 +23,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             <main className="flex flex-1 items-center justify-center p-8">
                 <div className="w-full max-w-md">{children}</div>
             </main>
+            <DeveloperCredit className="pb-4" />
         </div>
     );
 }

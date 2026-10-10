@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Billing\Gateways;
 
 /**
- * A verified gateway notification. `reference` is Clinic Flow's own reference
+ * A verified gateway notification. `reference` is Dr Business Flow's own reference
  * (checkout token); amounts are always re-checked against our records.
  */
 final readonly class WebhookResult

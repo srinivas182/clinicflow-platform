@@ -13,7 +13,7 @@ use Throwable;
 
 /**
  * Builds one balanced journal per day and posts it to the connected app.
- * Providers: from the Clinic Flow ledger. Platform: paid subscription invoices
+ * Providers: from the Dr Business Flow ledger. Platform: paid subscription invoices
  * and wallet top-ups. Every ledger account must be mapped to an account code.
  */
 class JournalExporter
@@ -84,7 +84,7 @@ class JournalExporter
                     $lines[] = ['account' => (string) $map[$account], 'debit' => $sum['debit'], 'credit' => $sum['credit'], 'description' => $account];
                 }
                 if ($lines !== []) {
-                    $this->client->postJournal($app, $connection, $date, "Clinic Flow {$date}", $lines);
+                    $this->client->postJournal($app, $connection, $date, "Dr Business Flow {$date}", $lines);
                     $posted++;
                 }
                 $connection->forceFill(['exported_until' => $date, 'last_error' => null])->save();

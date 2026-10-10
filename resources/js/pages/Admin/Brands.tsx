@@ -74,9 +74,9 @@ export default function AdminBrands({ brands, resellers, providers }: Props) {
             <Head title="Brands" />
             <h1 className="mb-1 text-2xl font-semibold">White-label brands</h1>
             <p className="mb-5 text-sm text-muted">
-                A brand changes what practices and patients see. Clinic Flow
+                A brand changes what practices and patients see. Dr Business Flow
                 still bills; the linked reseller earns commission. The partner
-                must point *.their-domain at Clinic Flow before practices can
+                must point *.their-domain at Dr Business Flow before practices can
                 use it.
             </p>
             <Flash />
@@ -197,7 +197,7 @@ export default function AdminBrands({ brands, resellers, providers }: Props) {
                                     form.setData("powered_by", e.target.checked)
                                 }
                             />{" "}
-                            Show &ldquo;Powered by Clinic Flow&rdquo;
+                            Show &ldquo;Powered by Dr Business Flow&rdquo;
                         </label>
                         <label className="flex items-center gap-2">
                             <input
@@ -269,7 +269,7 @@ export default function AdminBrands({ brands, resellers, providers }: Props) {
                                     )
                                 }
                             >
-                                <option value="">Clinic Flow</option>
+                                <option value="">Dr Business Flow</option>
                                 {brands.map((b) => (
                                     <option key={b.id} value={b.id}>
                                         {b.name}
@@ -334,7 +334,7 @@ export default function AdminBrands({ brands, resellers, providers }: Props) {
                             </p>
                             <p className="mb-1 text-xs text-muted">
                                 {b.emailFrom ??
-                                    "Uses the Clinic Flow address until a verified brand address is set."}
+                                    "Uses the Dr Business Flow address until a verified brand address is set."}
                             </p>
                             {b.emailRecords && !b.emailVerified && (
                                 <p className="mb-1 font-mono text-[11px]">

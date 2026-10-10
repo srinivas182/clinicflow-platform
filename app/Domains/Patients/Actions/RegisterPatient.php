@@ -17,7 +17,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Registers a patient with the current provider, applying the registration rules
- * from the Clinic Flow logic flow:
+ * from the Dr Business Flow logic flow:
  *  - SA ID must pass the check digit; it fills date of birth and sex.
  *  - Under 12: guardian name, relationship and cell are required; guardian consents.
  *  - 12 to 17: guardian consents, or the patient consents with maturity confirmed.

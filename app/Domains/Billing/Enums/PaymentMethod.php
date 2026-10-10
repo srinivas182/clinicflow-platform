@@ -6,7 +6,7 @@ namespace App\Domains\Billing\Enums;
 
 /**
  * How a patient paid the provider. Money always goes to the provider's own
- * account; Clinic Flow never holds patient money (ADR 0009).
+ * account; Dr Business Flow never holds patient money (ADR 0009).
  */
 enum PaymentMethod: string
 {

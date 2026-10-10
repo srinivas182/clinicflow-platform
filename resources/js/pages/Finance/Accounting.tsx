@@ -43,7 +43,7 @@ function ConnectionCard({
                 Exported up to {c.exportedUntil ?? "not yet"}.
             </p>
             <div className="mb-2 text-xs font-medium">
-                Map each Clinic Flow account to your account code
+                Map each Dr Business Flow account to your account code
             </div>
             {accounts.map((a) => (
                 <label key={a} className="mb-1 flex items-center gap-2 text-sm">

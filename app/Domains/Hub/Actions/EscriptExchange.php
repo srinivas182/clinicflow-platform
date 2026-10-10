@@ -30,7 +30,7 @@ class EscriptExchange
 
         $pharmacy = Provider::query()->find($pharmacyId);
         if (! $pharmacy instanceof Provider || $pharmacy->type !== ProviderType::Pharmacy || ! in_array($pharmacy->status, [ProviderStatus::Trial, ProviderStatus::Active], true)) {
-            throw ValidationException::withMessages(['pharmacy_id' => 'Choose a pharmacy that is live on the Clinic Flow network.']);
+            throw ValidationException::withMessages(['pharmacy_id' => 'Choose a pharmacy that is live on the Dr Business Flow network.']);
         }
 
         $patient = $prescription->patient;

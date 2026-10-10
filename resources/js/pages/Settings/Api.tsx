@@ -267,7 +267,7 @@ export default function ApiSettings({
             </Card>
             <Card title="Webhooks" className="mt-4">
                 <p className="mb-2 text-xs text-muted">
-                    Clinic Flow sends signed messages (IDs and status only) to
+                    Dr Business Flow sends signed messages (IDs and status only) to
                     your https:// address. Header X-ClinicFlow-Signature:
                     t=time,v1=HMAC-SHA256 of &quot;time.body&quot;. Failed
                     deliveries are retried for about a day; an address that
@@ -420,7 +420,7 @@ export default function ApiSettings({
                             }
                         >
                             <option value="">
-                                No lab system (orders stay in Clinic Flow)
+                                No lab system (orders stay in Dr Business Flow)
                             </option>
                             {lab.systems
                                 .filter((x) => x.orders)

@@ -70,7 +70,7 @@ class CalendarController extends Controller
     public function ical(string $token): HttpResponse
     {
         $conn = CalendarConnection::query()->where('ical_token', $token)->firstOrFail();
-        $lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Clinic Flow//EN', 'CALSCALE:GREGORIAN'];
+        $lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Dr Business Flow//EN', 'CALSCALE:GREGORIAN'];
         Appointment::query()->where('staff_id', $conn->staff_id)->whereIn('status', [AppointmentStatus::Booked->value, AppointmentStatus::CheckedIn->value])
             ->where('starts_at', '>=', now()->subDay())->where('starts_at', '<=', now()->addDays(60))->orderBy('starts_at')->get()
             ->each(function (Appointment $a) use (&$lines, $conn): void {

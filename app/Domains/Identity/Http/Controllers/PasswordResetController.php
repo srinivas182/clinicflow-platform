@@ -37,8 +37,8 @@ class PasswordResetController extends Controller
             $token = $this->broker()->createToken($user);
             $link = url('/reset-password/'.$token).'?email='.urlencode($email);
             app(SendMessage::class)->handle('email', $email,
-                "Reset your Clinic Flow password with this link (valid for 60 minutes, works once):\n\n{$link}\n\nIf you didn't ask for this, ignore this email — your password stays the same.",
-                'Reset your Clinic Flow password');
+                "Reset your Dr Business Flow password with this link (valid for 60 minutes, works once):\n\n{$link}\n\nIf you didn't ask for this, ignore this email — your password stays the same.",
+                'Reset your Dr Business Flow password');
             activity('auth')->causedBy($user)->log('Password reset link sent');
         }
 

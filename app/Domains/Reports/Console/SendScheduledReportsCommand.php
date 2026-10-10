@@ -36,7 +36,7 @@ class SendScheduledReportsCommand extends Command
                 [$from, $to] = $r->schedule === 'weekly' ? [$today->copy()->subDays(7), $today->copy()->subDay()] : [$today->copy()->subMonth()->startOfMonth(), $today->copy()->subMonth()->endOfMonth()];
                 $result = $runner->run(array_merge($def, ['from' => $from->toDateString(), 'to' => $to->toDateString()]));
                 $permission = ReportDatasets::all()[(string) $def['dataset']]['permission'];
-                $body = strip_tags(str_replace(['</tr>', '</th>', '</td>'], ["\n", ' | ', ' | '], ReportsController::html($result, (string) $r->name, 25)))."\n\nOpen the full report in Clinic Flow: ".url('/reports');
+                $body = strip_tags(str_replace(['</tr>', '</th>', '</td>'], ["\n", ' | ', ' | '], ReportsController::html($result, (string) $r->name, 25)))."\n\nOpen the full report in Dr Business Flow: ".url('/reports');
                 foreach ((array) json_decode((string) ($r->recipients ?? '[]'), true) as $userId) {
                     $email = User::query()->whereKey((int) $userId)->value('email');
                     if (is_string($email) && ReportsController::staffMay((int) $userId, $permission)) {

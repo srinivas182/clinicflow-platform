@@ -139,7 +139,7 @@ class Webhooks
             if ($failures >= self::DISABLE_AFTER) {
                 $this->setActive((int) $endpoint->id, false);
                 foreach (User::query()->whereIn('id', Membership::query()->where('tenant_id', tenant('id'))->where('role', StaffRole::Owner->value)->pluck('user_id'))->pluck('email') as $email) {
-                    app(SendMessage::class)->handle('email', (string) $email, "Clinic Flow switched off your webhook to {$endpoint->url} after ".self::DISABLE_AFTER.' failed deliveries in a row. Fix the receiver, then switch it back on in Settings → API.', 'Webhook switched off');
+                    app(SendMessage::class)->handle('email', (string) $email, "Dr Business Flow switched off your webhook to {$endpoint->url} after ".self::DISABLE_AFTER.' failed deliveries in a row. Fix the receiver, then switch it back on in Settings → API.', 'Webhook switched off');
                 }
             }
         }

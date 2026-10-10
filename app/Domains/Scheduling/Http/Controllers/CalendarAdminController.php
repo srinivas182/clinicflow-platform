@@ -12,7 +12,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Super admin: Clinic Flow's Google and Microsoft calendar app credentials.
+ * Super admin: Dr Business Flow's Google and Microsoft calendar app credentials.
  */
 class CalendarAdminController extends Controller
 {

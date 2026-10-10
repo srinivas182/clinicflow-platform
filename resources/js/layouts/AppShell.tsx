@@ -1,3 +1,4 @@
+import { DeveloperCredit } from "@/components/DeveloperCredit";
 import { AccountMenu } from "@/components/AccountMenu";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -189,7 +190,7 @@ export function AppShell({
                     </span>
                     <div className="leading-tight">
                         <div className="text-sm font-medium text-white">
-                            {provider?.name ?? "Clinic Flow"}
+                            {provider?.name ?? "Dr Business Flow"}
                         </div>
                         <div className="text-xs text-chrome-muted">
                             {provider?.typeLabel ?? "Platform"}
@@ -263,6 +264,7 @@ export function AppShell({
                     className="max-md:pt-16 flex-1 px-6 py-6"
                 >
                     {children}
+                    <DeveloperCredit className="mt-10 pb-2" />
                 </main>
             </div>
         </div>

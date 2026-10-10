@@ -15,7 +15,7 @@ type Brand =
     | undefined;
 
 /**
- * The product logo: Clinic Flow, or a white-label brand's logo and name. A brand's colours are
+ * The product logo: Dr Business Flow, or a white-label brand's logo and name. A brand's colours are
  * applied to the theme tokens, so every screen picks them up.
  */
 export function Logo({ tone = "dark" }: { tone?: "dark" | "light" }) {
@@ -23,7 +23,7 @@ export function Logo({ tone = "dark" }: { tone?: "dark" | "light" }) {
 
     useEffect(() => {
         const root = document.documentElement.style;
-        brandTitle.name = brand ? brand.name : "Clinic Flow";
+        brandTitle.name = brand ? brand.name : "Dr Business Flow";
         if (brand) {
             root.setProperty("--color-teal", brand.primary);
             root.setProperty("--color-teal-deep", brand.accent);
@@ -51,7 +51,7 @@ export function Logo({ tone = "dark" }: { tone?: "dark" | "light" }) {
                     <span
                         className={`text-[10px] ${tone === "light" ? "text-white/60" : "text-muted"}`}
                     >
-                        Powered by Clinic Flow
+                        Powered by Dr Business Flow
                     </span>
                 )}
             </span>
@@ -69,7 +69,7 @@ export function Logo({ tone = "dark" }: { tone?: "dark" | "light" }) {
                     aria-hidden="true"
                 />
             </span>
-            Clinic Flow
+            Dr Business Flow
         </span>
     );
 }

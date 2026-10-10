@@ -54,7 +54,7 @@ export default function Invitation({
                             </Button>
                         ) : existingAccount ? (
                             <p className="text-sm">
-                                You already have a Clinic Flow account.{" "}
+                                You already have a Dr Business Flow account.{" "}
                                 <Link
                                     className="text-teal-deep underline"
                                     href="/login"

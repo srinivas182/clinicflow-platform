@@ -8,6 +8,7 @@ use App\Domains\Branches\Support\BranchContext;
 use App\Domains\Platform\Branding\Brands;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Security\BotProtection;
+use App\Domains\Wallet\Support\WalletSettings;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -33,6 +34,8 @@ class HandleInertiaRequests extends Middleware
                 'name' => config('app.name'),
                 'version' => config('clinicflow.version'),
             ],
+            // Developer credit, shown in every footer; practices cannot change it.
+            'credit' => ['text' => (string) WalletSettings::get('platform.credit_text'), 'url' => (string) WalletSettings::get('platform.credit_url')],
             'centralUrl' => rtrim((string) config('app.url'), '/'),
             'auth' => [
                 'user' => $user instanceof User ? ['name' => $user->name, 'email' => $user->email] : null,
@@ -43,7 +46,7 @@ class HandleInertiaRequests extends Middleware
                 // A newly created API key, shown once (never stored readable).
                 'newApiKey' => $request->session()->get('new_api_key'),
             ],
-            // White-label: the practice's brand, or the brand from a brand sign-up link (null = Clinic Flow).
+            // White-label: the practice's brand, or the brand from a brand sign-up link (null = Dr Business Flow).
             // Real-time updates (Reverb); null when broadcasting is off, so pages fall back to polling.
             'realtime' => config('broadcasting.default') === 'reverb' && $provider instanceof Provider ? ['key' => (string) config('broadcasting.connections.reverb.key'),
                 'host' => (string) config('broadcasting.connections.reverb.options.host'), 'port' => (int) config('broadcasting.connections.reverb.options.port'),

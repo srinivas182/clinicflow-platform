@@ -162,7 +162,7 @@ export default function MessagingSettings({
             <Head title="Messaging" />
             <h1 className="mb-1 text-2xl font-semibold">SMS and email</h1>
             <p className="mb-5 text-sm text-muted">
-                Messages are sent by Clinic Flow on your behalf. You choose the
+                Messages are sent by Dr Business Flow on your behalf. You choose the
                 name patients see and where email replies go.
             </p>
             <Flash />

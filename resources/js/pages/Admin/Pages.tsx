@@ -1,4 +1,4 @@
-import { Head, router } from "@inertiajs/react";
+import { Head, router, usePage } from "@inertiajs/react";
 import { ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { Flash } from "@/components/Flash";
@@ -37,6 +37,8 @@ const blank = {
  * field; older HTML pages keep the HTML box.
  */
 export default function Pages({ pages }: { pages: CmsPage[] }) {
+    const credit = usePage<{ credit: { text: string; url: string } }>().props
+        .credit;
     const [form, setForm] = useState(blank);
     const usesSections = form.sections.length > 0 || form.body === "";
 
@@ -214,6 +216,32 @@ export default function Pages({ pages }: { pages: CmsPage[] }) {
                     </Button>
                 </Card>
             </div>
+            <Card
+                title="Developer credit"
+                className="mt-4"
+                aside={<Badge tone="neutral">fixed</Badge>}
+            >
+                <p className="mb-2 text-sm text-muted">
+                    Shown in the footer of this website, every practice website,
+                    the admin and staff areas and the patient portal. Practices
+                    cannot change or hide it.
+                </p>
+                <dl className="grid gap-2 text-sm sm:grid-cols-[8rem_1fr]">
+                    <dt className="text-muted">Text</dt>
+                    <dd>{credit.text}</dd>
+                    <dt className="text-muted">Link</dt>
+                    <dd>
+                        <a
+                            href={credit.url}
+                            target="_blank"
+                            rel="noopener"
+                            className="text-teal-deep underline"
+                        >
+                            {credit.url}
+                        </a>
+                    </dd>
+                </dl>
+            </Card>
         </AdminShell>
     );
 }

@@ -41,7 +41,7 @@ class PracticeSecurityController extends Controller
         TenantLookupCache::forget($provider->id);
         activity('security')->withProperties(['require_authenticator' => $on])->log($on ? 'Authenticator app required for all staff' : 'Authenticator app no longer required for all staff');
 
-        return back()->with('success', $on ? 'All staff must now use an authenticator app. Those without one are asked to set it up when they next open Clinic Flow.' : 'Saved.');
+        return back()->with('success', $on ? 'All staff must now use an authenticator app. Those without one are asked to set it up when they next open Dr Business Flow.' : 'Saved.');
     }
 
     private function ownerPractice(Request $request): Provider

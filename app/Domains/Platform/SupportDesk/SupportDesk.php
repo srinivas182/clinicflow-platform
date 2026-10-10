@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Support tickets between practices and Clinic Flow, and support access that
+ * Support tickets between practices and Dr Business Flow, and support access that
  * only the practice can grant: time-limited, read-only, revocable, and every
  * page the support person opens is recorded in the practice's audit log.
  */

@@ -1,7 +1,7 @@
 import { cn } from "@/lib/cn";
 
 /**
- * The queue ticket — Clinic Flow's signature element. It follows the patient
+ * The queue ticket — Dr Business Flow's signature element. It follows the patient
  * from the kiosk to triage, the doctor, the pharmacy and the TV display.
  */
 export function Ticket({

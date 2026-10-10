@@ -116,8 +116,8 @@ class MessagingAdminController extends Controller
         $row = MessagingProvider::query()->where('driver', $d->value)->firstOrFail();
 
         $result = $d->channel() === 'sms'
-            ? SmsGateway::send($row, $data['to'], 'Clinic Flow test message.')
-            : EmailGateway::send($row, $data['to'], 'Clinic Flow test message', 'This is a test message from Clinic Flow.', 'Clinic Flow', null);
+            ? SmsGateway::send($row, $data['to'], 'Dr Business Flow test message.')
+            : EmailGateway::send($row, $data['to'], 'Dr Business Flow test message', 'This is a test message from Dr Business Flow.', 'Dr Business Flow', null);
 
         $row->forceFill(['last_tested_at' => now(), 'last_test_ok' => $result['ok']])->save();
 

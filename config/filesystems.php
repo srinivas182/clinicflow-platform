@@ -31,7 +31,7 @@ return [
     'disks' => [
 
         /*
-         * Clinic Flow file storage. Replaced at boot by the super admin's active storage
+         * Dr Business Flow file storage. Replaced at boot by the super admin's active storage
          * (App\Domains\Platform\Storage\FileStore); defaults to the same folders as "local".
          */
         'files' => [

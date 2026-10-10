@@ -48,7 +48,7 @@ class ResellerController extends Controller
     public function portal(Request $request, ResellerProgramme $programme): Response
     {
         $reseller = DB::connection((string) config('tenancy.database.central_connection'))->table('resellers')->where('user_id', $request->user()?->getAuthIdentifier())->first();
-        abort_if($reseller === null, 403, 'You are not a Clinic Flow reseller.');
+        abort_if($reseller === null, 403, 'You are not a Dr Business Flow reseller.');
 
         return Inertia::render('Reseller/Portal', [
             'reseller' => ['name' => $reseller->name, 'code' => $reseller->code, 'percent' => (float) $reseller->commission_percent, 'months' => (int) $reseller->commission_months,

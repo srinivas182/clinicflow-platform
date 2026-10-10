@@ -102,7 +102,7 @@ class WalletController extends Controller
         $start = GatewayFactory::fromConfig($config)->startCheckout(new CheckoutRequest(
             amountCents: $topup->amount_cents + $topup->vat_cents,
             reference: $token,
-            description: 'Clinic Flow telemedicine wallet top-up',
+            description: 'Dr Business Flow telemedicine wallet top-up',
             returnUrl: "{$root}/billing/done",
             cancelUrl: "{$root}/billing/done?cancelled=1",
             notifyUrl: "{$root}/api/webhooks/platform/{$config->gateway->value}",

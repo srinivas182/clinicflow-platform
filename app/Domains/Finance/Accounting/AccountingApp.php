@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Stancl\Tenancy\Database\Concerns\CentralConnection;
 
 /**
- * Clinic Flow's registered app with each accounting vendor (super admin).
+ * Dr Business Flow's registered app with each accounting vendor (super admin).
  *
  * @property int $id
  * @property AccountingDriver $driver

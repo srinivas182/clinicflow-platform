@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Provider routes: the signed-in user must hold a usable membership for this
- * provider (active, and not past a locum expiry) — or be Clinic Flow support
+ * provider (active, and not past a locum expiry) — or be Dr Business Flow support
  * under an active grant from this provider.
  */
 class EnsureWorkspaceMember
@@ -35,7 +35,7 @@ class EnsureWorkspaceMember
         $usable = $membership instanceof Membership
             && ($membership->role !== StaffRole::LocumDoctor || app(LocumMarketplace::class)->withinShiftWindow($membership->user_id, $membership->tenant_id));
 
-        // Clinic Flow support under a grant this practice gave (unexpired, not revoked, for this practice only).
+        // Dr Business Flow support under a grant this practice gave (unexpired, not revoked, for this practice only).
         // SupportSessionGuard keeps such sessions read-only and logs every page.
         $grantId = $request->hasSession() ? $request->session()->get('support_grant_id') : null;
         $support = ! $usable && $user instanceof User && $provider !== null && (bool) $user->getAttribute('is_platform_admin') && is_numeric($grantId)

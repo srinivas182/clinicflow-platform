@@ -29,7 +29,7 @@ class GatewayOtpSender implements OtpSender
         if ($channel === 'sms') {
             $this->messages->send('sms', (string) $user->phone, null, $text);
         } elseif ($channel === 'email') {
-            $this->messages->send('email', (string) $user->email, 'Your Clinic Flow sign-in code', $text);
+            $this->messages->send('email', (string) $user->email, 'Your Dr Business Flow sign-in code', $text);
         }
     }
 }

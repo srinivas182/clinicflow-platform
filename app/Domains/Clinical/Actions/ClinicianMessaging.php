@@ -161,7 +161,7 @@ class ClinicianMessaging
         }
         $emails = User::query()->whereIn('id', array_diff($thread->local_staff_ids, [$except]))->pluck('email');
         foreach ($emails as $email) {
-            app(SendMessage::class)->handle('email', (string) $email, "Urgent clinical message from {$from}. Sign in to Clinic Flow to read it.", 'Urgent message: '.$thread->subject, 'message_thread', $thread->id);
+            app(SendMessage::class)->handle('email', (string) $email, "Urgent clinical message from {$from}. Sign in to Dr Business Flow to read it.", 'Urgent message: '.$thread->subject, 'message_thread', $thread->id);
         }
     }
 

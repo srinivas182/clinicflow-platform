@@ -25,7 +25,7 @@ final class ShareConsent
     {
         $code = (string) random_int(100000, 999999);
         Cache::put($this->key($identity, $provider), Hash::make($code), now()->addMinutes(10));
-        app(SendMessage::class)->handle('sms', $identity->cell, "{$provider->name} asks to see parts of your health history on Clinic Flow. Code {$code}. Only share it at {$provider->name}.", null, 'share_consent', $identity->id);
+        app(SendMessage::class)->handle('sms', $identity->cell, "{$provider->name} asks to see parts of your health history on Dr Business Flow. Code {$code}. Only share it at {$provider->name}.", null, 'share_consent', $identity->id);
     }
 
     /**

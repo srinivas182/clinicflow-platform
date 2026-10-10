@@ -4,6 +4,15 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.71.0] — Sprint W4: Dr Business Flow name, pulse logo, developer credit
+
+### Changed
+- The product is now called Dr Business Flow in every screen, email, SMS wording, error page and page title (APP_NAME default updated); website pages already created are renamed too. Webhook header names (X-ClinicFlow-*) are unchanged so existing integrations keep working.
+- The platform website header shows the pulse logo (practice websites keep their own initial or logo); browser tab icon is the pulse logo.
+
+### Added
+- "Developed & Maintained by Mayura Consultancy Services" (linking to www.mayuraconsultancy.com) in the footer of the platform website, every practice website, the admin and staff areas, the patient portal and the sign-in pages. Stored as a fixed platform setting, shown read-only in Admin → Website; practices cannot change or hide it.
+
 ## [0.70.0] — Sprint W3b: detailed Solutions pages
 
 ### Added

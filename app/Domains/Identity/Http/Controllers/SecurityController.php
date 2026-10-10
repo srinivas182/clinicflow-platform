@@ -92,7 +92,7 @@ class SecurityController extends Controller
         activity('auth')->causedBy($user)->log('Password changed');
         if ($user->email !== '') {
             app(SendMessage::class)->handle('email', (string) $user->email,
-                'Your Clinic Flow password was changed at '.now()->format('Y-m-d H:i').". If this wasn't you, reset it now from the sign-in page and contact your practice owner.", 'Your password was changed');
+                'Your Dr Business Flow password was changed at '.now()->format('Y-m-d H:i').". If this wasn't you, reset it now from the sign-in page and contact your practice owner.", 'Your password was changed');
         }
 
         return response()->json(['ok' => true]);

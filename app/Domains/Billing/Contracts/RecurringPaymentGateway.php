@@ -9,7 +9,7 @@ use App\Domains\Billing\Support\GatewayResult;
 
 /**
  * Gateways that can keep charging a saved card (auto-debit).
- * Paystack and Peach are charged by Clinic Flow; PayFast runs the
+ * Paystack and Peach are charged by Dr Business Flow; PayFast runs the
  * subscription itself and reports each charge by ITN.
  */
 interface RecurringPaymentGateway

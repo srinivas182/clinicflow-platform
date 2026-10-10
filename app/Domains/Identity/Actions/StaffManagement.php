@@ -200,9 +200,9 @@ class StaffManagement
     private function send(Provider $provider, ?string $email, ?string $phone, string $name, StaffRole $role, string $token): void
     {
         $url = rtrim((string) config('app.url'), '/').'/invitations/'.$token;
-        $text = "Hello {$name}, {$provider->name} has invited you to join them on Clinic Flow as {$role->label()}. Accept within ".self::INVITE_DAYS." days: {$url}";
+        $text = "Hello {$name}, {$provider->name} has invited you to join them on Dr Business Flow as {$role->label()}. Accept within ".self::INVITE_DAYS." days: {$url}";
         if ($email !== null) {
-            app(SendMessage::class)->handle('email', $email, $text."\n\nIf you were not expecting this, ignore this message.", "Join {$provider->name} on Clinic Flow");
+            app(SendMessage::class)->handle('email', $email, $text."\n\nIf you were not expecting this, ignore this message.", "Join {$provider->name} on Dr Business Flow");
         }
         if ($phone !== null) {
             app(SendMessage::class)->handle('sms', $phone, $text);

@@ -35,8 +35,8 @@ class SubscriptionDebitNotice extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $mail = (new MailMessage)->subject(match ($this->outcome) {
-            'paid' => "Clinic Flow subscription paid — {$this->invoiceNumber}",
-            'failed' => "Clinic Flow could not collect {$this->invoiceNumber}",
+            'paid' => "Dr Business Flow subscription paid — {$this->invoiceNumber}",
+            'failed' => "Dr Business Flow could not collect {$this->invoiceNumber}",
             default => "Automatic payment stopped — {$this->invoiceNumber}",
         });
 

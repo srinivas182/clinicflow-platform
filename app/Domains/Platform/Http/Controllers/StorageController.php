@@ -14,7 +14,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Super admin: where Clinic Flow keeps files.
+ * Super admin: where Dr Business Flow keeps files.
  */
 class StorageController extends Controller
 {

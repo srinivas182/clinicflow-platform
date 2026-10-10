@@ -136,7 +136,7 @@ export default function Subscription({
                                 className="mt-0.5 accent-teal"
                             />
                             <span>
-                                I authorise Clinic Flow to save the card I use
+                                I authorise Dr Business Flow to save the card I use
                                 for invoice {open.number} with {platformGateway}{" "}
                                 and charge it for future subscription invoices
                                 on their due date. I can switch this off at any

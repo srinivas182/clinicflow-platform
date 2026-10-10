@@ -56,7 +56,7 @@ class LocumShiftLifecycle
                 continue;
             }
             $when = CarbonImmutable::parse((string) $shift->starts_at)->format('D j M H:i');
-            $text = ($shift->invited_profile_id !== null ? "{$practice} offered you a locum shift" : "New locum shift at {$practice}")." on {$when}. Sign in to Clinic Flow to apply: ".rtrim((string) config('app.url'), '/').'/locum';
+            $text = ($shift->invited_profile_id !== null ? "{$practice} offered you a locum shift" : "New locum shift at {$practice}")." on {$when}. Sign in to Dr Business Flow to apply: ".rtrim((string) config('app.url'), '/').'/locum';
             if ((bool) $p->alerts_email && filled($p->email)) {
                 app(SendMessage::class)->handle('email', (string) $p->email, $text, 'Locum shift: '.$practice);
             }
@@ -150,7 +150,7 @@ class LocumShiftLifecycle
     }
 
     /**
-     * The locum's invoice to the practice for one shift (paid directly, not through Clinic Flow).
+     * The locum's invoice to the practice for one shift (paid directly, not through Dr Business Flow).
      */
     public function invoicePdf(int $shiftId): string
     {
@@ -175,7 +175,7 @@ class LocumShiftLifecycle
             .($shift->hours_status === 'adjusted' ? ' (adjusted by the practice: '.$e($shift->hours_note).')' : '').'</p>'
             .'<p><b>Rate:</b> '.$money((int) $shift->rate_cents).' per '.$e($shift->rate_basis).'</p>'
             .'<p>Amount: '.$money($net).($vat ? '<br>VAT 15%: '.$money($total - $net) : '').'<br><b>Total due: '.$money($total).'</b></p>'
-            .'<p style="color:#666">Paid directly by the practice to the locum — not through Clinic Flow.'.($shift->invoice_paid_at !== null ? ' Marked paid by the practice on '.substr((string) $shift->invoice_paid_at, 0, 10).'.' : '').'</p></body></html>';
+            .'<p style="color:#666">Paid directly by the practice to the locum — not through Dr Business Flow.'.($shift->invoice_paid_at !== null ? ' Marked paid by the practice on '.substr((string) $shift->invoice_paid_at, 0, 10).'.' : '').'</p></body></html>';
         $pdf = new Dompdf;
         $pdf->loadHtml($html);
         $pdf->render();

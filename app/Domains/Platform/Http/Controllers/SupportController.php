@@ -55,7 +55,7 @@ class SupportController extends Controller
         if ($ticket !== null) {
             abort_unless($this->db()->table('support_tickets')->where('id', $ticket)->where('tenant_id', $provider->id)->exists(), 404);
         }
-        // Only the practice owner may let Clinic Flow support into the workspace; anyone managing settings may end it.
+        // Only the practice owner may let Dr Business Flow support into the workspace; anyone managing settings may end it.
         if ($action === 'grant') {
             abort_unless(Membership::query()->where('tenant_id', $provider->id)->where('user_id', $user->id)->where('role', 'owner')->exists(), 403, 'Only the practice owner can grant support access.');
         }

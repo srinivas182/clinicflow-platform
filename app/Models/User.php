@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
 use Stancl\Tenancy\Database\Concerns\CentralConnection;
 
 /**
- * A person with a Clinic Flow account. Stored once in the Platform database and
+ * A person with a Dr Business Flow account. Stored once in the Platform database and
  * used across every workspace. Roles live on the provider-side Staff record.
  *
  * @property int $id

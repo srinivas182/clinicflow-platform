@@ -55,7 +55,7 @@ class SendMessage
             return false;
         }
 
-        $vars['practice'] ??= $provider instanceof Provider ? (string) Setting::get('messaging', 'from_name', $provider->name) : 'Clinic Flow';
+        $vars['practice'] ??= $provider instanceof Provider ? (string) Setting::get('messaging', 'from_name', $provider->name) : 'Dr Business Flow';
 
         // Patients who chose WhatsApp (and opted in) get it there when the practice has the add-on; otherwise SMS as before.
         if ($channel === 'sms' && app(WhatsAppRouter::class)->trySend($key, $recipient, $vars, $entry, $relatedType, $relatedId)) {
@@ -92,7 +92,7 @@ class SendMessage
     {
         $provider = tenant();
         if ($this->sender instanceof GatewayMessageSender) {
-            $this->sender->fromName = $provider instanceof Provider ? (string) Setting::get('messaging', 'from_name', $provider->name) : 'Clinic Flow';
+            $this->sender->fromName = $provider instanceof Provider ? (string) Setting::get('messaging', 'from_name', $provider->name) : 'Dr Business Flow';
             $reply = $provider instanceof Provider ? Setting::get('messaging', 'reply_to') : null;
             $this->sender->replyTo = is_string($reply) && $reply !== '' ? $reply : null;
             $brandSender = app(Brands::class)->senderFor($provider instanceof Provider ? $provider : null);

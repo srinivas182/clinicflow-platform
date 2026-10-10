@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Platform\Enums;
 
 /**
- * The kinds of business that can subscribe to Clinic Flow.
+ * The kinds of business that can subscribe to Dr Business Flow.
  * Each provider gets its own isolated database.
  */
 enum ProviderType: string
