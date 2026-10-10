@@ -282,6 +282,67 @@ export default function Security({
                     </div>
                 ))}
             </Card>
+            <Card title="Change password" className="mt-4">
+                <form
+                    className="flex flex-wrap items-end gap-2 text-sm"
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        const f = new FormData(e.currentTarget);
+                        run(async () => {
+                            await post("/account/security/password", {
+                                current_password: f.get("current"),
+                                password: f.get("next"),
+                                password_confirmation: f.get("repeat"),
+                            });
+                            window.alert(
+                                "Password changed. Your other browsers and devices have been signed out.",
+                            );
+                            (e.target as HTMLFormElement).reset();
+                        });
+                    }}
+                >
+                    <label>
+                        Current password
+                        <br />
+                        <input
+                            name="current"
+                            type="password"
+                            autoComplete="current-password"
+                            required
+                            className="rounded-md border border-line px-2 py-1"
+                        />
+                    </label>
+                    <label>
+                        New password
+                        <br />
+                        <input
+                            name="next"
+                            type="password"
+                            autoComplete="new-password"
+                            required
+                            minLength={10}
+                            className="rounded-md border border-line px-2 py-1"
+                        />
+                    </label>
+                    <label>
+                        Repeat it
+                        <br />
+                        <input
+                            name="repeat"
+                            type="password"
+                            autoComplete="new-password"
+                            required
+                            minLength={10}
+                            className="rounded-md border border-line px-2 py-1"
+                        />
+                    </label>
+                    <Button size="sm">Change password</Button>
+                </form>
+                <p className="mt-2 text-xs text-muted">
+                    10+ characters with letters and numbers. Passwords known
+                    from data breaches are refused.
+                </p>
+            </Card>
             <Card title="Recent sign-ins" className="mt-4">
                 {signIns.length === 0 && (
                     <p className="text-sm text-muted">

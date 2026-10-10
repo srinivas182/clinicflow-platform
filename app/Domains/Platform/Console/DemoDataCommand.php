@@ -85,9 +85,9 @@ class DemoDataCommand extends Command
             Subscription::create(['tenant_id' => $provider->id, 'package_id' => $package->id, 'status' => SubscriptionStatus::Active, 'current_period_ends_at' => now()->addYear()]);
             foreach (StaffRole::forProviderType($type) as $role) {
                 $user = new User;
-                $user->forceFill(['name' => "Demo {$role->label()}", 'email' => $address($tag.'-'.str_replace('_', '-', $role->value)), 'phone' => '0'.($phone++), 'password' => $password])->save();
+                $user->forceFill(['name' => 'Demo '.$role->labelFor($type), 'email' => $address($tag.'-'.str_replace('_', '-', $role->value)), 'phone' => '0'.($phone++), 'password' => $password])->save();
                 $add->handle($provider, $user, $role);
-                $rows[] = [$name, $role->label(), $user->email, "https://{$host}"];
+                $rows[] = [$name, $role->labelFor($type), $user->email, "https://{$host}"];
             }
             if ($type === ProviderType::Clinic) {
                 $provider->run(fn () => $this->patients());

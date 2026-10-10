@@ -6,6 +6,9 @@ cd "$(dirname "$0")"
 PHP="${PHP:-/opt/cpanel/ea-php84/root/usr/bin/php}"
 COMPOSER="${COMPOSER:-$HOME/bin/composer.phar}"
 
+# If any step fails: clear caches (uncached is always correct), bring the site back up, and say so.
+trap 'echo; echo "✗ Deploy stopped at the step above. The site has been brought back up; fix the error and run deploy.sh again."; "$PHP" artisan optimize:clear >/dev/null 2>&1 || true; "$PHP" artisan up >/dev/null 2>&1 || true' ERR
+
 echo "→ Fetching the latest release"
 git fetch origin deploy
 git checkout -q -B deploy origin/deploy
