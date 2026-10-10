@@ -4,6 +4,16 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.73.0] — Sprint W6a: phones — sign-in, headers, loading
+
+### Fixed
+- Sign-in pages on phones and tablets: logo at the top, form in the middle, developer credit at the bottom (the credit was squeezed into a column at the top, and there was no logo below laptop width).
+- Admin and staff areas on phones: a sticky header with the logo and menu button (replacing the floating button), content never wider than the screen, phone-sized padding.
+
+### Added
+- First-load screen: the logo, name and a loading bar appear before any script arrives, and disappear the moment the app is ready (no blank screen on slow connections); the bar is still for people who prefer reduced motion.
+- The progress bar between pages appears sooner (0.1 s) and shows a spinner.
+
 ## [0.72.0] — Sprint W5: website polish
 
 ### Changed

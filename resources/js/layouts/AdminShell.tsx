@@ -74,17 +74,21 @@ export function AdminShell({
     useEffect(() => router.on("navigate", () => setMenuOpen(false)), []);
 
     return (
-        <div className="flex min-h-screen">
-            <button
-                type="button"
-                className="fixed right-3 top-3 z-30 rounded-md bg-chrome p-2 text-white shadow md:hidden"
-                aria-label="Open menu"
-                aria-expanded={menuOpen}
-                aria-controls="app-menu"
-                onClick={() => setMenuOpen(true)}
-            >
-                <Menu size={18} aria-hidden="true" />
-            </button>
+        <div className="flex min-h-screen max-md:flex-col">
+            <header className="sticky top-0 z-20 flex items-center gap-3 px-4 py-2.5 text-white shadow md:hidden bg-[#1B1640]">
+                <Logo tone="light" />
+                <span className="text-xs text-chrome-muted">Admin</span>
+                <button
+                    type="button"
+                    className="ml-auto rounded-md p-2.5 text-white hover:bg-white/10"
+                    aria-label="Open menu"
+                    aria-expanded={menuOpen}
+                    aria-controls="app-menu"
+                    onClick={() => setMenuOpen(true)}
+                >
+                    <Menu size={18} aria-hidden="true" />
+                </button>
+            </header>
             {menuOpen && (
                 <div
                     className="fixed inset-0 z-30 bg-black/40 md:hidden"
@@ -135,7 +139,7 @@ export function AdminShell({
             <main
                 id="main-content"
                 tabIndex={-1}
-                className="max-md:pt-16 flex-1 bg-paper px-8 py-7"
+                className="min-w-0 flex-1 bg-paper px-4 py-5 md:px-8 md:py-7"
             >
                 {children}
                 <DeveloperCredit className="mt-10 pb-2" />
