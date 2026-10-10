@@ -6,6 +6,7 @@ namespace App\Domains\Platform\Http\Controllers;
 
 use App\Domains\Identity\Support\TwoFactorPolicy;
 use App\Domains\Messaging\Models\MessagingProvider;
+use App\Domains\Platform\Security\BotProtection;
 use App\Domains\Wallet\Support\WalletSettings;
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -29,6 +30,8 @@ class SecuritySettingsController extends Controller
             'enabled' => TwoFactorPolicy::enabled(),
             'methods' => TwoFactorPolicy::methods(),
             'suppliers' => ['email' => MessagingProvider::activeFor('email') !== null, 'sms' => MessagingProvider::activeFor('sms') !== null],
+            'bot' => ['enabled' => (bool) WalletSettings::get('security.bot_protection_enabled'), 'siteKey' => BotProtection::siteKey(),
+                'secretSet' => BotProtection::secret() !== ''],
             'me' => ['authenticator' => $user->totp_confirmed_at !== null, 'email' => $user->email !== '', 'sms' => is_string($user->phone) && $user->phone !== ''],
         ]);
     }
@@ -50,5 +53,27 @@ class SecuritySettingsController extends Controller
             ->log($enabled ? 'Two-step sign-in switched on' : 'Two-step sign-in switched off');
 
         return back()->with('success', $enabled ? 'Two-step sign-in is on.' : 'Two-step sign-in is off — staff sign in with a password only. Switch it on before real patient data.');
+    }
+
+    /** Bot protection (Cloudflare Turnstile): on/off and keys. The secret is stored encrypted and never shown again. */
+    public function updateBot(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user instanceof User, 403);
+        $data = $request->validate(['enabled' => ['required', 'boolean'], 'site_key' => ['nullable', 'string', 'max:100'], 'secret' => ['nullable', 'string', 'max:200']]);
+        if (is_string($data['site_key'] ?? null)) {
+            WalletSettings::put('security.turnstile_site_key', trim($data['site_key']));
+        }
+        if (is_string($data['secret'] ?? null) && trim($data['secret']) !== '') {
+            BotProtection::saveSecret(trim($data['secret']));
+        }
+        $enabled = (bool) $data['enabled'];
+        if ($enabled && (BotProtection::siteKey() === '' || BotProtection::secret() === '')) {
+            throw ValidationException::withMessages(['bot' => 'Add the Turnstile site key and secret key before switching bot protection on.']);
+        }
+        WalletSettings::put('security.bot_protection_enabled', $enabled);
+        activity('security')->causedBy($user)->withProperties(['enabled' => $enabled])->log($enabled ? 'Bot protection switched on' : 'Bot protection settings saved');
+
+        return back()->with('success', $enabled ? 'Bot protection is on for sign-in, sign-up, forgot password and patient portal sign-in.' : 'Bot protection settings saved (off).');
     }
 }

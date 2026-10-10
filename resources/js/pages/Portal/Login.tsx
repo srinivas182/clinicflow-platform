@@ -1,3 +1,4 @@
+import { HumanCheck } from "@/components/HumanCheck";
 import { Head, useForm } from "@inertiajs/react";
 import type { FormEvent } from "react";
 import { Field } from "@/components/form/Field";
@@ -5,7 +6,7 @@ import { Button, Card } from "@/components/ui";
 import { PortalLayout } from "@/layouts/PortalLayout";
 
 export default function PortalLogin({ provider }: { provider: string }) {
-    const form = useForm({ cell: "" });
+    const form = useForm({ "cf-turnstile-response": "", cell: "" });
     const submit = (e: FormEvent) => {
         e.preventDefault();
         form.post("/my/login");
@@ -33,6 +34,12 @@ export default function PortalLogin({ provider }: { provider: string }) {
                             )
                         }
                         error={form.errors.cell}
+                    />
+                    <HumanCheck
+                        onToken={(t) =>
+                            form.setData("cf-turnstile-response", t)
+                        }
+                        error={(form.errors as Record<string, string>).human}
                     />
                     <Button
                         type="submit"
