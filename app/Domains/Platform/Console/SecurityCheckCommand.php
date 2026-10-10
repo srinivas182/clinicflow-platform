@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Platform\Console;
 
+use App\Domains\Identity\Support\TwoFactorPolicy;
 use Illuminate\Console\Command;
 
 /**
@@ -25,6 +26,7 @@ class SecurityCheckCommand extends Command
             'Sessions are encrypted' => (bool) config('session.encrypt'),
             'Sessions time out within 60 minutes' => (int) config('session.lifetime') <= 60,
             'Content-security policy is on' => config('clinicflow.security.csp') === null ? $production : (bool) config('clinicflow.security.csp'),
+            'Two-step sign-in is on' => TwoFactorPolicy::enabled(),
             'Authenticator app required for admins' => (bool) config('clinicflow.security.require_authenticator_for_admins'),
             'Uploads are checked for viruses' => (bool) config('clinicflow.security.virus_scan.enabled'),
         ];

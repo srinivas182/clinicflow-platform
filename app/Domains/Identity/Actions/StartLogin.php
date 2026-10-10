@@ -6,6 +6,7 @@ namespace App\Domains\Identity\Actions;
 
 use App\Domains\Identity\Contracts\OtpSender;
 use App\Domains\Identity\Models\LoginChallenge;
+use App\Domains\Identity\Support\TwoFactorPolicy;
 use App\Domains\Messaging\Actions\SendMessage;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
@@ -69,7 +70,8 @@ class StartLogin
     public function challenge(User $user, ?string $ip = null): LoginChallenge
     {
         // Authenticator app set up: no SMS or email code is sent; the app's code (or a recovery code) is asked for.
-        if ($user->totp_confirmed_at !== null) {
+        $method = TwoFactorPolicy::methodFor($user);
+        if ($method === 'authenticator' || ($method === null && $user->totp_confirmed_at !== null)) {
             return LoginChallenge::create(['user_id' => $user->id, 'code_hash' => '-', 'method' => 'authenticator', 'expires_at' => now()->addMinutes(5), 'ip' => $ip]);
         }
 

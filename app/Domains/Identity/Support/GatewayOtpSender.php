@@ -24,9 +24,12 @@ class GatewayOtpSender implements OtpSender
     {
         $this->sent[$user->id] = $code;
 
-        if (is_string($user->phone) && $user->phone !== '') {
-            $text = MessageCatalogue::render((string) (MessageCatalogue::get('auth.sign_in_code')['sms'] ?? ''), ['code' => $code]);
-            $this->messages->send('sms', $user->phone, null, $text);
+        $text = MessageCatalogue::render((string) (MessageCatalogue::get('auth.sign_in_code')['sms'] ?? ''), ['code' => $code]);
+        $channel = TwoFactorPolicy::messageChannelFor($user);
+        if ($channel === 'sms') {
+            $this->messages->send('sms', (string) $user->phone, null, $text);
+        } elseif ($channel === 'email') {
+            $this->messages->send('email', (string) $user->email, 'Your Clinic Flow sign-in code', $text);
         }
     }
 }

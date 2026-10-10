@@ -10,6 +10,7 @@ use App\Domains\Identity\Actions\TrustedDevices;
 use App\Domains\Identity\Actions\VerifyLoginChallenge;
 use App\Domains\Identity\Http\Requests\LoginRequest;
 use App\Domains\Identity\Models\LoginChallenge;
+use App\Domains\Identity\Support\TwoFactorPolicy;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,11 +34,12 @@ class LoginController extends Controller
         // A device the user trusted in the last 30 days skips the code step (never for super admins).
         $devices = app(TrustedDevices::class);
         $cookie = $request->cookie($devices::COOKIE);
-        if ($devices->trusted($user, is_string($cookie) ? $cookie : null)) {
+        $twoStepOff = ! TwoFactorPolicy::enabled();
+        if ($twoStepOff || $devices->trusted($user, is_string($cookie) ? $cookie : null)) {
             Auth::guard('web')->login($user);
             $request->session()->regenerate();
             $user->forceFill(['last_login_at' => now()])->save();
-            activity('auth')->causedBy($user)->log('Signed in on a trusted device');
+            activity('auth')->causedBy($user)->log($twoStepOff ? 'Signed in (two-step sign-in is off)' : 'Signed in on a trusted device');
             app(RecordSignIn::class)->handle($user, (string) $request->ip(), (string) $request->userAgent());
 
             return redirect()->route('workspaces');

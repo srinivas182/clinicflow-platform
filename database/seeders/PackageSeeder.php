@@ -16,6 +16,11 @@ class PackageSeeder extends Seeder
     public function run(): void
     {
         $packages = [
+            // Free packages (listed first): small limits, no trial needed.
+            ['clinic-free', 'Clinic Free', ProviderType::Clinic, 'Free for one doctor: front desk, consultations and billing', 0, ['doctors' => 1, 'branches' => 1, 'storage_gb' => 2, 'sms' => 0, 'email' => 100, 'sms_overage_cents' => 35, 'email_overage_cents' => 5], ['front_desk', 'consults', 'billing', 'patient_app', 'subdomain', 'msg_booking']],
+            ['doctor-free', 'Doctor Free', ProviderType::IndependentDoctor, 'Free: your own practice and bookings', 0, ['doctors' => 1, 'branches' => 1, 'storage_gb' => 2, 'sms' => 0, 'email' => 100, 'sms_overage_cents' => 35, 'email_overage_cents' => 5], ['consults', 'billing', 'patient_app', 'subdomain', 'msg_booking']],
+            ['pharmacy-free', 'Pharmacy Free', ProviderType::Pharmacy, 'Free: network e-scripts and dispensing', 0, ['branches' => 1, 'storage_gb' => 2, 'sms' => 0, 'email' => 100, 'sms_overage_cents' => 35, 'email_overage_cents' => 5], ['e_scripts', 'dispensing', 'subdomain']],
+            ['lab-free', 'Lab Free', ProviderType::Lab, 'Free: orders, samples and reports', 0, ['branches' => 1, 'storage_gb' => 5, 'sms' => 0, 'email' => 100, 'sms_overage_cents' => 35, 'email_overage_cents' => 5], ['lab_orders', 'samples', 'reports', 'subdomain']],
             ['clinic-starter', 'Clinic Starter', ProviderType::Clinic, 'Up to 3 doctors, one branch', 149000, ['doctors' => 3, 'branches' => 1, 'storage_gb' => 25, 'sms' => 200, 'email' => 500, 'sms_overage_cents' => 35, 'email_overage_cents' => 5], ['front_desk', 'consults', 'billing', 'claims', 'patient_app', 'subdomain', 'msg_booking', 'msg_billing']],
             ['clinic-standard', 'Clinic Standard', ProviderType::Clinic, 'Up to 10 doctors, two branches', 299000, ['doctors' => 10, 'branches' => 2, 'storage_gb' => 100, 'sms' => 600, 'email' => 1500, 'sms_overage_cents' => 35, 'email_overage_cents' => 5], ['reports_advanced', 'front_desk', 'consults', 'billing', 'claims', 'patient_app', 'subdomain', 'multi_doctor', 'in_house_pharmacy', 'in_house_lab', 'procedures', 'revenue_by_doctor', 'msg_booking', 'msg_billing', 'msg_reminders', 'msg_queue_alerts', 'msg_pharmacy']],
             ['clinic-pro', 'Clinic Pro', ProviderType::Clinic, 'Unlimited doctors and branches', 549000, ['doctors' => 0, 'branches' => 0, 'storage_gb' => 500, 'sms' => 1500, 'email' => 5000, 'sms_overage_cents' => 35, 'email_overage_cents' => 5], ['reports_advanced', 'front_desk', 'consults', 'billing', 'claims', 'patient_app', 'subdomain', 'multi_doctor', 'in_house_pharmacy', 'in_house_lab', 'procedures', 'revenue_by_doctor', 'custom_domain', 'group_dashboards', 'accounting_sync', 'priority_support', 'api', 'msg_booking', 'msg_billing', 'msg_reminders', 'msg_queue_alerts', 'msg_pharmacy', 'msg_recalls']],
@@ -32,7 +37,7 @@ class PackageSeeder extends Seeder
                 'summary' => $summary,
                 'price_monthly_cents' => $monthly,
                 'price_annual_cents' => (int) round($monthly * 12 * 0.85),
-                'trial_days' => 30,
+                'trial_days' => $monthly > 0 ? 30 : 0,
                 'limits' => $limits,
                 'features' => $features,
                 'addons' => $type->canOfferTelemedicine() ? ['telemedicine', 'whatsapp', 'ai_scribe', 'extra_messaging', 'custom_domain'] : ['whatsapp', 'extra_messaging', 'custom_domain'],

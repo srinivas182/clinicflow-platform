@@ -16,9 +16,12 @@ it('shows only active packages on the public pricing page', function (): void {
         ->assertOk()
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->component('Public/Pricing')
-            ->has('packages', 6)
-            ->where('packages.0.code', 'clinic-starter')
-            ->where('packages.0.priceMonthly', 1490));
+            // Free packages are listed first; the paid ones follow.
+            ->has('packages', 10)
+            ->where('packages.0.code', 'clinic-free')
+            ->where('packages.0.priceMonthly', 0)
+            ->where('packages.4.code', 'clinic-starter')
+            ->where('packages.4.priceMonthly', 1490));
 });
 
 it('keeps admin pages for platform admins only', function (): void {
