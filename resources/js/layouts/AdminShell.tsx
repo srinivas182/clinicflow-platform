@@ -1,3 +1,4 @@
+import { AccountMenu } from "@/components/AccountMenu";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Link, router } from "@inertiajs/react";
@@ -128,6 +129,7 @@ export function AdminShell({
                     ))}
                 </nav>
                 <ThemeToggle className="mt-3 self-start" />
+                <AccountMenu area="admin" />
             </aside>
             <main
                 id="main-content"

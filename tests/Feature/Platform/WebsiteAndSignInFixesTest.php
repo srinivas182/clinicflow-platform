@@ -52,7 +52,8 @@ it('shows the pricing page with the site menu, sign-in and sign-up', function ()
     $this->seed(PackageSeeder::class);
     $this->get('http://localhost/pricing')->assertOk()->assertInertia(fn ($p) => $p->component('Public/Pricing')
         ->where('site.cta.href', '/start')
-        ->where('site.menu', fn ($menu) => collect($menu)->pluck('href')->contains('/login') && collect($menu)->pluck('href')->contains('/pricing')));
+        ->where('site.signIn.href', '/login')
+        ->where('site.menu', fn ($menu) => collect($menu)->pluck('href')->contains('/pricing')));
 });
 
 it('updates the hosting wording on pages already created', function (): void {

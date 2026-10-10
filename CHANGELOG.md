@@ -4,6 +4,17 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.69.0] — Sprint W3a: account menu, sign out everywhere, website menu
+
+### Added
+- Account menu at the foot of the sidebar in the admin area and the practice area: name and email, Account & Security, My Workspaces / Switch Practice, Sign Out (previously there was no way to sign out).
+- Signing out in a practice ends the practice session and the central session, through a signed two-minute link that only works for the person it was made for.
+
+### Changed
+- Website menu: About · Solutions (Clinics, Individual Doctors, Pharmacies & Labs, Patients) · Find Care · Pricing, with Sign In and Start Free Trial on the right; Title Case labels; the Solutions dropdown opens on hover, click or tap and closes with Escape. Footer lists the solutions, About, Contact and published legal pages.
+- Find Care, About, Contact, Privacy and Terms use the full website layout (menu, footer, theme).
+- Practice websites show "Staff Sign In" on the right of the header.
+
 ## [0.68.0] — Sprint W2: bot protection
 
 ### Added

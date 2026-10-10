@@ -27,6 +27,7 @@ use App\Domains\Identity\Http\Controllers\ConfirmIdentityController;
 use App\Domains\Identity\Http\Controllers\HandoffController;
 use App\Domains\Identity\Http\Controllers\PracticeSecurityController;
 use App\Domains\Identity\Http\Controllers\StaffController;
+use App\Domains\Identity\Http\Controllers\StaffSessionController;
 use App\Domains\Lab\Http\Controllers\LabCatalogController;
 use App\Domains\Lab\Http\Controllers\LabController;
 use App\Domains\Lab\Inbound\LabInboundController;
@@ -192,6 +193,8 @@ Route::middleware([
     Route::post('/kiosk/{token}', [DeviceController::class, 'kioskCheckIn'])->middleware('throttle:20,1')->name('kiosk.checkin');
     Route::get('/display/{token}', [DeviceController::class, 'display'])->name('display');
     Route::post('/display/{token}/broadcasting/auth', [RealtimeAuthController::class, 'display'])->middleware('throttle:30,1')->name('display.broadcasting');
+
+    Route::post('/staff/logout', [StaffSessionController::class, 'destroy'])->name('staff.logout');
 
     Route::middleware(['auth', 'workspace', 'provider.writable'])->group(function (): void {
         Route::get('/workspace', ProviderHomeController::class)->name('provider.home');

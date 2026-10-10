@@ -16,10 +16,15 @@ it('publishes a complete default clinicflow.co.za with menus and images', functi
         ->assertInertia(fn (AssertableInertia $page) => $page->component('Public/Site')
             ->where('sections.0.type', 'hero')
             ->where('sections.0.image', '/images/site/hero-network.svg')
-            ->where('site.menu.0.label', 'For clinics')
-            ->where('site.cta.href', '/start')
-            ->has('site.menu', 9)
-            ->where('site.menu.8.href', '/login'));
+            ->where('site.menu.0.label', 'About')
+            ->where('site.menu.1.label', 'Solutions')
+            ->where('site.menu.1.children', fn ($c) => collect($c)->pluck('label')->all() === ['Clinics', 'Individual Doctors', 'Pharmacies & Labs', 'Patients'])
+            ->where('site.menu.2.label', 'Find Care')
+            ->where('site.menu.3.label', 'Pricing')
+            ->has('site.menu', 4)
+            ->where('site.signIn.href', '/login')
+            ->where('site.cta.label', 'Start Free Trial')
+            ->where('site.cta.href', '/start'));
 
     $this->get('http://localhost/pages/for-doctors')->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->component('Public/Site'));
     expect(file_exists(public_path('images/site/hero-network.svg')))->toBeTrue();
@@ -27,7 +32,9 @@ it('publishes a complete default clinicflow.co.za with menus and images', functi
 
 it('keeps legal drafts unpublished until approved', function (): void {
     $this->get('http://localhost/pages/privacy')->assertNotFound();
-    $this->get('http://localhost/')->assertInertia(fn (AssertableInertia $page) => $page->where('site.footer', [['label' => 'Sign in', 'href' => '/login']]));
+    // Draft legal pages never appear in the footer until approved.
+    $this->get('http://localhost/')->assertInertia(fn (AssertableInertia $page) => $page->where('site.footer', fn ($footer) => ! collect($footer)->pluck('href')->contains('/pages/privacy')
+        && ! collect($footer)->pluck('href')->contains('/pages/terms') && collect($footer)->pluck('href')->contains('/login')));
 });
 
 it('never overwrites edited pages when the defaults run again', function (): void {

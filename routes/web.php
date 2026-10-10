@@ -78,6 +78,9 @@ foreach ($centralDomains as $index => $domain) {
         Route::get('/status', [StatusController::class, 'show'])->name('status.public');
         Route::get('/status.json', [StatusController::class, 'json'])->name('status.json');
         Route::get('/accounting/callback/{driver}', AccountingCallbackController::class)->whereIn('driver', ['xero', 'sage', 'zoho'])->middleware('throttle:20,1')->name('accounting.callback');
+        // Signed, short-lived link from a practice's "Sign Out": ends the central session too.
+        Route::get('/logout/everywhere', [LoginController::class, 'signedOut'])->middleware('signed:relative')->name('logout.signed');
+
         Route::middleware('auth')->group(function (): void {
             Route::get('/groups', [GroupController::class, 'mine'])->name('groups.mine');
             Route::get('/reseller', [ResellerController::class, 'portal'])->name('reseller.portal');

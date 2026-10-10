@@ -45,10 +45,11 @@ final class SiteData
             'page' => ['title' => str_replace('{name}', $tokens['name'], $page->title), 'description' => str_replace('{name}', $tokens['name'], (string) $page->meta_description)],
             'sections' => self::withoutEmptyPhoneButtons(SiteSections::resolve($page->sections, [...$tokens, 'phone' => $tokens['phone'] !== '' ? $tokens['phone'] : 'the practice'])),
             'site' => [
-                'name' => $tokens['name'], 'colour' => PracticeData::get()['colour'], 'menu' => [...$menu, ['label' => 'Staff sign in', 'href' => rtrim((string) config('app.url'), '/').'/login?practice='.tenant('id')]],
+                'name' => $tokens['name'], 'colour' => PracticeData::get()['colour'], 'menu' => $menu,
+                'signIn' => ['label' => 'Staff Sign In', 'href' => rtrim((string) config('app.url'), '/').'/login?practice='.tenant('id')],
                 'cta' => ['label' => 'Patient portal', 'href' => '/portal'],
                 'contact' => ['phone' => $tokens['phone'], 'email' => $tokens['email'], 'address' => $tokens['address'], 'hours' => $tokens['hours']],
-                'footer' => [['label' => 'Staff sign in', 'href' => rtrim((string) config('app.url'), '/').'/login?practice='.tenant('id')]],
+                'footer' => [['label' => 'Staff Sign In', 'href' => rtrim((string) config('app.url'), '/').'/login?practice='.tenant('id')]],
                 'poweredBy' => true,
                 'reviews' => Feedback::publicReviews(),
                 'ogImage' => Setting::get('website', 'og_image'),
@@ -75,21 +76,30 @@ final class SiteData
      */
     public static function platformSite(): array
     {
-        $menu = CmsPage::query()->where('published', true)->whereNotNull('menu_order')->orderBy('menu_order')->get()
-            ->map(fn (CmsPage $p) => ['label' => $p->menu_label ?? $p->title, 'href' => "/pages/{$p->slug}"])->values()->all();
+        $pages = CmsPage::query()->where('published', true)->get(['slug', 'title'])->keyBy('slug');
+        $solutions = collect([['for-clinics', 'Clinics'], ['for-doctors', 'Individual Doctors'], ['for-pharmacies-and-labs', 'Pharmacies & Labs'], ['for-patients', 'Patients']])
+            ->filter(fn (array $p) => $pages->has($p[0]))->map(fn (array $p) => ['label' => $p[1], 'href' => "/pages/{$p[0]}"])->values()->all();
+        $page = fn (string $slug, string $label) => $pages->has($slug) ? ['label' => $label, 'href' => "/pages/{$slug}"] : null;
 
         return [
             'name' => 'Clinic Flow', 'colour' => '#0F7C74',
-            'menu' => [...$menu, ['label' => 'Pricing', 'href' => '/pricing'], ['label' => 'Find care', 'href' => '/find-care'], ['label' => 'Sign in', 'href' => '/login']],
-            'cta' => ['label' => 'Start free trial', 'href' => '/start'],
+            'menu' => array_values(array_filter([
+                $page('about', 'About'),
+                $solutions === [] ? null : ['label' => 'Solutions', 'href' => $solutions[0]['href'], 'children' => $solutions],
+                ['label' => 'Find Care', 'href' => '/find-care'],
+                ['label' => 'Pricing', 'href' => '/pricing'],
+            ])),
+            'signIn' => ['label' => 'Sign In', 'href' => '/login'],
+            'cta' => ['label' => 'Start Free Trial', 'href' => '/start'],
             'contact' => [
                 'phone' => (string) config('clinicflow.website.phone'), 'email' => (string) config('clinicflow.website.email'),
                 'address' => (string) config('clinicflow.website.address'), 'hours' => 'Mon–Fri 08:00–17:00',
             ],
-            'footer' => [
-                ...CmsPage::query()->where('published', true)->whereIn('slug', ['privacy', 'terms'])->get()->map(fn (CmsPage $p) => ['label' => $p->title, 'href' => "/pages/{$p->slug}"])->values()->all(),
-                ['label' => 'Sign in', 'href' => '/login'],
-            ],
+            'footer' => array_values(array_filter([
+                ...$solutions,
+                $page('about', 'About'), $page('contact', 'Contact'), $page('privacy', 'Privacy'), $page('terms', 'Terms'),
+                ['label' => 'Sign In', 'href' => '/login'],
+            ])),
             'poweredBy' => false,
         ];
     }
