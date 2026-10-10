@@ -225,18 +225,20 @@ function Section({ s, site }: { s: SiteSection; site: SiteInfo }) {
                 <section id={anchor(s.heading)} className="bg-paper py-16">
                     <div className="mx-auto max-w-6xl px-6">
                         {s.heading && (
-                            <h2 className="mb-8 text-3xl font-semibold">
+                            <h2 className="mb-10 text-center text-3xl font-semibold">
                                 {s.heading}
                             </h2>
                         )}
-                        <ol className="grid gap-5 md:grid-cols-5">
+                        <ol
+                            className={`grid gap-5 sm:grid-cols-2 ${STEP_COLUMNS[s.items?.length ?? 0] ?? "lg:grid-cols-4"}`}
+                        >
                             {s.items?.map((i, k) => (
                                 <li
                                     key={k}
-                                    className="rounded-xl bg-surface p-5"
+                                    className="rounded-xl bg-surface p-6 text-center"
                                 >
                                     <span
-                                        className="grid size-8 place-items-center rounded-full text-sm font-bold text-white"
+                                        className="mx-auto grid size-10 place-items-center rounded-full text-base font-bold text-white"
                                         style={{ background: site.colour }}
                                     >
                                         {k + 1}
@@ -564,3 +566,11 @@ function anchor(heading?: string): string | undefined {
               .replace(/^-|-$/g, "")
         : undefined;
 }
+
+/** As many columns as there are steps, so they always fill the row evenly. */
+const STEP_COLUMNS: Record<number, string> = {
+    2: "lg:grid-cols-2",
+    3: "lg:grid-cols-3",
+    4: "lg:grid-cols-4",
+    5: "lg:grid-cols-5",
+};

@@ -50,7 +50,7 @@ export function SiteLayout({
                     </a>
                     <nav
                         aria-label="Main"
-                        className={`${open ? "flex" : "hidden"} absolute top-16 right-0 left-0 flex-col gap-1 border-b border-line bg-surface p-4 md:static md:flex md:flex-1 md:flex-row md:items-center md:border-0 md:p-0`}
+                        className={`${open ? "flex" : "hidden"} absolute top-16 right-0 left-0 flex-col gap-1 border-b border-line bg-surface p-4 md:static md:flex md:flex-1 md:flex-row md:items-center md:justify-center md:border-0 md:p-0`}
                     >
                         {site.menu.map((m) => (
                             <NavItem key={m.label} item={m} />
@@ -58,7 +58,7 @@ export function SiteLayout({
                         {site.signIn && (
                             <a
                                 href={site.signIn.href}
-                                className="rounded-md px-3 py-2 text-sm font-medium text-muted hover:text-ink md:hidden"
+                                className="rounded-md px-3 py-2 text-sm font-medium text-ink hover:text-teal-deep md:hidden"
                             >
                                 {site.signIn.label}
                             </a>
@@ -71,11 +71,11 @@ export function SiteLayout({
                             {site.cta.label}
                         </a>
                     </nav>
-                    <div className="ml-auto hidden items-center gap-2 md:flex">
+                    <div className="hidden items-center gap-2 md:flex">
                         {site.signIn && (
                             <a
                                 href={site.signIn.href}
-                                className="rounded-md px-3 py-2 text-sm font-medium text-muted hover:text-ink"
+                                className="rounded-md px-3 py-2 text-sm font-medium text-ink hover:text-teal-deep"
                             >
                                 {site.signIn.label}
                             </a>
@@ -130,7 +130,7 @@ export function SiteLayout({
 function NavItem({ item }: { item: SiteLink }) {
     const [open, setOpen] = useState(false);
     const link =
-        "rounded-md px-3 py-2 text-sm font-medium text-muted hover:text-ink";
+        "rounded-md px-3 py-2 text-sm font-medium text-ink hover:text-teal-deep";
     if (!item.children?.length) {
         return (
             <a href={item.href} className={link}>
@@ -167,7 +167,7 @@ function NavItem({ item }: { item: SiteLink }) {
                         <a
                             key={c.href}
                             href={c.href}
-                            className="block rounded-md px-3 py-2 text-sm text-muted hover:bg-line-soft hover:text-ink"
+                            className="block rounded-md px-3 py-2 text-sm text-ink hover:bg-line-soft hover:text-teal-deep"
                         >
                             {c.label}
                         </a>

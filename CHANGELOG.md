@@ -4,6 +4,12 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.72.0] — Sprint W5: website polish
+
+### Changed
+- "Up and running in four steps" sections are centred, with as many columns as there are steps (previously four steps sat in five columns, off to one side).
+- Website menu: Contact Us added (About · Solutions · Find Care · Pricing · Contact Us), centred in the header, links in black for readability.
+
 ## [0.71.0] — Sprint W4: Dr Business Flow name, pulse logo, developer credit
 
 ### Changed
