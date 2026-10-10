@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Platform\Http\Controllers;
 
 use App\Domains\Platform\Models\Package;
+use App\Domains\Platform\Support\Website\SiteData;
 use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,7 +17,7 @@ class PricingController extends Controller
 {
     public function __invoke(): Response
     {
-        return Inertia::render('Public/Pricing', ['packages' => self::packages()]);
+        return Inertia::render('Public/Pricing', ['packages' => self::packages(), 'site' => SiteData::platformSite()]);
     }
 
     /**

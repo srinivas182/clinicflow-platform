@@ -1,4 +1,5 @@
-import { Head, router } from "@inertiajs/react";
+import { useEffect } from "react";
+import { Head, Link, router } from "@inertiajs/react";
 import { ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui";
 import { AuthLayout } from "@/layouts/AuthLayout";
@@ -14,10 +15,18 @@ interface Workspace {
 export default function Workspaces({
     userName,
     workspaces,
+    isPlatformAdmin,
+    autoOpen,
 }: {
     userName: string;
     workspaces: Workspace[];
+    isPlatformAdmin: boolean;
+    autoOpen: string | null;
 }) {
+    // Arriving from a practice's "Staff sign in": go straight into that practice.
+    useEffect(() => {
+        if (autoOpen) router.post(`/workspaces/${autoOpen}/open`);
+    }, [autoOpen]);
     return (
         <AuthLayout>
             <Head title="Choose workspace" />
@@ -26,7 +35,19 @@ export default function Workspaces({
                 Choose where you're working today.
             </p>
             <div className="mt-8 flex flex-col gap-3">
-                {workspaces.length === 0 && (
+                {isPlatformAdmin && (
+                    <Link
+                        href="/admin"
+                        className="mb-3 block rounded-xl border border-line bg-surface p-4 hover:border-teal"
+                    >
+                        <span className="font-semibold">Platform admin</span>
+                        <span className="block text-sm text-muted">
+                            Practices, packages, messaging and security for the
+                            whole platform
+                        </span>
+                    </Link>
+                )}
+                {workspaces.length === 0 && !isPlatformAdmin && (
                     <p className="rounded-lg border border-line bg-paper p-4 text-sm text-muted">
                         You don't have access to any workspace yet. Ask your
                         practice admin to invite you.

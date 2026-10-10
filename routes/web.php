@@ -104,6 +104,7 @@ foreach ($centralDomains as $index => $domain) {
         });
 
         Route::middleware(['auth', 'platform.admin'])->prefix('admin')->name('admin.')->group(function (): void {
+            Route::get('/', fn () => redirect()->route('admin.providers.index'))->name('home');
             Route::get('/providers', [ProviderAdminController::class, 'index'])->name('providers.index');
             Route::get('/providers/{provider}', [ProviderAdminController::class, 'show'])->name('providers.show');
             Route::post('/providers/{provider}/approve', [ProviderAdminController::class, 'approve'])->name('providers.approve');

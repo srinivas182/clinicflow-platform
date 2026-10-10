@@ -34,7 +34,8 @@ beforeEach(function (): void {
 it('signs in with a password only when two-step sign-in is off, and forces nothing', function (): void {
     WalletSettings::put('security.two_factor_enabled', false);
     config(['clinicflow.security.require_authenticator_for_admins' => true]);
-    $this->post('http://localhost/login', ['login' => 'admin@drbusinessflow.com', 'password' => 'correct-horse-battery'])->assertRedirect('/workspaces');
+    // A super admin with no practice goes straight to the admin area.
+    $this->post('http://localhost/login', ['login' => 'admin@drbusinessflow.com', 'password' => 'correct-horse-battery'])->assertRedirect('/admin/providers');
     $this->assertAuthenticatedAs($this->admin);
     expect($this->outbox->sent)->toBe([]);
     // No authenticator set-up is forced on the super admin while two-step sign-in is off.

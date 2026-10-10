@@ -43,7 +43,9 @@ function signInTrusting(object $t, string $email = 'nurse@sunrise.test'): ?strin
 {
     $t->post('http://localhost/login', ['login' => $email, 'password' => 'correct-horse-battery']);
     $user = User::query()->where('email', $email)->firstOrFail();
-    $response = $t->post('http://localhost/login/verify', ['code' => $t->otp->sent[$user->id], 'trust_device' => '1'])->assertRedirect('/workspaces');
+    // Super admins with no practice land in the admin area; staff on the workspace chooser.
+    $response = $t->post('http://localhost/login/verify', ['code' => $t->otp->sent[$user->id], 'trust_device' => '1'])
+        ->assertRedirect($user->is_platform_admin ? '/admin/providers' : '/workspaces');
     $t->post('http://localhost/logout');
     $t->otp->sent = [];
 

@@ -4,6 +4,18 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.67.0] — Sprint W1: website and sign-in fixes
+
+### Fixed
+- Super admins: /admin opens the admin area; a super admin with no practice goes there straight after sign-in (previously "You don't have access to any workspace"); the workspace page offers a "Platform admin" card.
+- Website illustrations: no text drawn inside the security shield (it overlapped the outline), and the remaining labels are locked to fixed widths so they never overlap icons whatever font the browser uses.
+- "Hosted in AWS Cape Town (af-south-1)" changed to "Hosted in South Africa" (accurate for every installation), including pages already created.
+- Pricing page uses the website layout: same menu, footer and theme.
+- Sign-up is easy to find: "Start free trial" in the phone menu too, "Sign in" in the menu, "New practice? Start free" on the sign-in page.
+
+### Added
+- "Staff sign in" on practice websites (menu and footer): signs in centrally and opens that practice straight away; the sign-in page shows the practice's name.
+
 ## [0.66.0] — Sprint D0-4: passwords, safer deploys, manager label
 
 ### Added
