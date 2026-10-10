@@ -74,7 +74,8 @@ return [
     |
     */
 
-    'connection' => env('SESSION_CONNECTION'),
+    // Always the platform database (sessions are shared across a person's practices).
+    'connection' => env('SESSION_CONNECTION', env('DB_CONNECTION', 'mysql')),
 
     /*
     |--------------------------------------------------------------------------

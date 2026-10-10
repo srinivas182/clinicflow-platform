@@ -4,6 +4,12 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.65.0] — Sprint D0-3: database cache, sessions and queue on shared hosting
+
+### Fixed
+- With the database cache, sessions and queue (shared cPanel hosting, no Redis), all three now always use the platform database. Inside a practice they used the practice's database, which has no cache, sessions or jobs table (seen when creating demo practices on Afrihost).
+- Practices' caches stay separate on any cache store: tags where the store supports them (Redis, array — unchanged), a per-practice key prefix where it does not (database, file).
+
 ## [0.64.0] — Sprint DEMO: demo data, free packages and first sign-in without SMS
 
 ### Added
