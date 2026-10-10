@@ -126,7 +126,7 @@ class WebsiteToolsController extends Controller
         $this->authorize(Permission::SETTINGS_MANAGE);
         $action === 'reply' ? $feedback->reply($review, $request->string('reply')->toString()) : $feedback->flag($review, $request->string('reason')->toString());
 
-        return back()->with('success', $action === 'reply' ? 'Reply saved.' : 'Reported to Clinic Flow. The review is hidden until it is reviewed.');
+        return back()->with('success', $action === 'reply' ? 'Reply saved.' : 'Reported to Dr Business Flow. The review is hidden until it is reviewed.');
     }
 
     public function reviewSettings(Request $request): RedirectResponse

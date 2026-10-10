@@ -43,7 +43,7 @@ export default function Pricing({
         <SiteLayout
             site={site}
             title="Pricing"
-            description="Clinic Flow packages and prices, including free packages."
+            description="Dr Business Flow packages and prices, including free packages."
         >
             <main className="mx-auto max-w-6xl px-6 py-12">
                 <h1 className="text-4xl font-semibold tracking-tight">

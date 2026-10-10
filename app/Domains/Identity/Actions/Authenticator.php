@@ -19,7 +19,7 @@ use Illuminate\Validation\ValidationException;
  */
 class Authenticator
 {
-    public const ISSUER = 'Clinic Flow';
+    public const ISSUER = 'Dr Business Flow';
 
     /**
      * Starts set-up: a new secret is stored but not switched on until a code from the app is confirmed.

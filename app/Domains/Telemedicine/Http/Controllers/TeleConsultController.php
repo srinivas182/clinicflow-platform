@@ -28,7 +28,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Online consults inside Clinic Flow: the doctor's list and call screen, the
+ * Online consults inside Dr Business Flow: the doctor's list and call screen, the
  * patient's call screen in the portal, and the owner's add-on switch.
  */
 class TeleConsultController extends Controller

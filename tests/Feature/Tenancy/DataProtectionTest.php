@@ -74,10 +74,10 @@ it('alerts the owners once when someone opens unusually many patient records, an
     $open($patients[0])->assertOk();
     $open($patients[1])->assertOk();
     $open($patients[0])->assertOk();
-    expect(collect($this->outbox->sent)->where(1, 'Clinic Flow security alert'))->toHaveCount(0);
+    expect(collect($this->outbox->sent)->where(1, 'Dr Business Flow security alert'))->toHaveCount(0);
     $open($patients[2])->assertOk();
     $open($patients[3])->assertOk();
-    $alerts = collect($this->outbox->sent)->where(1, 'Clinic Flow security alert');
+    $alerts = collect($this->outbox->sent)->where(1, 'Dr Business Flow security alert');
     expect($alerts)->toHaveCount(1)->and($alerts->first()[0])->toBe('owner@sunrise.test')->and($alerts->first()[2])->toContain('Dr Mokoena opened 3 different patient records');
 
     $open($patients[4])->assertOk();
@@ -90,7 +90,7 @@ it('alerts the owners about every patient data export', function (): void {
     $patient = $this->clinic->run(fn () => registerTestPatient('Thandi', '880412')->id);
     $this->actingAs($this->owner)->withSession([RequireRecentConfirmation::SESSION_KEY => now()->getTimestamp()])
         ->get("http://sunrise.clinicflow.test/compliance/patients/{$patient}/export")->assertOk();
-    expect(collect($this->outbox->sent)->where(1, 'Clinic Flow security alert')->pluck(2)->implode(' '))->toContain('exported a patient');
+    expect(collect($this->outbox->sent)->where(1, 'Dr Business Flow security alert')->pluck(2)->implode(' '))->toContain('exported a patient');
 });
 
 it('limits patient searches per person', function (): void {

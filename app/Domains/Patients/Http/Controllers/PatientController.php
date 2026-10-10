@@ -62,7 +62,7 @@ class PatientController extends Controller
             $network = app(NetworkIdentity::class);
             $identity = $network->register($patient, $provider);
             if ($identity !== null && ! $network->isLinked($identity, $provider->id)) {
-                $message .= ' This cell number is already on the Clinic Flow network — use Network search to send the patient an approval code and link their records.';
+                $message .= ' This cell number is already on the Dr Business Flow network — use Network search to send the patient an approval code and link their records.';
             }
         }
 

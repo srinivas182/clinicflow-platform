@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\DB;
 final class WalletSettings
 {
     public const DEFAULTS = [
+        // Developer credit in every footer. Fixed for now (shown read-only to the super admin).
+        'platform.credit_text' => 'Developed & Maintained by Mayura Consultancy Services',
+        'platform.credit_url' => 'https://www.mayuraconsultancy.com',
         'wallet.price_video_per_minute_cents' => 250,
         'wallet.price_audio_per_minute_cents' => 120,
         'wallet.price_chat_per_session_cents' => 1200,

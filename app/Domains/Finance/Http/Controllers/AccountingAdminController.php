@@ -17,7 +17,7 @@ use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 /**
- * Super admin: which accounting apps providers may connect (with Clinic Flow's
+ * Super admin: which accounting apps providers may connect (with Dr Business Flow's
  * registered app credentials) and the platform's own books.
  */
 class AccountingAdminController extends Controller

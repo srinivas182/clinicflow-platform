@@ -1,3 +1,4 @@
+import { DeveloperCredit } from "@/components/DeveloperCredit";
 import { AccountMenu } from "@/components/AccountMenu";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -137,6 +138,7 @@ export function AdminShell({
                 className="max-md:pt-16 flex-1 bg-paper px-8 py-7"
             >
                 {children}
+                <DeveloperCredit className="mt-10 pb-2" />
             </main>
         </div>
     );

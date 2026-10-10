@@ -77,7 +77,7 @@ class TrackRecordAccess
         activity('security')->causedBy($user)->withProperties(['kind' => $kind])->log($message);
         $owners = Membership::query()->where('tenant_id', tenant('id'))->where('role', StaffRole::Owner->value)->usable()->pluck('user_id');
         foreach (User::query()->whereIn('id', $owners)->pluck('email') as $email) {
-            app(SendMessage::class)->handle('email', (string) $email, $message, 'Clinic Flow security alert');
+            app(SendMessage::class)->handle('email', (string) $email, $message, 'Dr Business Flow security alert');
         }
     }
 }

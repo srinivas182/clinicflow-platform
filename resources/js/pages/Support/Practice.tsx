@@ -37,7 +37,7 @@ export default function SupportPractice({
             <Head title="Support" />
             <div className="mb-5 flex items-center">
                 <h1 className="flex-1 text-2xl font-semibold">
-                    Clinic Flow support
+                    Dr Business Flow support
                 </h1>
                 <Button
                     onClick={() =>
@@ -71,7 +71,7 @@ export default function SupportPractice({
                 ) : (
                     <div className="text-sm">
                         <p className="mb-2 text-muted">
-                            Clinic Flow staff cannot see your workspace unless
+                            Dr Business Flow staff cannot see your workspace unless
                             you allow it. Access is read-only, time-limited and
                             every page they open is in your audit log.
                         </p>
@@ -103,7 +103,7 @@ export default function SupportPractice({
                     {t.messages.map((m, i) => (
                         <p key={i} className="mb-2 text-sm">
                             <span className="text-xs text-muted">
-                                {m.author === "support" ? "Clinic Flow" : "You"}{" "}
+                                {m.author === "support" ? "Dr Business Flow" : "You"}{" "}
                                 · {m.created_at.slice(0, 16)}
                             </span>
                             <br />

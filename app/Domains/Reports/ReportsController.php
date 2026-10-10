@@ -140,7 +140,7 @@ class ReportsController extends Controller
             $h .= '</tr>';
         }
 
-        return $h.'</table>'.($result['truncated'] || ($limit > 0 && count($result['rows']) > $limit) ? '<p>More rows are available in Clinic Flow.</p>' : '').'</body></html>';
+        return $h.'</table>'.($result['truncated'] || ($limit > 0 && count($result['rows']) > $limit) ? '<p>More rows are available in Dr Business Flow.</p>' : '').'</body></html>';
     }
 
     private static function cell(mixed $v): string

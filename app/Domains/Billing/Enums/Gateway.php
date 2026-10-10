@@ -58,7 +58,7 @@ enum Gateway: string
 
     /**
      * Refunds through the gateway API. Others are refunded in the gateway's
-     * own dashboard and recorded in Clinic Flow.
+     * own dashboard and recorded in Dr Business Flow.
      */
     public function supportsAutoDebit(): bool
     {
@@ -67,7 +67,7 @@ enum Gateway: string
 
     /**
      * PayFast runs the subscription and charges the card itself; the others
-     * are charged by Clinic Flow's daily collection run.
+     * are charged by Dr Business Flow's daily collection run.
      */
     public function chargesMandateItself(): bool
     {

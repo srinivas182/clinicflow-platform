@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Stancl\Tenancy\Database\Concerns\CentralConnection;
 
 /**
- * Clinic Flow's registered app with Google or Microsoft (super admin).
+ * Dr Business Flow's registered app with Google or Microsoft (super admin).
  *
  * @property int $id
  * @property string $driver google|microsoft

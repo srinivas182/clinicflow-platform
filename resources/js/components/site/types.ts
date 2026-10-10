@@ -52,6 +52,7 @@ export interface SiteInfo {
     contact: { phone: string; email: string; address: string; hours: string };
     footer: SiteLink[];
     poweredBy: boolean;
+    platform?: boolean;
     reviews?:
         | {
               rating: number;

@@ -21,7 +21,7 @@ interface Props {
 }
 
 /**
- * The call runs inside Clinic Flow; only the media goes through LiveKit.
+ * The call runs inside Dr Business Flow; only the media goes through LiveKit.
  * Adaptive streaming lowers video quality on weak connections.
  */
 export default function Call({
@@ -218,7 +218,7 @@ export default function Call({
             <Head title="Online consult" />
             <header className="flex items-center gap-3 px-6 py-4">
                 <span className="font-semibold">
-                    Clinic Flow · {type === "video" ? "Video" : "Audio"} consult
+                    Dr Business Flow · {type === "video" ? "Video" : "Audio"} consult
                 </span>
                 <span className="text-sm text-white/60">
                     {joined

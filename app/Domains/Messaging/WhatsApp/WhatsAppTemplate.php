@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 use Stancl\Tenancy\Database\Concerns\CentralConnection;
 
 /**
- * A Clinic Flow message submitted to WhatsApp as a template. Business-initiated
+ * A Dr Business Flow message submitted to WhatsApp as a template. Business-initiated
  * WhatsApp messages may only use templates WhatsApp has approved.
  * category: utility | marketing | authentication.
  *

@@ -34,11 +34,11 @@ const COPY: Record<number, { title: string; message: string }> = {
     503: {
         title: "Back shortly",
         message:
-            "Clinic Flow is being updated or is temporarily unavailable. Please try again in a few minutes.",
+            "Dr Business Flow is being updated or is temporarily unavailable. Please try again in a few minutes.",
     },
 };
 
-/** In-app error page (shown when an error happens while moving around inside Clinic Flow). */
+/** In-app error page (shown when an error happens while moving around inside Dr Business Flow). */
 export default function ErrorPage({
     status,
     message,

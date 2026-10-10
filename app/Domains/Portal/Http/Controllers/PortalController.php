@@ -174,6 +174,6 @@ class PortalController extends Controller
     {
         $provider = tenant();
 
-        return $provider instanceof Provider ? $provider->name : 'Clinic Flow';
+        return $provider instanceof Provider ? $provider->name : 'Dr Business Flow';
     }
 }

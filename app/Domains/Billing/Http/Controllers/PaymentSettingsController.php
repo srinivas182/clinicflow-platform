@@ -41,7 +41,7 @@ class PaymentSettingsController extends Controller
     {
         $this->authorize(Permission::PAYMENTS_CONFIGURE);
         $g = Gateway::from($gateway);
-        abort_unless(in_array($g->value, PlatformGatewayConfig::offeredGateways(), true), 403, 'This gateway is not offered on Clinic Flow.');
+        abort_unless(in_array($g->value, PlatformGatewayConfig::offeredGateways(), true), 403, 'This gateway is not offered on Dr Business Flow.');
 
         $data = self::validated($request);
         $action->handle(GatewayConfig::class, $g, GatewayMode::from($data['mode']), (bool) $data['enabled'], (bool) ($data['is_default'] ?? false), $data['credentials'] ?? [], $request->user() instanceof User ? $request->user() : null);

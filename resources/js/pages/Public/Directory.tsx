@@ -22,7 +22,7 @@ export default function Directory({
         <SiteLayout
             site={site}
             title="Find Care"
-            description="Verified clinics, doctors, pharmacies and labs on Clinic Flow."
+            description="Verified clinics, doctors, pharmacies and labs on Dr Business Flow."
         >
             <div className="mx-auto max-w-4xl px-6 py-10">
                 <h1 className="text-3xl font-semibold">Find Care</h1>

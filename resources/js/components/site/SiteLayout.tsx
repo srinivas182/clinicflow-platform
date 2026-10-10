@@ -1,5 +1,6 @@
+import { DeveloperCredit } from "@/components/DeveloperCredit";
 import { Head } from "@inertiajs/react";
-import { ChevronDown, Menu } from "lucide-react";
+import { Activity, ChevronDown, Menu } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import type { SiteInfo, SiteLink } from "./types";
 
@@ -36,7 +37,14 @@ export function SiteLayout({
                             className="grid size-8 place-items-center rounded-lg font-bold text-white"
                             style={{ background: site.colour }}
                         >
-                            {site.name.charAt(0)}
+                            {site.platform ? (
+                                <Activity
+                                    className="size-5"
+                                    aria-hidden="true"
+                                />
+                            ) : (
+                                site.name.charAt(0)
+                            )}
                         </span>
                         {site.name}
                     </a>
@@ -108,10 +116,11 @@ export function SiteLayout({
                     ))}
                     {site.poweredBy && (
                         <span className="ml-auto text-xs">
-                            Powered by Clinic Flow
+                            Powered by Dr Business Flow
                         </span>
                     )}
                 </div>
+                <DeveloperCredit className="pb-6" />
             </footer>
         </div>
     );

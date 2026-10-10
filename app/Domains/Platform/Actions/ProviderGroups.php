@@ -32,7 +32,7 @@ class ProviderGroups
     {
         $user = User::query()->where('email', strtolower(trim($email)))->first();
         if (! $user instanceof User) {
-            throw ValidationException::withMessages(['email' => 'No Clinic Flow user has that email address.']);
+            throw ValidationException::withMessages(['email' => 'No Dr Business Flow user has that email address.']);
         }
         DB::connection((string) config('tenancy.database.central_connection'))->table('provider_group_admins')->insertOrIgnore(['provider_group_id' => $group->id, 'user_id' => $user->id]);
     }

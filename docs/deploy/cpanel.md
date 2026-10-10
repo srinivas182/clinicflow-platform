@@ -33,6 +33,10 @@ Optional, later: put the domain behind Cloudflare's proxy (DNS) for DDoS and att
 
 People change their own password in Account → Security, or use "Forgot your password?" on the sign-in page (needs an email supplier). On the server: `php artisan clinicflow:set-password <email>`.
 
+## Product name
+
+Set `APP_NAME="Dr Business Flow"` in `.env` (used as the email sender name and in page titles), then `php artisan optimize`.
+
 ## Cron jobs (cPanel → Cron Jobs)
 
 | When | Command |

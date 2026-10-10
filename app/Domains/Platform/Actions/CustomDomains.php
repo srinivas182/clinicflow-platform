@@ -12,8 +12,8 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
- * A practice's own domain: it points the domain at its Clinic Flow address,
- * proves ownership with a TXT record, and Clinic Flow then serves the
+ * A practice's own domain: it points the domain at its Dr Business Flow address,
+ * proves ownership with a TXT record, and Dr Business Flow then serves the
  * practice there. Certificates are issued per domain by the web server
  * (on-demand TLS asks tlsAllowed() first) — finished during deployment.
  */
@@ -32,7 +32,7 @@ class CustomDomains
             throw ValidationException::withMessages(['domain' => 'Enter a domain you own, e.g. book.yourpractice.co.za.']);
         }
         if (DB::connection((string) config('tenancy.database.central_connection'))->table('custom_domains')->where('domain', $domain)->exists() || DB::connection((string) config('tenancy.database.central_connection'))->table('domains')->where('domain', $domain)->exists()) {
-            throw ValidationException::withMessages(['domain' => 'That domain is already in use on Clinic Flow.']);
+            throw ValidationException::withMessages(['domain' => 'That domain is already in use on Dr Business Flow.']);
         }
         $id = DB::connection((string) config('tenancy.database.central_connection'))->table('custom_domains')->insertGetId(['tenant_id' => $provider->id, 'domain' => $domain, 'token' => 'cf-verify-'.Str::lower(Str::random(24)), 'created_at' => now(), 'updated_at' => now()]);
 

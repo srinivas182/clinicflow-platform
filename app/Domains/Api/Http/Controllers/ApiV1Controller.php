@@ -181,7 +181,7 @@ class ApiV1Controller extends Controller
 
         return response()->json([
             'openapi' => '3.1.0',
-            'info' => ['title' => 'Clinic Flow practice API', 'version' => '1.0', 'description' => 'Read access to this practice\'s appointments, availability, patients (demographics only), invoices and prices. Send the key as "Authorization: Bearer cf_live_…". No clinical information is available through this API.'],
+            'info' => ['title' => 'Dr Business Flow practice API', 'version' => '1.0', 'description' => 'Read access to this practice\'s appointments, availability, patients (demographics only), invoices and prices. Send the key as "Authorization: Bearer cf_live_…". No clinical information is available through this API.'],
             'servers' => [['url' => url('/api/v1')]],
             'components' => ['securitySchemes' => ['bearer' => ['type' => 'http', 'scheme' => 'bearer']]],
             'paths' => [

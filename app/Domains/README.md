@@ -1,6 +1,6 @@
 # Domain modules
 
-Clinic Flow is a modular monolith (ADR 0003). Each folder is one business domain.
+Dr Business Flow is a modular monolith (ADR 0003). Each folder is one business domain.
 
 | Module | Responsibility |
 |---|---|

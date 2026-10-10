@@ -34,7 +34,7 @@ export default function PracticeSecurity({
                     {staff} staff · {withoutApp} without an authenticator app
                     yet.{" "}
                     {required
-                        ? "They are asked to set it up when they next open Clinic Flow."
+                        ? "They are asked to set it up when they next open Dr Business Flow."
                         : "Requiring it protects patient records if a password is stolen."}
                 </p>
                 <Button

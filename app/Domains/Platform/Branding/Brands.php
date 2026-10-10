@@ -14,7 +14,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * White-label brands. A brand changes what practices and patients see (name,
- * logo, colours, support details, practice web address); Clinic Flow still bills.
+ * logo, colours, support details, practice web address); Dr Business Flow still bills.
  */
 class Brands
 {

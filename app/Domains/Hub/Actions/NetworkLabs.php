@@ -219,7 +219,7 @@ class NetworkLabs
     {
         $lab = Provider::query()->find($labId);
         if (! $lab instanceof Provider || $lab->type !== ProviderType::Lab || ! in_array($lab->status, [ProviderStatus::Trial, ProviderStatus::Active], true)) {
-            throw ValidationException::withMessages(['lab_id' => 'Choose a lab that is live on the Clinic Flow network.']);
+            throw ValidationException::withMessages(['lab_id' => 'Choose a lab that is live on the Dr Business Flow network.']);
         }
 
         return $lab;

@@ -18,7 +18,7 @@ interface Props {
 
 export default function Pharmacies({ items, pharmacies }: Props) {
     return (
-        <PortalLayout provider="Clinic Flow">
+        <PortalLayout provider="Dr Business Flow">
             <Head title="Compare pharmacies" />
             <h1 className="mb-1 text-2xl font-semibold">Compare pharmacies</h1>
             <p className="mb-4 text-sm text-muted">

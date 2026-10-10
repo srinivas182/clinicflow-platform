@@ -98,8 +98,8 @@ class CalendarSync
         $end = $a->ends_at->toIso8601String();
 
         return $conn->driver === 'google'
-            ? ['summary' => $title, 'description' => 'Clinic Flow', 'start' => ['dateTime' => $start], 'end' => ['dateTime' => $end]]
-            : ['subject' => $title, 'body' => ['contentType' => 'text', 'content' => 'Clinic Flow'], 'start' => ['dateTime' => $a->starts_at->format('Y-m-d\TH:i:s'), 'timeZone' => (string) config('app.timezone')], 'end' => ['dateTime' => $a->ends_at->format('Y-m-d\TH:i:s'), 'timeZone' => (string) config('app.timezone')]];
+            ? ['summary' => $title, 'description' => 'Dr Business Flow', 'start' => ['dateTime' => $start], 'end' => ['dateTime' => $end]]
+            : ['subject' => $title, 'body' => ['contentType' => 'text', 'content' => 'Dr Business Flow'], 'start' => ['dateTime' => $a->starts_at->format('Y-m-d\TH:i:s'), 'timeZone' => (string) config('app.timezone')], 'end' => ['dateTime' => $a->ends_at->format('Y-m-d\TH:i:s'), 'timeZone' => (string) config('app.timezone')]];
     }
 
     private function eventUrl(CalendarConnection $conn, ?string $id): string

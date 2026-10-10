@@ -12,7 +12,7 @@ use App\Models\User;
 
 /**
  * Owner switches automatic payment off. The card is removed at the gateway
- * where possible and is never charged again by Clinic Flow either way.
+ * where possible and is never charged again by Dr Business Flow either way.
  * Returns a warning when the gateway did not confirm.
  */
 class RevokeBillingMandate

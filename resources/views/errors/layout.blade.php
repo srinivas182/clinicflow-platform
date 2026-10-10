@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
-    <title>@yield('title') · {{ config('app.name', 'Clinic Flow') }}</title>
+    <title>@yield('title') · {{ config('app.name', 'Dr Business Flow') }}</title>
     {{-- Apply a saved Light/Dark choice before drawing (same key as the in-app switch). --}}
     <script nonce="{{ $cspNonce ?? '' }}">try{var t=localStorage.getItem('cf-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
     <style>
@@ -29,7 +29,7 @@
 </head>
 <body>
     <main role="main">
-        <div class="brand"><span class="dot" aria-hidden="true"></span>{{ config('app.name', 'Clinic Flow') }}</div>
+        <div class="brand"><span class="dot" aria-hidden="true"></span>{{ config('app.name', 'Dr Business Flow') }}</div>
         <div><span class="code">Error @yield('code')</span></div>
         <h1>@yield('title')</h1>
         <p>@yield('message')</p>

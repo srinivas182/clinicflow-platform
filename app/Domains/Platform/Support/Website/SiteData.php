@@ -82,7 +82,7 @@ final class SiteData
         $page = fn (string $slug, string $label) => $pages->has($slug) ? ['label' => $label, 'href' => "/pages/{$slug}"] : null;
 
         return [
-            'name' => 'Clinic Flow', 'colour' => '#0F7C74',
+            'name' => 'Dr Business Flow', 'colour' => '#0F7C74', 'platform' => true,
             'menu' => array_values(array_filter([
                 $page('about', 'About'),
                 $solutions === [] ? null : ['label' => 'Solutions', 'href' => $solutions[0]['href'], 'children' => $solutions],

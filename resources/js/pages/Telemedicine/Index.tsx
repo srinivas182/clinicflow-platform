@@ -33,7 +33,7 @@ export default function TeleIndex({
             <Flash />
             {!videoReady && (
                 <p className="mb-4 rounded-lg bg-status-warning-wash px-3 py-2 text-sm text-status-warning">
-                    Video is not configured yet by Clinic Flow. Consults cannot
+                    Video is not configured yet by Dr Business Flow. Consults cannot
                     start until it is.
                 </p>
             )}

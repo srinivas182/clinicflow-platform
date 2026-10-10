@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 /**
  * One merchant account at PayFast, Paystack, Peach Payments or Yoco — either
  * a provider's own (patient payments) or the platform's (subscriptions).
- * Money never passes through Clinic Flow (ADR 0009).
+ * Money never passes through Dr Business Flow (ADR 0009).
  */
 interface PaymentGateway
 {

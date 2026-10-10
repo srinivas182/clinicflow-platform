@@ -149,7 +149,7 @@ export function GatewayCard({
                 <p className="text-xs text-muted">
                     {row.apiRefunds
                         ? "Refunds go through the gateway automatically."
-                        : "Refunds are made in the gateway dashboard, then recorded in Clinic Flow."}
+                        : "Refunds are made in the gateway dashboard, then recorded in Dr Business Flow."}
                 </p>
                 <div className="flex gap-2">
                     <Button type="submit" disabled={form.processing}>

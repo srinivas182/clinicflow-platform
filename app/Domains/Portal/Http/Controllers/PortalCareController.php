@@ -98,7 +98,7 @@ class PortalCareController extends Controller
         $patient = $signIn->profiles((string) $request->session()->get('portal_cell'))->first();
         abort_unless($patient instanceof Patient, 403);
         $identity = HubIdentity::query()->find($patient->getAttribute('hub_identity_id'));
-        abort_unless($identity instanceof HubIdentity, 422, 'Your records are not on the Clinic Flow network yet.');
+        abort_unless($identity instanceof HubIdentity, 422, 'Your records are not on the Dr Business Flow network yet.');
         $provider = tenant();
         abort_unless($provider instanceof Provider, 404);
 

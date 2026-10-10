@@ -57,7 +57,7 @@ class SubscriptionBillingController extends Controller
                 'expiry' => $mandate->card_expiry,
                 'gateway' => $mandate->gateway->label(),
                 'since' => $mandate->consented_at->toDateString(),
-                'chargedBy' => $mandate->gateway->chargesMandateItself() ? $mandate->gateway->label() : 'Clinic Flow',
+                'chargedBy' => $mandate->gateway->chargesMandateItself() ? $mandate->gateway->label() : 'Dr Business Flow',
             ],
             'autoDebitAvailable' => $platformGateway !== null && $platformGateway->gateway->supportsAutoDebit(),
             'platformGateway' => $platformGateway?->gateway->label(),
@@ -96,7 +96,7 @@ class SubscriptionBillingController extends Controller
 
         $warning = $action->handle($mandate, $request->user() instanceof User ? $request->user() : null);
 
-        return back()->with('success', $warning === null ? 'Automatic payment is off. Your card has been removed.' : "Automatic payment is off in Clinic Flow. {$warning}");
+        return back()->with('success', $warning === null ? 'Automatic payment is off. Your card has been removed.' : "Automatic payment is off in Dr Business Flow. {$warning}");
     }
 
     public function pay(Request $request, string $token): HttpResponse
@@ -117,7 +117,7 @@ class SubscriptionBillingController extends Controller
         $start = GatewayFactory::fromConfig($config)->startCheckout(new CheckoutRequest(
             amountCents: $invoice->total_cents,
             reference: $token,
-            description: "Clinic Flow subscription {$invoice->number}",
+            description: "Dr Business Flow subscription {$invoice->number}",
             returnUrl: "{$root}/billing/done",
             cancelUrl: "{$root}/billing/done?cancelled=1",
             notifyUrl: "{$root}/api/webhooks/platform/{$config->gateway->value}",

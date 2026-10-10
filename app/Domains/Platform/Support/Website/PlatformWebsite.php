@@ -38,11 +38,11 @@ final class PlatformWebsite
 
         return [
             [
-                'slug' => 'home', 'title' => 'Clinic Flow — healthcare network software for South Africa', 'menu_label' => null, 'menu_order' => null, 'published' => true,
+                'slug' => 'home', 'title' => 'Dr Business Flow — healthcare network software for South Africa', 'menu_label' => null, 'menu_order' => null, 'published' => true,
                 'meta_description' => 'Run your clinic, practice, pharmacy or lab on one platform, connected to your patients. Hosted in South Africa.',
                 'sections' => [
                     ['type' => 'hero', 'eyebrow' => 'Built for South African healthcare', 'heading' => 'Your clinic, the pharmacy and the lab — finally on one line.',
-                        'text' => 'Clinic Flow runs the front desk, consultations, prescriptions, billing and medical aid claims, and connects your patients through one app. Every practice gets its own database, hosted in South Africa.',
+                        'text' => 'Dr Business Flow runs the front desk, consultations, prescriptions, billing and medical aid claims, and connects your patients through one app. Every practice gets its own database, hosted in South Africa.',
                         'image' => '/images/site/hero-network.svg', 'primary' => $start, 'secondary' => ['label' => 'See pricing', 'href' => '/pricing']],
                     ['type' => 'cards', 'heading' => 'One platform, four kinds of provider',
                         'items' => [
@@ -73,7 +73,7 @@ final class PlatformWebsite
                         'bullets' => ['Hosted in South Africa', 'A separate database for every provider', 'Append-only audit trail of every sensitive action', 'POPIA export of everything held about a patient', 'Read-only, never deleted, if a subscription lapses']],
                     ['type' => 'faq', 'heading' => 'Questions practices ask',
                         'items' => [
-                            ['question' => 'Do patient payments go through Clinic Flow?', 'answer' => 'No. Patients pay your practice directly through your own merchant account. Clinic Flow only charges your subscription and the add-ons you switch on.'],
+                            ['question' => 'Do patient payments go through Dr Business Flow?', 'answer' => 'No. Patients pay your practice directly through your own merchant account. Dr Business Flow only charges your subscription and the add-ons you switch on.'],
                             ['question' => 'Where is our data hosted?', 'answer' => 'In South Africa, in AWS Cape Town, with a separate database for your practice.'],
                             ['question' => 'Can we bring our existing patients?', 'answer' => 'Yes. Patient lists can be imported from a spreadsheet; each patient confirms consent at their next visit.'],
                             ['question' => 'Is there a contract?', 'answer' => 'Start with a 30-day free trial. Packages are billed monthly or annually.'],
@@ -84,17 +84,17 @@ final class PlatformWebsite
             ],
             ...RolePages::all(),
             [
-                'slug' => 'about', 'title' => 'About Clinic Flow', 'menu_label' => 'About', 'menu_order' => 5, 'published' => true,
-                'meta_description' => 'Why Clinic Flow exists and how it is built.',
+                'slug' => 'about', 'title' => 'About Dr Business Flow', 'menu_label' => 'About', 'menu_order' => 5, 'published' => true,
+                'meta_description' => 'Why Dr Business Flow exists and how it is built.',
                 'sections' => [
-                    ['type' => 'hero', 'heading' => 'Built so care moves at the patient\'s pace, not the paperwork\'s', 'text' => 'Clinic Flow connects clinics, independent doctors, pharmacies and labs so a patient\'s visit — from booking to medicine — runs on one line.', 'image' => '/images/site/hero-network.svg'],
+                    ['type' => 'hero', 'heading' => 'Built so care moves at the patient\'s pace, not the paperwork\'s', 'text' => 'Dr Business Flow connects clinics, independent doctors, pharmacies and labs so a patient\'s visit — from booking to medicine — runs on one line.', 'image' => '/images/site/hero-network.svg'],
                     ['type' => 'split', 'heading' => 'How we build it', 'image' => '/images/site/secure-data.svg', 'text' => 'Every practice is isolated, every sensitive action is audited and clinical rules are signed off by clinicians before they go live.',
                         'bullets' => ['South African hosting', 'Separate database per provider', 'Clinical, pharmacy and legal review of rules', 'Regular, tested releases']],
                 ],
             ],
             [
                 'slug' => 'contact', 'title' => 'Contact us', 'menu_label' => 'Contact', 'menu_order' => 6, 'published' => true,
-                'meta_description' => 'Talk to the Clinic Flow team.',
+                'meta_description' => 'Talk to the Dr Business Flow team.',
                 'sections' => [
                     ['type' => 'hero', 'heading' => 'Talk to us', 'text' => 'Questions about packages, moving your patient records or a demo for your practice? Send us a message and we\'ll get back to you within one working day.'],
                     ['type' => 'contact', 'heading' => 'Get in touch', 'note' => 'Replace these details with your sales and support contacts in Admin → Website.'],
@@ -102,12 +102,12 @@ final class PlatformWebsite
             ],
             [
                 'slug' => 'privacy', 'title' => 'Privacy policy', 'menu_label' => null, 'menu_order' => null, 'published' => false,
-                'meta_description' => 'How Clinic Flow processes personal information.',
-                'sections' => [['type' => 'richtext', 'html' => '<p><strong>Draft for legal review — publish only after approval.</strong></p><h2>Who we are</h2><p>Clinic Flow provides software to healthcare providers. For patient records, each provider is the responsible party and Clinic Flow is its operator under POPIA.</p><h2>What we process</h2><p>Account details of practice staff, subscription and billing details, and — on behalf of providers — patient information needed for care, billing and claims.</p><h2>Where it is stored</h2><p>In South Africa (AWS Cape Town), in a separate database for each provider.</p><h2>Your rights</h2><p>You may ask for access to, correction of or deletion of your personal information, subject to health-record retention laws. Contact the provider you visited, or us for account information.</p>']],
+                'meta_description' => 'How Dr Business Flow processes personal information.',
+                'sections' => [['type' => 'richtext', 'html' => '<p><strong>Draft for legal review — publish only after approval.</strong></p><h2>Who we are</h2><p>Dr Business Flow provides software to healthcare providers. For patient records, each provider is the responsible party and Dr Business Flow is its operator under POPIA.</p><h2>What we process</h2><p>Account details of practice staff, subscription and billing details, and — on behalf of providers — patient information needed for care, billing and claims.</p><h2>Where it is stored</h2><p>In South Africa (AWS Cape Town), in a separate database for each provider.</p><h2>Your rights</h2><p>You may ask for access to, correction of or deletion of your personal information, subject to health-record retention laws. Contact the provider you visited, or us for account information.</p>']],
             ],
             [
                 'slug' => 'terms', 'title' => 'Terms of service', 'menu_label' => null, 'menu_order' => null, 'published' => false,
-                'meta_description' => 'Terms for using Clinic Flow.',
+                'meta_description' => 'Terms for using Dr Business Flow.',
                 'sections' => [['type' => 'richtext', 'html' => '<p><strong>Draft for legal review — publish only after approval.</strong></p><p>These terms will set out subscriptions, trials, acceptable use, data processing, availability and liability.</p>']],
             ],
         ];

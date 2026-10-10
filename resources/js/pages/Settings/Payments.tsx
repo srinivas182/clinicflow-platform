@@ -29,7 +29,7 @@ export default function PaymentSettings({
             </div>
             <p className="mb-5 text-sm text-muted">
                 Connect your own PayFast, Paystack, Peach Payments or Yoco
-                account. Patients pay straight into your account — Clinic Flow
+                account. Patients pay straight into your account — Dr Business Flow
                 never holds patient money. Start in test mode, then switch to
                 live.
             </p>
