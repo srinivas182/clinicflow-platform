@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Tenancy\CpanelDatabaseManager;
+use App\Domains\Platform\Tenancy\TenantCacheBootstrapper;
 use Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper;
 use Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper;
 use Stancl\Tenancy\Bootstrappers\FilesystemTenancyBootstrapper;
@@ -38,7 +39,8 @@ return [
      */
     'bootstrappers' => [
         DatabaseTenancyBootstrapper::class,
-        CacheTenancyBootstrapper::class,
+        // Tags where the cache store supports them, a per-practice prefix where it does not (database/file).
+        TenantCacheBootstrapper::class,
         FilesystemTenancyBootstrapper::class,
         QueueTenancyBootstrapper::class,
         // Stancl\Tenancy\Bootstrappers\RedisTenancyBootstrapper::class, // Note: phpredis is needed

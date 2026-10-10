@@ -41,9 +41,10 @@ return [
 
         'database' => [
             'driver' => 'database',
-            'connection' => env('DB_CACHE_CONNECTION'),
+            // Always the platform database, even inside a practice (whose database has no cache table).
+            'connection' => env('DB_CACHE_CONNECTION', env('DB_CONNECTION', 'mysql')),
             'table' => env('DB_CACHE_TABLE', 'cache'),
-            'lock_connection' => env('DB_CACHE_LOCK_CONNECTION'),
+            'lock_connection' => env('DB_CACHE_LOCK_CONNECTION', env('DB_CONNECTION', 'mysql')),
             'lock_table' => env('DB_CACHE_LOCK_TABLE'),
         ],
 
