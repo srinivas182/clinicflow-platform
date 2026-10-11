@@ -8,6 +8,7 @@ use App\Domains\Patients\Enums\Channel;
 use App\Domains\Patients\Enums\ConsentGivenBy;
 use App\Domains\Patients\Enums\IdType;
 use App\Domains\Patients\Support\RegistrationData;
+use App\Domains\Translation\Support\Languages;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -34,7 +35,7 @@ class RegisterPatientRequest extends FormRequest
             'cell' => ['nullable', 'string', 'max:10'],
             'no_cell' => ['boolean'],
             'email' => ['nullable', 'email', 'max:255'],
-            'preferred_language' => ['required', Rule::in(['en', 'zu', 'xh', 'af'])],
+            'preferred_language' => ['required', Rule::in(Languages::enabled())],
             'preferred_channel' => ['required', Rule::enum(Channel::class)],
             'address' => ['nullable', 'string', 'max:500'],
             'guardian_name' => ['nullable', 'string', 'max:120'],

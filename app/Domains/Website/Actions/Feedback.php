@@ -8,6 +8,7 @@ use App\Domains\Messaging\Actions\SendMessage;
 use App\Domains\Patients\Models\Patient;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\Setting;
+use App\Domains\Translation\Support\Languages;
 use App\Domains\Visits\Enums\VisitStage;
 use App\Domains\Visits\Models\Visit;
 use Illuminate\Support\Facades\DB;
@@ -41,7 +42,7 @@ class Feedback
                 }
                 $token = Str::random(40);
                 DB::table('feedback_requests')->insert(['visit_id' => $v->id, 'patient_id' => $v->patient_id, 'token' => $token, 'created_at' => now(), 'updated_at' => now()]);
-                $ok = app(SendMessage::class)->template('feedback.request', 'sms', (string) $patient->cell, ['patient' => $patient->first_names, 'link' => url('/feedback/'.$token)], 'en', 'visit', $v->id);
+                $ok = app(SendMessage::class)->template('feedback.request', 'sms', (string) $patient->cell, ['patient' => $patient->first_names, 'link' => url('/feedback/'.$token)], Languages::for($patient->preferred_language), 'visit', $v->id);
                 DB::table('feedback_requests')->where('token', $token)->update(['sent_at' => $ok ? now() : null]);
                 $sent += $ok ? 1 : 0;
             });

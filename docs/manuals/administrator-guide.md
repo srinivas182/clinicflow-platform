@@ -84,3 +84,5 @@ English is always on. In **Admin → Languages** you switch other languages on o
 A translation reaches patients only when a reviewer approves it — and, for medical wording (lab results, medicine collection, recall reminders, queue calls), a clinical reviewer approves it too. Anything not approved is sent in English. If the English wording is changed, its translations go back to English until a reviewer re-checks them.
 
 To give reviewers a head start, press **Create AI drafts** on a language. Every text without a translation gets a first draft from your AI provider, marked "AI draft — needs review". Drafts are never sent to patients until a reviewer approves them.
+
+Patients receive messages in their preferred language (chosen at registration or in the patient portal) once that language is switched on; otherwise in English.

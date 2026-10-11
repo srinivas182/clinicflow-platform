@@ -6,6 +6,7 @@ namespace App\Domains\Portal\Actions;
 
 use App\Domains\Messaging\Actions\SendMessage;
 use App\Domains\Patients\Models\Patient;
+use App\Domains\Translation\Support\Languages;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -29,7 +30,8 @@ class PortalSignIn
         }
 
         // Same response whether or not the number is registered, so the portal can't be used to find patients.
-        if ($this->profiles($cell)->isEmpty()) {
+        $profiles = $this->profiles($cell);
+        if ($profiles->isEmpty()) {
             return null;
         }
 
@@ -38,7 +40,7 @@ class PortalSignIn
         DB::table('portal_login_challenges')->insert([
             'id' => $id, 'cell' => $cell, 'code_hash' => Hash::make($code), 'expires_at' => now()->addMinutes(5), 'created_at' => now(), 'updated_at' => now(),
         ]);
-        $this->messages->template('portal.sign_in_code', 'sms', $cell, ['code' => $code], 'en', 'portal_login', $id);
+        $this->messages->template('portal.sign_in_code', 'sms', $cell, ['code' => $code], Languages::for($profiles->first()->preferred_language), 'portal_login', $id);
 
         return $id;
     }

@@ -29,6 +29,7 @@ use App\Domains\Telemedicine\Models\TeleSession;
 use App\Domains\Telemedicine\Support\OnlineSlots;
 use App\Domains\Telemedicine\Support\Telemedicine;
 use App\Domains\Telemedicine\Support\TeleSettings;
+use App\Domains\Translation\Support\Languages;
 use App\Domains\Visits\Enums\PayerType;
 use App\Domains\Visits\Enums\VisitStage;
 use App\Domains\Visits\Models\Visit;
@@ -151,7 +152,7 @@ class OnlineBooking
             $this->messages->template('booking.confirmation', 'sms', (string) $patient->cell, [
                 'patient' => $patient->first_names, 'date' => $appointment->starts_at->format('j M'), 'time' => $appointment->starts_at->format('H:i'),
                 'doctor' => (string) Staff::query()->whereKey($appointment->staff_id)->value('name'),
-            ], 'en', 'appointment', $appointment->id);
+            ], Languages::for($patient->preferred_language), 'appointment', $appointment->id);
         }
         activity('telemedicine')->performedOn($appointment)->log('Online consult paid and confirmed');
     }

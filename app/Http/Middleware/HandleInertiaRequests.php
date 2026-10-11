@@ -8,6 +8,7 @@ use App\Domains\Branches\Support\BranchContext;
 use App\Domains\Platform\Branding\Brands;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Security\BotProtection;
+use App\Domains\Translation\Support\Languages;
 use App\Domains\Wallet\Support\WalletSettings;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -36,6 +37,8 @@ class HandleInertiaRequests extends Middleware
             ],
             // Developer credit, shown in every footer; practices cannot change it.
             'credit' => ['text' => (string) WalletSettings::get('platform.credit_text'), 'url' => (string) WalletSettings::get('platform.credit_url')],
+            // Languages switched on (Admin → Languages): offered to patients.
+            'languages' => fn () => Languages::options(),
             'centralUrl' => rtrim((string) config('app.url'), '/'),
             'auth' => [
                 'user' => $user instanceof User ? ['name' => $user->name, 'email' => $user->email] : null,

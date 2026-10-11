@@ -16,6 +16,7 @@ use App\Domains\Lab\Models\LabResult;
 use App\Domains\Lab\Support\Classifier;
 use App\Domains\Messaging\Actions\SendMessage;
 use App\Domains\Patients\Models\Patient;
+use App\Domains\Translation\Support\Languages;
 use App\Domains\Visits\Enums\PayerType;
 use App\Domains\Visits\Models\Visit;
 use Illuminate\Support\Facades\DB;
@@ -331,7 +332,7 @@ class LabWorkflow
         $patient = Patient::query()->find($order->patient_id);
         if ($patient instanceof Patient && is_string($patient->cell) && $patient->cell !== '') {
             // The message never contains results; the patient signs in to view them.
-            app(SendMessage::class)->template($template, 'sms', $patient->cell, ['patient' => $patient->first_names], 'en', 'lab_order', $order->id);
+            app(SendMessage::class)->template($template, 'sms', $patient->cell, ['patient' => $patient->first_names], Languages::for($patient->preferred_language), 'lab_order', $order->id);
         }
     }
 

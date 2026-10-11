@@ -6,6 +6,7 @@ namespace App\Domains\Clinical\Care;
 
 use App\Domains\Messaging\Actions\SendMessage;
 use App\Domains\Patients\Models\Patient;
+use App\Domains\Translation\Support\Languages;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -62,7 +63,7 @@ class Prevention
                     if ($dueOn->isFuture() || DB::table('patient_recalls')->where('patient_id', $p->id)->where('recall_rule_id', $rule->id)->whereDate('due_on', $dueOn)->whereNotNull('sent_at')->exists()) {
                         return;
                     }
-                    $ok = app(SendMessage::class)->template('recall.reminder', 'sms', (string) $p->cell, ['patient' => $p->first_names, 'reason' => (string) $rule->reason]);
+                    $ok = app(SendMessage::class)->template('recall.reminder', 'sms', (string) $p->cell, ['patient' => $p->first_names, 'reason' => (string) $rule->reason], Languages::for($p->preferred_language));
                     DB::table('patient_recalls')->updateOrInsert(['patient_id' => $p->id, 'recall_rule_id' => $rule->id, 'due_on' => $dueOn->toDateString()], ['sent_at' => now()]);
                     $sent += $ok ? 1 : 0;
                 });

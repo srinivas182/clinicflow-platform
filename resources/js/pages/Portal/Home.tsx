@@ -1,4 +1,4 @@
-import { Head, router } from "@inertiajs/react";
+import { Head, router, usePage } from "@inertiajs/react";
 import { useLiveReload } from "@/lib/realtime";
 import { useState } from "react";
 import { Flash } from "@/components/Flash";
@@ -8,6 +8,7 @@ import { rand } from "@/lib/money";
 
 interface Props {
     provider: string;
+    language: string;
     profiles: { id: string; name: string; age: number; current: boolean }[];
     patientChannel?: string | null;
     visit: {
@@ -42,6 +43,9 @@ interface Props {
 }
 
 export default function PortalHome(p: Props) {
+    const languages =
+        usePage<{ languages: { code: string; name: string }[] }>().props
+            .languages ?? [];
     useLiveReload(p.patientChannel ?? "", "queue.changed", 20000, [
         "visit",
         "patientChannel",
@@ -53,6 +57,28 @@ export default function PortalHome(p: Props) {
         <PortalLayout provider={p.provider}>
             <Head title="My health" />
             <Flash />
+            {languages.length > 1 && (
+                <label className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+                    Language for your messages
+                    <select
+                        className="min-h-10 rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm"
+                        value={p.language}
+                        onChange={(e) =>
+                            router.post(
+                                "/my/language",
+                                { language: e.target.value },
+                                { preserveScroll: true },
+                            )
+                        }
+                    >
+                        {languages.map((l) => (
+                            <option key={l.code} value={l.code}>
+                                {l.name}
+                            </option>
+                        ))}
+                    </select>
+                </label>
+            )}
             {p.profiles.length > 1 && (
                 <div className="mb-4 flex flex-wrap gap-2">
                     {p.profiles.map((x) => (
