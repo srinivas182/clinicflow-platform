@@ -8,6 +8,7 @@ use App\Domains\Billing\Enums\InvoiceStatus;
 use App\Domains\Billing\Models\Invoice;
 use App\Domains\Messaging\Actions\SendMessage;
 use App\Domains\Patients\Models\Patient;
+use App\Domains\Translation\Support\Languages;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -62,7 +63,7 @@ class Debtors
             }
             app(SendMessage::class)->template('billing.pay_link', 'sms', (string) $patient->cell, [
                 'patient' => $patient->first_names, 'amount' => 'R'.number_format($row['balance'] / 100, 2, '.', ' '), 'link' => url('/my'),
-            ], 'en', 'statement', $patient->id);
+            ], Languages::for($patient->preferred_language), 'statement', $patient->id);
             DB::table('statements')->insert(['patient_id' => $patient->id, 'period' => $period, 'balance_cents' => $row['balance'], 'sent_at' => now()]);
             $sent++;
         }

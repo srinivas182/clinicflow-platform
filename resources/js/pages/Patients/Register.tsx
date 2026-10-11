@@ -1,4 +1,4 @@
-import { Head, useForm } from "@inertiajs/react";
+import { Head, useForm, usePage } from "@inertiajs/react";
 import { type FormEvent, useEffect, useState } from "react";
 import { Checkbox, Field } from "@/components/form/Field";
 import { Button, Card } from "@/components/ui";
@@ -59,6 +59,9 @@ export default function RegisterPatient() {
     };
 
     const e = form.errors;
+    const languages =
+        usePage<{ languages: { code: string; name: string }[] }>().props
+            .languages ?? [];
     // If the server finds a problem, open the step that has it.
     useEffect(() => {
         const first = Object.keys(form.errors)[0];
@@ -226,6 +229,27 @@ export default function RegisterPatient() {
                 </Card>
                 <Card title="Contact" className={show(1)}>
                     <div className="grid sm:grid-cols-2 gap-3">
+                        {languages.length > 1 && (
+                            <label className="flex flex-col gap-1.5 text-xs font-medium">
+                                Language for messages
+                                <select
+                                    className={select}
+                                    value={form.data.preferred_language}
+                                    onChange={(ev) =>
+                                        form.setData(
+                                            "preferred_language",
+                                            ev.target.value,
+                                        )
+                                    }
+                                >
+                                    {languages.map((l) => (
+                                        <option key={l.code} value={l.code}>
+                                            {l.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                        )}
                         <Field
                             label="Cell number"
                             name="cell"

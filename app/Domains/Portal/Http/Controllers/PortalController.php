@@ -19,12 +19,14 @@ use App\Domains\Scheduling\Actions\BookAppointment;
 use App\Domains\Scheduling\Actions\CancelAppointment;
 use App\Domains\Scheduling\Enums\AppointmentStatus;
 use App\Domains\Scheduling\Models\Appointment;
+use App\Domains\Translation\Support\Languages;
 use App\Domains\Visits\Enums\VisitStage;
 use App\Domains\Visits\Models\Visit;
 use App\Http\Controllers\Controller;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -87,6 +89,7 @@ class PortalController extends Controller
 
         return Inertia::render('Portal/Home', [
             'provider' => $this->providerName(),
+            'language' => Languages::for($patient->preferred_language),
             'profiles' => $profiles->map(fn (Patient $p) => ['id' => $p->id, 'name' => $p->fullName(), 'age' => $p->ageInYears(), 'current' => $p->id === $patient->id])->values(),
             // Live updates for today's visit (this patient's own channel).
             'patientChannel' => $visit === null ? null : 'patient.'.$visit->patient_id,
@@ -175,5 +178,15 @@ class PortalController extends Controller
         $provider = tenant();
 
         return $provider instanceof Provider ? $provider->name : 'Dr Business Flow';
+    }
+
+    /** The signed-in patient chooses the language of their messages (only languages switched on). */
+    public function language(Request $request, PortalSignIn $signIn): RedirectResponse
+    {
+        $data = $request->validate(['language' => ['required', Rule::in(Languages::enabled())]]);
+        $patient = $this->current($request, $signIn->profiles($this->cell($request))->all());
+        $patient->forceFill(['preferred_language' => $data['language']])->save();
+
+        return back()->with('success', 'Saved. Your messages will come in this language.');
     }
 }

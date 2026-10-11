@@ -4,6 +4,16 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.79.0] — Sprint W8b: patients' messages in their language
+
+### Added
+- Patients receive messages in their preferred language when it is switched on (Admin → Languages), otherwise in English: recall reminders, lab results, feedback requests, payment links, booking confirmations and the patient portal sign-in code. Previously every message was sent in English.
+- Patient registration asks for the language for messages, offering only languages that are switched on (shown only when there is a choice); registration accepts only those.
+- The patient portal lets patients choose the language of their messages.
+
+### Changed
+- CI runs the backend tests in six shorter parts instead of four (same total minutes), keeping each well inside its time limit.
+
 ## [0.78.0] — Sprint W8a-2: AI first-draft translations
 
 ### Added

@@ -157,6 +157,7 @@ Route::middleware([
         Route::post('/verify', [PortalController::class, 'verify'])->middleware('throttle:10,1')->name('verify.store');
         Route::middleware(EnsurePortalPatient::class)->group(function (): void {
             Route::get('/', [PortalController::class, 'home'])->name('home');
+            Route::post('/language', [PortalController::class, 'language'])->middleware('throttle:10,1')->name('language');
             Route::post('/logout', [PortalController::class, 'logout'])->name('logout');
             Route::post('/profiles/{patient}', [PortalController::class, 'switchProfile'])->name('profile');
             Route::post('/appointments', [PortalController::class, 'book'])->middleware('throttle:10,1')->name('book');

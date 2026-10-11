@@ -147,13 +147,14 @@ jobs:
     # The suite is split across 4 runners, each with its own machine and MySQL.
     # Only for ready (non-draft) PRs, or when run by hand.
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
-    name: Tests (part ${{ matrix.shard }} of 4)
+    name: Tests (part ${{ matrix.shard }} of 6)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        # Six shorter parts (same total minutes) keep each well inside its time limit.
+        shard: [1, 2, 3, 4, 5, 6]
 
     services:
       mysql:
@@ -217,7 +218,7 @@ jobs:
       - name: Pest
         # Stops a stuck run with time left to report it.
         timeout-minutes: 25
-        run: vendor/bin/pest --ci --shard=${{ matrix.shard }}/4 --log-events-text .ci-events.txt 2>&1 | tee .ci-pest.txt
+        run: vendor/bin/pest --ci --shard=${{ matrix.shard }}/6 --log-events-text .ci-events.txt 2>&1 | tee .ci-pest.txt
 
       - name: Save this part's result
         if: success()
@@ -236,9 +237,9 @@ jobs:
         run: |
           {
             if [ "${{ job.status }}" = "cancelled" ]; then
-              echo "### Backend CI cancelled (tests part ${{ matrix.shard }} of 4, superseded) — \`${GITHUB_SHA::8}\`"
+              echo "### Backend CI cancelled (tests part ${{ matrix.shard }} of 6, superseded) — \`${GITHUB_SHA::8}\`"
             else
-              echo "### Backend CI failed (tests part ${{ matrix.shard }} of 4) — \`${GITHUB_SHA::8}\`"
+              echo "### Backend CI failed (tests part ${{ matrix.shard }} of 6) — \`${GITHUB_SHA::8}\`"
             fi
             if [ -s .ci-pest.txt ] && grep -q "FAILED" .ci-pest.txt; then
               echo ""
