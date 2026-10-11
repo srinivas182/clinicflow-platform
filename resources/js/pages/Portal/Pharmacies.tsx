@@ -68,7 +68,10 @@ export default function Pharmacies({ items, pharmacies }: Props) {
                                                     : "warning"
                                             }
                                         >
-                                            {p.available} of {p.of} in stock
+                                            {t("portal.pharmacies.in_stock", {
+                                                available: p.available,
+                                                total: p.of,
+                                            })}
                                         </Badge>
                                     )}
                                     <span className="w-28 text-right font-medium">

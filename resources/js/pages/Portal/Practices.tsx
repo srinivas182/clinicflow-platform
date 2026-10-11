@@ -38,7 +38,9 @@ export default function Practices({
                                 {p.provider}
                             </span>
                             <span className="text-xs text-muted">
-                                since {p.linked_at}
+                                {t("portal.practices.since", {
+                                    date: p.linked_at,
+                                })}
                             </span>
                             <Button
                                 size="sm"

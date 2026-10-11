@@ -168,7 +168,9 @@ export default function PortalCare({
                             {r.appointment}{" "}
                             {r.outcome && (
                                 <span className="block text-xs">
-                                    Outcome: {r.outcome}
+                                    {t("portal.care.outcome", {
+                                        outcome: r.outcome,
+                                    })}
                                 </span>
                             )}
                         </p>
@@ -204,7 +206,11 @@ export default function PortalCare({
                     ))}
                     {immunisations.given.map((g, i) => (
                         <p key={`g${i}`} className="text-xs text-muted">
-                            Given {g.vaccine} ({g.dose}) on {g.given_on}
+                            {t("portal.care.immunisation_given", {
+                                vaccine: g.vaccine,
+                                dose: g.dose,
+                                date: g.given_on,
+                            })}
                         </p>
                     ))}
                 </Card>
@@ -217,7 +223,10 @@ export default function PortalCare({
                                 key={c.week}
                                 tone={c.done ? "success" : "neutral"}
                             >
-                                {c.week} weeks · {c.date}
+                                {t("portal.care.pregnancy_check", {
+                                    weeks: c.week,
+                                    date: c.date,
+                                })}
                             </Badge>
                         ))}
                     </div>
@@ -245,8 +254,11 @@ export default function PortalCare({
                             </p>
                             {w.flags.length > 0 ? (
                                 <p className="text-xs text-status-warning">
-                                    Please book a follow-up:{" "}
-                                    {w.flags.join(", ").replaceAll("_", " ")}
+                                    {t("portal.care.please_book_follow_up", {
+                                        checks: w.flags
+                                            .join(", ")
+                                            .replaceAll("_", " "),
+                                    })}
                                 </p>
                             ) : (
                                 <p className="text-xs text-muted">

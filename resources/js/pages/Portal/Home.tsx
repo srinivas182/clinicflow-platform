@@ -107,13 +107,15 @@ export default function PortalHome(p: Props) {
                             {p.visit.ahead !== null && (
                                 <div className="text-muted">
                                     {p.visit.ahead === 0
-                                        ? "You're next"
-                                        : `${p.visit.ahead} ahead of you`}
+                                        ? t("portal.home.you_are_next")
+                                        : t("portal.home.ahead_of_you", {
+                                              count: p.visit.ahead,
+                                          })}
                                 </div>
                             )}
                             {p.visit.collectionCode && (
                                 <div className="mt-1">
-                                    Medicine ready — collection code{" "}
+                                    {t("portal.home.medicine_ready")}{" "}
                                     <b className="text-lg">
                                         {p.visit.collectionCode}
                                     </b>
@@ -221,7 +223,9 @@ export default function PortalHome(p: Props) {
                         ))}
                         {o.comment && (
                             <p className="mt-1 text-muted">
-                                Doctor: {o.comment}
+                                {t("portal.home.doctor_comment", {
+                                    comment: o.comment,
+                                })}
                             </p>
                         )}
                     </div>
@@ -244,7 +248,9 @@ export default function PortalHome(p: Props) {
                                     router.post(`/my/invoices/${i.id}/pay`)
                                 }
                             >
-                                Pay {rand(i.balance, 2)}
+                                {t("portal.home.pay_amount", {
+                                    amount: rand(i.balance, 2),
+                                })}
                             </Button>
                         ) : (
                             <Badge tone="success">
