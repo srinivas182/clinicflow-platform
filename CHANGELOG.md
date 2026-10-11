@@ -4,6 +4,11 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.81.1] — deploy.sh keeps cPanel's PHP setting
+
+### Fixed
+- deploy.sh keeps the blocks cPanel writes into public/.htaccess (MultiPHP Manager's PHP version handler, PHP ini directives) across updates — before, the update stopped because the file had local changes, and discarding them would have dropped the site to the server's default PHP. The blocks are also restored if a deploy fails part-way.
+
 ## [0.81.0] — Sprint W8d: portal sentences with live values
 
 ### Added
