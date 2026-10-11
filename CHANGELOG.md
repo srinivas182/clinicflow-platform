@@ -6,6 +6,9 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [0.74.1] — Sprint W6c: phone checks for practice pages
 
+### Fixed
+- Practice pages failed with a server error on hosting whose cache stores serialised values (database, file, Redis — including cPanel): the practice-by-address lookup cached the whole practice object, which the app refuses to rebuild from the cache (a security default). It now caches only the practice ID; old entries are ignored and replaced. Found by the new practice-page phone checks; covered by a database-cache test.
+
 ### Added
 - The CI phone layout checks now also cover every practice staff page (60 pages: front desk, triage, doctor, patients, billing, finance, lab, pharmacy, analytics, rosters, settings and more): the demo practices are created on *.localhost, the demo clinic is given the fullest clinic package, and the check signs in as its owner through the real hand-off. Pages the owner cannot open are skipped and reported. 96 pages in total.
 

@@ -5,9 +5,11 @@ use App\Domains\Identity\Enums\StaffRole;
 use App\Domains\Identity\Models\Membership;
 use App\Domains\Platform\Enums\ProviderType;
 use App\Domains\Platform\Models\Provider;
+use App\Domains\Platform\Tenancy\IdCachedDomainTenantResolver;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\Cache;
+use Stancl\Tenancy\Resolvers\DomainTenantResolver;
 
 uses(DatabaseMigrations::class);
 
@@ -51,4 +53,18 @@ it('adds staff inside a practice with the database cache (the failing demo step)
     $user = User::factory()->create();
     app(AddStaffMember::class)->handle($this->a, $user, StaffRole::Doctor);
     expect(Membership::query()->where('user_id', $user->id)->exists())->toBeTrue();
+});
+
+it('opens practice pages with the database cache, caching only the practice ID', function (): void {
+    IdCachedDomainTenantResolver::$shouldCache = true;
+    $this->get('http://sunrise.clinicflow.test/')->assertOk();
+    // The second request is served from the cache — the 500 error seen on database/file caches.
+    $this->get('http://sunrise.clinicflow.test/')->assertOk();
+    $key = app(DomainTenantResolver::class)->getCacheKey('sunrise.clinicflow.test');
+    expect(Cache::store()->get($key))->toBe($this->a->id);
+
+    // An old-format entry (anything but an ID) is ignored and replaced, never crashed on.
+    Cache::store()->put($key, ['not' => 'an id'], 300);
+    $this->get('http://sunrise.clinicflow.test/')->assertOk();
+    expect(Cache::store()->get($key))->toBe($this->a->id);
 });
