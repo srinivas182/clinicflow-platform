@@ -241,3 +241,12 @@ it('posts the platform\'s own books and offers CSV, Excel and PDF exports to pro
     expect($this->actingAs($this->ownerUser)->get($base.'&format=xlsx')->assertOk()->getContent())->toStartWith('PK')
         ->and($this->actingAs($this->ownerUser)->get($base.'&format=pdf')->assertOk()->getContent())->toStartWith('%PDF');
 });
+
+it('opens Procurement with stock on hand, sorted by item name', function (): void {
+    foreach (['Tramadol' => 'Tramadol 50mg capsules', 'Paracetamol' => 'Paracetamol 500mg tablets'] as $medicine => $description) {
+        (new StockItem)->forceFill(['medicine_id' => medicineId($medicine), 'nappi_code' => (string) random_int(1000000, 9999999), 'description' => $description,
+            'schedule' => 'S0', 'unit_price_cents' => 500, 'reorder_level' => 0])->save();
+    }
+    $this->actingAs($this->ownerUser)->get('http://sunrise.clinicflow.test/procurement')->assertOk()
+        ->assertInertia(fn ($p) => $p->where('stock.0.name', 'Paracetamol 500mg tablets')->where('stock.1.name', 'Tramadol 50mg capsules'));
+});

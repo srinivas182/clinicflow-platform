@@ -27,6 +27,7 @@ use App\Domains\Platform\Security\ClamdScanner;
 use App\Domains\Platform\Security\VirusScanner;
 use App\Domains\Platform\Storage\FileStore;
 use App\Domains\Platform\Support\TenantLookupCache;
+use App\Domains\Platform\Tenancy\IdCachedDomainTenantResolver;
 use App\Domains\Prescribing\Contracts\DrugDatabase;
 use App\Domains\Prescribing\Support\DemoDrugDatabase;
 use App\Domains\Scheduling\Calendar\CalendarSync;
@@ -105,6 +106,8 @@ class AppServiceProvider extends ServiceProvider
          */
         // Practice lookup by domain: cached for 5 minutes and cleared the moment a practice or its domains change
         // (so suspending a practice takes effect immediately).
+        // Practice lookup cached as the practice ID only (works with every cache store).
+        $this->app->bind(DomainTenantResolver::class, IdCachedDomainTenantResolver::class);
         DomainTenantResolver::$shouldCache = (bool) config('clinicflow.performance.cache_tenant_lookup', true);
         DomainTenantResolver::$cacheTTL = 300;
         // Cleared in the platform context (inside a practice, the cache is scoped to that practice).

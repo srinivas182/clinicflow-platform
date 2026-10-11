@@ -1,6 +1,6 @@
 name: Phone layout
 
-# Loads every public page and every admin page in Chromium at phone width (375 px) and fails if any
+# Loads every public, admin and practice staff page in Chromium at phone width (375 px) and fails if any
 # page is wider than the screen. Screenshots of failures are uploaded. Runs on ready PRs that touch
 # the front end, and by hand.
 on:
@@ -38,7 +38,10 @@ jobs:
           --health-interval=5s --health-timeout=5s --health-retries=30
 
     env:
-      APP_URL: http://localhost:8000
+      APP_URL: http://localhost
+      PROVIDER_DOMAIN: localhost
+      PHP_CLI_SERVER_WORKERS: 4
+      PHONE_BASE_URL: http://localhost
       DB_CONNECTION: mysql
       DB_HOST: 127.0.0.1
       DB_PORT: 3306
@@ -81,11 +84,17 @@ jobs:
           php artisan migrate --database=hub --path=database/migrations/hub --force
           php artisan db:seed --force
           php artisan route:list --json --method=GET > tests/phone/routes.json
+          php artisan clinicflow:demo | tee demo.txt
+          php tests/phone/upgrade-demo-clinic.php
+          echo "PHONE_PRACTICE_PASSWORD=$(grep -o 'shown once): [A-Za-z0-9]*' demo.txt | awk '{print $3}')" >> "$GITHUB_ENV"
 
       - name: Start the app
         run: |
+          # Practice addresses have no port (http://demo-clinic.localhost/...): send port 80 to the app.
+          sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-port 8000
           php artisan serve --host=127.0.0.1 --port=8000 > storage/logs/serve.log 2>&1 &
-          for i in $(seq 1 30); do curl -sf -o /dev/null http://localhost:8000/login && break; sleep 1; done
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://localhost/login && break; sleep 1; done
+          curl -s -o /dev/null -w "practice address: HTTP %{http_code}\n" http://demo-clinic.localhost/
 
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
@@ -102,7 +111,8 @@ jobs:
           [ -f phone.log ] && note "Phone check output" "$(grep -E '✘|Error|error|expect|wider|Timeout|›' phone.log | head -40)"
           note "Server log" "$(tail -25 storage/logs/serve.log 2>/dev/null)"
           note "App log" "$(grep -E 'ERROR|Exception' storage/logs/laravel.log 2>/dev/null | tail -8)"
-          note "Sign-in page check" "$(curl -s -o /dev/null -w 'login page HTTP %{http_code}' http://localhost:8000/login)"
+          note "Sign-in page check" "$(curl -s -o /dev/null -w 'login page HTTP %{http_code}' http://localhost/login)"
+          note "Demo practices" "$(tail -5 demo.txt 2>/dev/null | grep -v 'shown once')"
 
       - name: Upload screenshots and logs
         if: failure()
