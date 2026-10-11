@@ -85,14 +85,54 @@ export function useLiveReload(
     event: string,
     fallbackMs: number,
     only?: string[],
+    /** Never slowed by data-saver mode (e.g. the waiting-room TV). */
+    fullSpeed = false,
 ): boolean {
     const reload = () => router.reload(only ? { only } : {});
     const live = useRealtime(channel, event, reload);
     useEffect(() => {
-        const t = setInterval(reload, live ? 60000 : fallbackMs);
-        return () => clearInterval(t);
+        // Data saving: no refreshing while the screen is hidden (refresh at once on return), and
+        // three times less often when the phone asks to save data or is on a 2G connection.
+        const ms =
+            (live ? 60000 : fallbackMs) * (!fullSpeed && savesData() ? 3 : 1);
+        let timer: ReturnType<typeof setInterval> | undefined;
+        const stop = () => {
+            if (timer) clearInterval(timer);
+            timer = undefined;
+        };
+        const start = () => {
+            stop();
+            timer = setInterval(reload, ms);
+        };
+        const onVisibility = () => {
+            if (document.hidden) {
+                stop();
+            } else {
+                reload();
+                start();
+            }
+        };
+        if (!document.hidden) start();
+        document.addEventListener("visibilitychange", onVisibility);
+        return () => {
+            stop();
+            document.removeEventListener("visibilitychange", onVisibility);
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [live, fallbackMs]);
 
     return live;
+}
+
+/** The phone asks to save data (data-saver / Lite mode) or is on a 2G connection. */
+export function savesData(): boolean {
+    const connection = (
+        navigator as Navigator & {
+            connection?: { saveData?: boolean; effectiveType?: string };
+        }
+    ).connection;
+    return (
+        connection?.saveData === true ||
+        ["slow-2g", "2g"].includes(connection?.effectiveType ?? "")
+    );
 }

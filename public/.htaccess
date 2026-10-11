@@ -33,7 +33,11 @@
 
 # Built assets carry a content hash in their names: cache for a year.
 <IfModule mod_headers.c>
-    <FilesMatch "\.(js|css|woff2?)$">
+    # The service worker, app manifest and offline page are always re-checked, so updates arrive at once.
+    <FilesMatch "^(sw\.js|manifest\.webmanifest|offline\.html)$">
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+    <FilesMatch "^(?!sw\.js$).+\.(js|css|woff2?)$">
         Header set Cache-Control "public, max-age=31536000, immutable"
     </FilesMatch>
     <FilesMatch "\.(ico|png|jpe?g|gif|webp|svg)$">

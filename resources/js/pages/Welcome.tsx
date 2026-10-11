@@ -66,7 +66,7 @@ export default function Welcome() {
                 </div>
 
                 <div className="mt-6 grid grid-cols-2 gap-4">
-                    <Card title="Design system" aside="IBM Plex Sans">
+                    <Card title="Design system" aside="Device font">
                         <div className="flex flex-wrap gap-2">
                             <Button>Primary</Button>
                             <Button variant="secondary">Secondary</Button>

@@ -1,8 +1,4 @@
 import "../css/app.css";
-import "@fontsource/ibm-plex-sans/400.css";
-import "@fontsource/ibm-plex-sans/500.css";
-import "@fontsource/ibm-plex-sans/600.css";
-import "@fontsource/ibm-plex-sans/700.css";
 
 import { createInertiaApp } from "@inertiajs/react";
 import type { ComponentType } from "react";
@@ -28,6 +24,18 @@ void createInertiaApp({
             requestAnimationFrame(() =>
                 document.getElementById("boot")?.remove(),
             );
+            // Installable app + data saving on repeat visits (see public/sw.js). Secure addresses only.
+            if (
+                import.meta.env.PROD &&
+                "serviceWorker" in navigator &&
+                window.isSecureContext
+            ) {
+                window.addEventListener("load", () =>
+                    navigator.serviceWorker
+                        .register("/sw.js")
+                        .catch(() => undefined),
+                );
+            }
         }
     },
     progress: {

@@ -14,7 +14,7 @@ export default function Display({
     calling: { ticket: string; to: string }[];
     waiting: { ticket: string; stage: string }[];
 }) {
-    useLiveReload("queue", "queue.changed", 5000);
+    useLiveReload("queue", "queue.changed", 5000, undefined, true);
 
     return (
         <main className="flex min-h-screen flex-col gap-6 bg-chrome p-10 text-white">
