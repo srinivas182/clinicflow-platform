@@ -19,8 +19,10 @@ export default function AdminStatus({
     return (
         <AdminShell active="Status">
             <Head title="Status page" />
-            <div className="mb-5 flex items-center gap-2">
-                <h1 className="flex-1 text-2xl font-semibold">Status page</h1>
+            <div className="mb-5 flex flex-wrap items-center gap-2">
+                <h1 className="min-w-0 flex-1 text-2xl font-semibold">
+                    Status page
+                </h1>
                 <a href="/status" target="_blank" rel="noreferrer">
                     <Button variant="ghost">View public page</Button>
                 </a>
@@ -54,9 +56,9 @@ export default function AdminStatus({
                 {components.map((c) => (
                     <p
                         key={c.key}
-                        className="flex items-center gap-2 py-1 text-sm"
+                        className="flex flex-wrap items-center gap-2 py-1 text-sm"
                     >
-                        <span className="flex-1">{c.name}</span>
+                        <span className="min-w-0 flex-1">{c.name}</span>
                         <Badge
                             tone={
                                 c.status === "operational"
