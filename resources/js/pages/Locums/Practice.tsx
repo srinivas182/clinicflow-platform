@@ -183,7 +183,7 @@ export default function LocumsPractice({ shifts, locums, branches }: Props) {
             </p>
             <Flash />
             <Card title="Post a shift" className="mb-4">
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid sm:grid-cols-3 gap-2">
                     <input
                         aria-label="Title"
                         className={input}

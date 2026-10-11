@@ -81,7 +81,7 @@ export default function Pricing({
                         Annual billing (save 15%)
                     </label>
                 </div>
-                <div className="mt-8 grid grid-cols-3 gap-5">
+                <div className="mt-8 grid sm:grid-cols-3 gap-5">
                     {shown.map((p) => (
                         <section
                             key={p.id}

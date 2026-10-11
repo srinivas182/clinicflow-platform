@@ -28,7 +28,7 @@ export default function Debtors({ buckets, patients, writeOffs }: Props) {
                 </Button>
             </div>
             <Flash />
-            <div className="mb-4 grid grid-cols-4 gap-3">
+            <div className="mb-4 grid sm:grid-cols-4 gap-3">
                 {Object.entries(buckets).map(([k, v]) => (
                     <Card
                         key={k}

@@ -89,7 +89,7 @@ export default function WalletPage({
                     value={rand(wallet.reserved, 2)}
                 />
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-3 gap-4">
                 <Card title="Top up" className="col-span-1">
                     <ul className="space-y-2">
                         {packs.map((p) => (

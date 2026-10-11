@@ -61,7 +61,7 @@ export default function Start({
             </header>
             <form
                 onSubmit={submit}
-                className="mx-auto grid max-w-5xl grid-cols-3 gap-5 px-6 py-10"
+                className="mx-auto grid max-w-5xl sm:grid-cols-3 gap-5 px-6 py-10"
                 noValidate
             >
                 <div className="col-span-3">

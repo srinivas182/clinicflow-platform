@@ -84,7 +84,7 @@ export default function ClaimsIndex({
                     </Button>
                 }
             >
-                <div className="grid grid-cols-4 gap-3 text-sm">
+                <div className="grid sm:grid-cols-4 gap-3 text-sm">
                     {Object.entries(ageing).map(([bucket, amount]) => (
                         <div
                             key={bucket}

@@ -74,13 +74,13 @@ export default function AdminBrands({ brands, resellers, providers }: Props) {
             <Head title="Brands" />
             <h1 className="mb-1 text-2xl font-semibold">White-label brands</h1>
             <p className="mb-5 text-sm text-muted">
-                A brand changes what practices and patients see. Dr Business Flow
-                still bills; the linked reseller earns commission. The partner
-                must point *.their-domain at Dr Business Flow before practices can
-                use it.
+                A brand changes what practices and patients see. Dr Business
+                Flow still bills; the linked reseller earns commission. The
+                partner must point *.their-domain at Dr Business Flow before
+                practices can use it.
             </p>
             <Flash />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
                 <Card title={form.data.id ? "Edit brand" : "New brand"}>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                         <input
@@ -305,7 +305,7 @@ export default function AdminBrands({ brands, resellers, providers }: Props) {
                         />
                         <span className="flex-1">
                             Sign-up link:{" "}
-                            <span className="font-mono text-xs">
+                            <span className="font-mono text-xs break-all">
                                 {b.signupLink}
                             </span>
                             {b.practiceDomain && (

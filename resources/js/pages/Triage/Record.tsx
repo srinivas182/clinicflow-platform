@@ -107,11 +107,11 @@ export default function TriageRecord({
             <Flash />
             <form
                 onSubmit={submit}
-                className="mt-5 grid grid-cols-3 gap-4"
+                className="mt-5 grid sm:grid-cols-3 gap-4"
                 noValidate
             >
                 <Card title="Vitals" className="col-span-2">
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid sm:grid-cols-4 gap-3">
                         {vital("bp_systolic", "BP systolic *")}
                         {vital("bp_diastolic", "BP diastolic *")}
                         {vital("pulse", "Pulse *")}

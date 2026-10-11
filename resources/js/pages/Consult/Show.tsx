@@ -217,7 +217,7 @@ export default function ConsultShow({
                 </div>
             </div>
             <Flash />
-            <div className="grid grid-cols-5 gap-4">
+            <div className="grid sm:grid-cols-5 gap-4">
                 <Card
                     title="Notes"
                     className="col-span-3"
@@ -504,7 +504,7 @@ export default function ConsultShow({
                                                 <Trash2 className="size-3.5 text-muted" />
                                             </button>
                                         </div>
-                                        <div className="mt-2 grid grid-cols-4 gap-2">
+                                        <div className="mt-2 grid sm:grid-cols-4 gap-2">
                                             <input
                                                 aria-label="Dose"
                                                 className="col-span-2 rounded border border-line px-2 py-1"

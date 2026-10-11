@@ -13,7 +13,7 @@ interface Route { uri: string; method: string }
 const routes: Route[] = JSON.parse(readFileSync("tests/phone/routes.json", "utf8"));
 const SIGNED_IN = [...new Set(routes
     .filter((r) => r.method.includes("GET") && (r.uri.startsWith("admin/") || ["workspaces", "account/security"].includes(r.uri)))
-    .filter((r) => !r.uri.includes("{") && !/(export|download|csv|xlsx|pdf|callback|webhook)/.test(r.uri))
+    .filter((r) => !r.uri.includes("{") && !/(export|download|csv|xlsx|pdf|callback|webhook|horizon|\/api\/)/.test(r.uri))
     .map((r) => `/${r.uri}`))].sort();
 
 async function noSidewaysScroll(page: Page, path: string): Promise<void> {

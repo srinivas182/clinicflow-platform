@@ -104,7 +104,7 @@ export default function AppointmentsIndex({
                     </p>
                 </Card>
             )}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-3 gap-4">
                 {doctors.length === 0 && (
                     <p className="text-sm text-muted">
                         No doctors are rostered yet. Add sessions on the Rosters

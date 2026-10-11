@@ -17,8 +17,8 @@ export default function Practices({
                 Practices linked to you
             </h1>
             <p className="mb-5 text-sm text-muted">
-                These practices can find your records on the Dr Business Flow network
-                and send your e-scripts. Remove one at any time.
+                These practices can find your records on the Dr Business Flow
+                network and send your e-scripts. Remove one at any time.
             </p>
             <Flash />
             <Card>

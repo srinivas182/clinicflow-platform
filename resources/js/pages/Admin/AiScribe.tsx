@@ -52,7 +52,7 @@ export default function AdminAiScribe({ providers, prices, usage }: Props) {
                 their wallet).
             </p>
             <Flash />
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-3 gap-4">
                 {providers.map((p) => (
                     <Card
                         key={p.driver}

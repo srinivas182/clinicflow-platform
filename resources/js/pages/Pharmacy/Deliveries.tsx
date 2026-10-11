@@ -158,8 +158,8 @@ export default function Deliveries({
                 <Card title="Courier accounts">
                     {partners.length === 0 && (
                         <p className="text-sm text-muted">
-                            No couriers are enabled on Dr Business Flow yet. Manual
-                            courier is always available.
+                            No couriers are enabled on Dr Business Flow yet.
+                            Manual courier is always available.
                         </p>
                     )}
                     {partners.map((p) => (

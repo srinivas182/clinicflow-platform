@@ -121,7 +121,7 @@ export default function InvoicePage({
                     {invoice.reviewNote}
                 </div>
             )}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-3 gap-4">
                 <Card title="Lines" className="col-span-2">
                     <table className="w-full text-sm">
                         <tbody>
@@ -206,7 +206,7 @@ export default function InvoicePage({
                         </span>
                     </div>
                     <form
-                        className="mt-4 grid grid-cols-5 items-end gap-2"
+                        className="mt-4 grid sm:grid-cols-5 items-end gap-2"
                         onSubmit={(e) => {
                             e.preventDefault();
                             line.post(`/invoices/${invoice.id}/lines`, {

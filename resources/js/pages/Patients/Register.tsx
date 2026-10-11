@@ -56,7 +56,7 @@ export default function RegisterPatient() {
             </p>
             <form
                 onSubmit={submit}
-                className="mt-6 grid grid-cols-3 gap-4"
+                className="mt-6 grid sm:grid-cols-3 gap-4"
                 noValidate
             >
                 <Card title="Identity" className="col-span-2">
