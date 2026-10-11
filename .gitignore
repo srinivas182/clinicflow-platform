@@ -30,5 +30,6 @@ Thumbs.db
 
 # Phone layout checks
 /tests/phone/.admin-session.json
+/tests/phone/.practice-session.json
 /tests/phone/routes.json
 /test-results/

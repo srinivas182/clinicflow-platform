@@ -4,6 +4,11 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.74.1] — Sprint W6c: phone checks for practice pages
+
+### Added
+- The CI phone layout checks now also cover every practice staff page (60 pages: front desk, triage, doctor, patients, billing, finance, lab, pharmacy, analytics, rosters, settings and more): the demo practices are created on *.localhost, the demo clinic is given the fullest clinic package, and the check signs in as its owner through the real hand-off. Pages the owner cannot open are skipped and reported. 96 pages in total.
+
 ## [0.74.0] — Sprint W6b: phones — tables, tap targets, keyboards, phone checks
 
 ### Added
