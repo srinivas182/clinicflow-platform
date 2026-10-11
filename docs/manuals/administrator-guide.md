@@ -82,3 +82,5 @@ Local disk works for a single server only. Local folders must be outside the app
 English is always on. In **Admin → Languages** you switch other languages on or off and invite native-speaker reviewers (Invite a reviewer: name, email or mobile, languages, and whether they may also approve medical wording). Reviewers get a single-use link valid for 7 days, create an account, and see only the review screen.
 
 A translation reaches patients only when a reviewer approves it — and, for medical wording (lab results, medicine collection, recall reminders, queue calls), a clinical reviewer approves it too. Anything not approved is sent in English. If the English wording is changed, its translations go back to English until a reviewer re-checks them.
+
+To give reviewers a head start, press **Create AI drafts** on a language. Every text without a translation gets a first draft from your AI provider, marked "AI draft — needs review". Drafts are never sent to patients until a reviewer approves them.

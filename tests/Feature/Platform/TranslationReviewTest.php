@@ -3,6 +3,7 @@
 use App\Domains\Messaging\Contracts\MessageSender;
 use App\Domains\Messaging\Models\MessageTemplate;
 use App\Domains\Messaging\Support\TemplateResolver;
+use App\Domains\Scribe\Models\AiProvider;
 use App\Domains\Translation\Actions\Translations;
 use App\Domains\Translation\Models\Language;
 use App\Domains\Translation\Models\Translation;
@@ -13,6 +14,7 @@ use App\Domains\Wallet\Support\WalletSettings;
 use App\Http\Middleware\RequireRecentConfirmation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 
 uses(DatabaseMigrations::class);
@@ -136,4 +138,29 @@ it('lets the super admin switch languages on and off, but never English', functi
     expect(Language::query()->find('zu')?->enabled)->toBeTrue();
     $this->actingAs($this->admin)->withSession($confirmed)->post('http://localhost/admin/languages/en', ['enabled' => false])->assertStatus(422);
     expect(Translation::query()->where('language', 'zu')->count())->toBe(count(TranslationUnits::all()));
+});
+
+it('creates AI drafts only for untranslated texts, discarding any that lose a placeholder', function () use ($booking, $bookingZu): void {
+    $confirmed = [RequireRecentConfirmation::SESSION_KEY => now()->getTimestamp()];
+    $this->actingAs($this->admin)->withSession($confirmed)->post('http://localhost/admin/languages/zu/drafts')->assertSessionHasErrors('drafts');
+
+    AiProvider::query()->create(['driver' => 'anthropic', 'kind' => 'notes', 'enabled' => true, 'credentials' => ['api_key' => 'sk-test']]);
+    // A reviewer already started this one: AI must not overwrite it.
+    $this->t->save($this->reviewer, 'zu', 'message:booking.reminder:sms', 'Isikhumbuzo esivela ku-{{ practice }}: {{ date }} ngo-{{ time }} no-{{ doctor }}.');
+    Http::fake(['api.anthropic.com/*' => Http::response(['content' => [['type' => 'text', 'text' => json_encode([
+        $booking => $bookingZu,
+        'message:queue.next:sms' => '{{ practice }}: ithikithi lakho, sicela uze egumbini.', // lost {{ ticket }} and {{ room }}
+        'message:booking.reminder:sms' => 'AI version {{ practice }} {{ date }} {{ time }} {{ doctor }}',
+    ])]]])]);
+    $this->actingAs($this->admin)->withSession($confirmed)->post('http://localhost/admin/languages/zu/drafts')->assertSessionHasNoErrors();
+
+    $status = fn (string $unit) => Translation::query()->where(['language' => 'zu', 'unit' => $unit])->value('status');
+    expect($status($booking))->toBe('ai_draft')
+        ->and($status('message:queue.next:sms'))->toBe('missing')
+        ->and($status('message:booking.reminder:sms'))->toBe('draft')
+        ->and(Translation::query()->where(['language' => 'zu', 'unit' => 'message:booking.reminder:sms'])->value('text'))->not->toContain('AI version')
+        // An AI draft is never sent until a reviewer approves it.
+        ->and(TemplateResolver::resolve('booking.confirmation', 'sms', 'zu')['body'])->not->toBe($bookingZu);
+    $this->t->approve($this->reviewer, 'zu', $booking);
+    expect(TemplateResolver::resolve('booking.confirmation', 'sms', 'zu')['body'])->toBe($bookingZu);
 });

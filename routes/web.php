@@ -128,6 +128,7 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/ai-scribe', [ScribeController::class, 'admin'])->name('ai-scribe.index');
             Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
             Route::get('/languages', [LanguagesController::class, 'index'])->name('languages.index');
+            Route::post('/languages/{code}/drafts', [LanguagesController::class, 'drafts'])->middleware(['step-up', 'throttle:6,1'])->name('languages.drafts');
             Route::post('/languages/invite', [LanguagesController::class, 'invite'])->middleware(['step-up', 'throttle:20,1'])->name('languages.invite');
             Route::post('/languages/{code}', [LanguagesController::class, 'toggle'])->middleware('step-up')->name('languages.toggle');
             Route::delete('/languages/reviewers/{reviewer}', [LanguagesController::class, 'removeReviewer'])->middleware('step-up')->name('languages.reviewers.remove');

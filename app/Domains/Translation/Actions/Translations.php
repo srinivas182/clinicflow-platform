@@ -74,6 +74,24 @@ class Translations
         return $t;
     }
 
+    /**
+     * Stores an AI draft for a text that has no translation yet (never over a reviewer's work).
+     * It is not live: a native speaker must review and approve it.
+     */
+    public function writeAiDraft(string $language, string $unit, string $text): bool
+    {
+        $u = TranslationUnits::all()[$unit] ?? null;
+        $t = Translation::query()->where(['language' => $language, 'unit' => $unit])->first();
+        if ($u === null || ($t instanceof Translation && $t->status !== 'missing')) {
+            return false;
+        }
+        Translation::query()->updateOrCreate(['language' => $language, 'unit' => $unit],
+            ['source' => $u['source'], 'text' => $text, 'medical' => $u['medical'], 'status' => 'ai_draft', 'approved_by' => null, 'approved_at' => null,
+                'clinical_approved_by' => null, 'clinical_approved_at' => null, 'updated_by' => null]);
+
+        return true;
+    }
+
     public function canReview(User $user, string $language): bool
     {
         return TranslatorLanguage::query()->where(['user_id' => $user->id, 'language' => $language])->exists();

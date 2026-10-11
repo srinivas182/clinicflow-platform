@@ -4,6 +4,11 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.78.0] — Sprint W8a-2: AI first-draft translations
+
+### Added
+- "Create AI drafts" per language (Admin → Languages): fills every text that has no translation yet with a first draft from the platform's AI provider (the same set-up as the AI scribe), in the background. Drafts use plain, everyday South African wording and must keep every placeholder — any that do not are discarded. A reviewer's draft or an approved translation is never overwritten. AI drafts are marked "AI draft — needs review" and are never sent to patients until a native speaker (and, for medical wording, a clinical reviewer) approves them. Each language shows how many texts are untranslated and how many AI drafts await review.
+
 ## [0.77.0] — Sprint W8a-1: translations with native-speaker review
 
 ### Added
