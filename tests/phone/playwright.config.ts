@@ -5,7 +5,8 @@ export default defineConfig({
     testDir: ".",
     timeout: 30_000,
     retries: 1,
-    reporter: [["list"]],
+    // In CI, failures also become GitHub annotations (readable from the PR and the API).
+    reporter: process.env.CI ? [["github"], ["list"]] : [["list"]],
     globalSetup: "./sign-in.ts",
     outputDir: "../../test-results/phone",
     use: {

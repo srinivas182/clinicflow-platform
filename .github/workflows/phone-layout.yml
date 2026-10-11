@@ -91,7 +91,18 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Check every page at phone width
-        run: npx playwright test --config tests/phone/playwright.config.ts
+        run: |
+          set -o pipefail
+          npx playwright test --config tests/phone/playwright.config.ts 2>&1 | tee phone.log
+
+      - name: Explain the failure (annotations)
+        if: failure()
+        run: |
+          note() { printf '::error title=%s::%s\n' "$1" "$(printf '%s' "$2" | head -c 3500 | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')"; }
+          [ -f phone.log ] && note "Phone check output" "$(grep -E '✘|Error|error|expect|wider|Timeout|›' phone.log | head -40)"
+          note "Server log" "$(tail -25 storage/logs/serve.log 2>/dev/null)"
+          note "App log" "$(grep -E 'ERROR|Exception' storage/logs/laravel.log 2>/dev/null | tail -8)"
+          note "Sign-in page check" "$(curl -s -o /dev/null -w 'login page HTTP %{http_code}' http://localhost:8000/login)"
 
       - name: Upload screenshots and logs
         if: failure()
