@@ -53,10 +53,10 @@ export default function Pricing({
                     Patients pay you directly. You pay one subscription, plus
                     add-ons you switch on.
                 </p>
-                <div className="mt-6 flex gap-3">
+                <div className="mt-6 flex flex-wrap items-center gap-3">
                     <div
                         role="tablist"
-                        className="inline-flex rounded-lg bg-line-soft p-1"
+                        className="inline-flex max-w-full flex-wrap rounded-lg bg-line-soft p-1"
                     >
                         {types.map((t) => (
                             <button
@@ -81,7 +81,7 @@ export default function Pricing({
                         Annual billing (save 15%)
                     </label>
                 </div>
-                <div className="mt-8 grid grid-cols-3 gap-5">
+                <div className="mt-8 grid sm:grid-cols-3 gap-5">
                     {shown.map((p) => (
                         <section
                             key={p.id}

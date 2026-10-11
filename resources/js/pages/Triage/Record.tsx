@@ -107,11 +107,11 @@ export default function TriageRecord({
             <Flash />
             <form
                 onSubmit={submit}
-                className="mt-5 grid grid-cols-3 gap-4"
+                className="mt-5 grid sm:grid-cols-3 gap-4"
                 noValidate
             >
-                <Card title="Vitals" className="col-span-2">
-                    <div className="grid grid-cols-4 gap-3">
+                <Card title="Vitals" className="sm:col-span-2">
+                    <div className="grid sm:grid-cols-4 gap-3">
                         {vital("bp_systolic", "BP systolic *")}
                         {vital("bp_diastolic", "BP diastolic *")}
                         {vital("pulse", "Pulse *")}
@@ -137,7 +137,7 @@ export default function TriageRecord({
                             </p>
                         </div>
                     )}
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid sm:grid-cols-2 gap-2">
                         {colours.map((c) => (
                             <button
                                 key={c}
@@ -164,7 +164,7 @@ export default function TriageRecord({
                         Save and send to doctor queue
                     </Button>
                 </Card>
-                <Card title="Allergies" className="col-span-3">
+                <Card title="Allergies" className="sm:col-span-3">
                     <div className="flex flex-wrap gap-2">
                         {allergies.length === 0 && (
                             <span className="text-sm text-muted">

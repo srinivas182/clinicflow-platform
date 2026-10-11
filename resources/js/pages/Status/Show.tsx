@@ -41,7 +41,9 @@ export default function StatusShow({
     return (
         <div className="mx-auto max-w-3xl px-6 py-10">
             <Head title="Dr Business Flow status" />
-            <h1 className="mb-2 text-2xl font-semibold">Dr Business Flow status</h1>
+            <h1 className="mb-2 text-2xl font-semibold">
+                Dr Business Flow status
+            </h1>
             <p
                 className="mb-6 rounded-lg px-4 py-3 font-medium text-white"
                 style={{ background: colour[overall] }}

@@ -22,9 +22,9 @@ export default function Network({
             <Head title="Network search" />
             <h1 className="mb-1 text-2xl font-semibold">Network search</h1>
             <p className="mb-5 text-sm text-muted">
-                Find a patient already on Dr Business Flow at another practice. You
-                see a masked match only; their records link after the patient
-                approves with a code on their own phone.
+                Find a patient already on Dr Business Flow at another practice.
+                You see a masked match only; their records link after the
+                patient approves with a code on their own phone.
             </p>
             <Flash />
             <div className="grid grid-cols-2 gap-4">

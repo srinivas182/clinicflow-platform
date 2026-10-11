@@ -53,7 +53,7 @@ export default function Start({
     return (
         <div className="min-h-screen bg-paper">
             <Head title="Start your free trial" />
-            <header className="flex items-center border-b border-line bg-surface px-10 py-4">
+            <header className="flex items-center border-b border-line bg-surface px-4 py-4 md:px-10">
                 <Logo />
                 <span className="ml-auto text-sm text-muted">
                     30-day free trial · no card needed
@@ -61,10 +61,10 @@ export default function Start({
             </header>
             <form
                 onSubmit={submit}
-                className="mx-auto grid max-w-5xl grid-cols-3 gap-5 px-6 py-10"
+                className="mx-auto grid max-w-5xl sm:grid-cols-3 gap-5 px-6 py-10"
                 noValidate
             >
-                <div className="col-span-3">
+                <div className="sm:col-span-3">
                     <h1 className="text-2xl font-semibold">
                         Set up your practice
                     </h1>
@@ -73,8 +73,8 @@ export default function Start({
                         verify your registrations before you appear in search.
                     </p>
                 </div>
-                <Card title="Practice" className="col-span-2">
-                    <div className="grid grid-cols-2 gap-3">
+                <Card title="Practice" className="sm:col-span-2">
+                    <div className="grid gap-3 sm:grid-cols-2">
                         <div className="flex flex-col gap-1.5">
                             <label
                                 htmlFor="type"
@@ -181,8 +181,8 @@ export default function Start({
                             ))}
                     </div>
                 </Card>
-                <Card title="Owner account" className="col-span-2">
-                    <div className="grid grid-cols-2 gap-3">
+                <Card title="Owner account" className="sm:col-span-2">
+                    <div className="grid gap-3 sm:grid-cols-2">
                         <Field
                             label="Full name"
                             name="owner_name"

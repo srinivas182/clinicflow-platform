@@ -4,6 +4,16 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.74.0] — Sprint W6b: phones — tables, tap targets, keyboards, phone checks
+
+### Added
+- Tables on phones: in the admin, staff and patient areas every table becomes a stack of cards with "Label: value" lines from its column headings (headings in a first row are detected too); label/value tables are left as they are and any other table scrolls inside its own box, so pages never scroll sideways. Works for future tables automatically; data-cards="off" opts out.
+- Phone keyboards from the field name: phone keypad for cell/phone numbers, number pad with "paste from SMS" for codes, decimal pad for amounts (a page's own setting wins).
+- Phone layout checks in CI: a real browser loads 47 pages (every public page, every admin page, workspaces and account security) at phone width and fails the PR if any page is wider than the screen, with screenshots of failures. Practice-area pages follow.
+
+### Changed
+- Buttons and fields are at least 44 px tall on touch screens; text boxes use 16 px text on phones so iPhones do not zoom in.
+
 ## [0.73.0] — Sprint W6a: phones — sign-in, headers, loading
 
 ### Fixed

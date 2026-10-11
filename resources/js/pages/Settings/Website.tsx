@@ -94,7 +94,7 @@ export default function WebsiteSettings({
                 </a>
             </div>
             <Flash />
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid sm:grid-cols-4 gap-4">
                 <div className="flex flex-col gap-4">
                     <Card title="Pages">
                         <ul className="space-y-1 text-sm">
@@ -161,9 +161,9 @@ export default function WebsiteSettings({
                 {current && (
                     <Card
                         title={`Edit: ${current.menu_label ?? current.slug}`}
-                        className="col-span-3"
+                        className="sm:col-span-3"
                     >
-                        <div className="mb-4 grid grid-cols-3 gap-3">
+                        <div className="mb-4 grid sm:grid-cols-3 gap-3">
                             <Field
                                 label="Page title"
                                 name="title"

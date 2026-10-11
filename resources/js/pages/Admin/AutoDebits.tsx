@@ -29,8 +29,8 @@ export default function AutoDebits({
                 Automatic subscription payments
             </h1>
             <p className="mb-5 text-sm text-muted">
-                Saved cards are held by the gateway; Dr Business Flow keeps only an
-                encrypted token, the card brand and last four digits.
+                Saved cards are held by the gateway; Dr Business Flow keeps only
+                an encrypted token, the card brand and last four digits.
             </p>
             <div className="mb-4 flex gap-4">
                 <Kpi label="Providers on auto-debit" value={String(active)} />

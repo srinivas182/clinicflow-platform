@@ -86,7 +86,7 @@ function TestCard({ t }: { t: Test }) {
             aside={<Badge>{`v${t.version}`}</Badge>}
             className="mb-3"
         >
-            <div className="grid grid-cols-4 gap-2 text-sm">
+            <div className="grid sm:grid-cols-4 gap-2 text-sm">
                 <input
                     aria-label="Name"
                     className={input}
@@ -312,8 +312,8 @@ export default function Catalogue({
                     ))}
                 </Card>
             )}
-            <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-2">
+            <div className="grid sm:grid-cols-3 gap-4">
+                <div className="sm:col-span-2">
                     {tests.map((t) => (
                         <TestCard key={t.id} t={t} />
                     ))}

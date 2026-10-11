@@ -119,7 +119,7 @@ export default function ApiSettings({
                 </Card>
             )}
             <Card title="New key" className="mb-4">
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid sm:grid-cols-3 gap-2">
                     <input
                         aria-label="Key name"
                         placeholder="Name, e.g. Website booking"
@@ -267,8 +267,8 @@ export default function ApiSettings({
             </Card>
             <Card title="Webhooks" className="mt-4">
                 <p className="mb-2 text-xs text-muted">
-                    Dr Business Flow sends signed messages (IDs and status only) to
-                    your https:// address. Header X-ClinicFlow-Signature:
+                    Dr Business Flow sends signed messages (IDs and status only)
+                    to your https:// address. Header X-ClinicFlow-Signature:
                     t=time,v1=HMAC-SHA256 of &quot;time.body&quot;. Failed
                     deliveries are retried for about a day; an address that
                     fails 5 deliveries in a row is switched off.

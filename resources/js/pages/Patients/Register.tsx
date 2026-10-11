@@ -56,11 +56,11 @@ export default function RegisterPatient() {
             </p>
             <form
                 onSubmit={submit}
-                className="mt-6 grid grid-cols-3 gap-4"
+                className="mt-6 grid sm:grid-cols-3 gap-4"
                 noValidate
             >
-                <Card title="Identity" className="col-span-2">
-                    <div className="grid grid-cols-2 gap-3">
+                <Card title="Identity" className="sm:col-span-2">
+                    <div className="grid sm:grid-cols-2 gap-3">
                         <Field
                             label="First names"
                             name="first_names"
@@ -188,8 +188,8 @@ export default function RegisterPatient() {
                         />
                     </div>
                 </Card>
-                <Card title="Contact" className="col-span-2">
-                    <div className="grid grid-cols-2 gap-3">
+                <Card title="Contact" className="sm:col-span-2">
+                    <div className="grid sm:grid-cols-2 gap-3">
                         <Field
                             label="Cell number"
                             name="cell"
@@ -223,7 +223,7 @@ export default function RegisterPatient() {
                             error={e.guardian_name}
                             hint="Required for children under 12"
                         />
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid sm:grid-cols-2 gap-3">
                             <Field
                                 label="Relationship"
                                 name="guardian_relationship"
@@ -309,7 +309,7 @@ export default function RegisterPatient() {
                         />
                     </div>
                 </Card>
-                <div className="col-span-3 flex justify-end gap-2">
+                <div className="sm:col-span-3 flex justify-end gap-2">
                     <Button type="submit" size="lg" disabled={form.processing}>
                         Register patient
                     </Button>

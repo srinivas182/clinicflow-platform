@@ -60,8 +60,8 @@ export default function Pharmacy({
                 owing list and are billed when supplied.
             </p>
             <Flash />
-            <div className="grid grid-cols-3 gap-4">
-                <Card title="Queue" className="col-span-2">
+            <div className="grid sm:grid-cols-3 gap-4">
+                <Card title="Queue" className="sm:col-span-2">
                     {queue.length === 0 && (
                         <p className="text-sm text-muted">Nobody is waiting.</p>
                     )}

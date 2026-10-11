@@ -1,3 +1,4 @@
+import { ResponsiveTables } from "@/components/ResponsiveTables";
 import { DeveloperCredit } from "@/components/DeveloperCredit";
 import type { ReactNode } from "react";
 import { Logo } from "@/components/Logo";
@@ -20,7 +21,10 @@ export function PortalLayout({
                     <Logo />
                 </span>
             </header>
-            <main className="mx-auto max-w-3xl px-4 py-6">{children}</main>
+            <main id="portal-content" className="mx-auto max-w-3xl px-4 py-6">
+                {children}
+            </main>
+            <ResponsiveTables rootId="portal-content" />
             <DeveloperCredit className="pb-4" />
         </div>
     );

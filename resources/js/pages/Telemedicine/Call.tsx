@@ -218,7 +218,8 @@ export default function Call({
             <Head title="Online consult" />
             <header className="flex items-center gap-3 px-6 py-4">
                 <span className="font-semibold">
-                    Dr Business Flow · {type === "video" ? "Video" : "Audio"} consult
+                    Dr Business Flow · {type === "video" ? "Video" : "Audio"}{" "}
+                    consult
                 </span>
                 <span className="text-sm text-white/60">
                     {joined

@@ -71,9 +71,10 @@ export default function SupportPractice({
                 ) : (
                     <div className="text-sm">
                         <p className="mb-2 text-muted">
-                            Dr Business Flow staff cannot see your workspace unless
-                            you allow it. Access is read-only, time-limited and
-                            every page they open is in your audit log.
+                            Dr Business Flow staff cannot see your workspace
+                            unless you allow it. Access is read-only,
+                            time-limited and every page they open is in your
+                            audit log.
                         </p>
                         <Button
                             size="sm"
@@ -103,7 +104,9 @@ export default function SupportPractice({
                     {t.messages.map((m, i) => (
                         <p key={i} className="mb-2 text-sm">
                             <span className="text-xs text-muted">
-                                {m.author === "support" ? "Dr Business Flow" : "You"}{" "}
+                                {m.author === "support"
+                                    ? "Dr Business Flow"
+                                    : "You"}{" "}
                                 · {m.created_at.slice(0, 16)}
                             </span>
                             <br />

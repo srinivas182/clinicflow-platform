@@ -95,7 +95,7 @@ export default function Pages({ pages }: { pages: CmsPage[] }) {
                 </a>
             </div>
             <Flash />
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid sm:grid-cols-4 gap-4">
                 <Card title="Pages">
                     <ul className="space-y-1 text-sm">
                         {pages.map((p) => (
@@ -131,9 +131,9 @@ export default function Pages({ pages }: { pages: CmsPage[] }) {
                 </Card>
                 <Card
                     title={form.id ? `Edit: ${form.title}` : "New page"}
-                    className="col-span-3"
+                    className="sm:col-span-3"
                 >
-                    <div className="mb-4 grid grid-cols-3 gap-3">
+                    <div className="mb-4 grid sm:grid-cols-3 gap-3">
                         <Field
                             label="Address (/pages/…)"
                             name="slug"

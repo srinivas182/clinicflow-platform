@@ -62,10 +62,10 @@ export default function Templates({
                     </Button>
                 ))}
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-3 gap-4">
                 <Card
                     title={`Body · version ${template.version}`}
-                    className="col-span-2"
+                    className="sm:col-span-2"
                 >
                     <form onSubmit={publish} className="flex flex-col gap-3">
                         <label htmlFor="body" className="sr-only">

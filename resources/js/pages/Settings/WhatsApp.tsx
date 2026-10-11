@@ -52,9 +52,9 @@ export default function WhatsAppSettings({
                         </p>
                         {!supplierReady && (
                             <p className="mb-2 text-xs text-status-warning">
-                                WhatsApp is not yet available on Dr Business Flow.
-                                You can switch it on now; messages go by SMS
-                                until it is.
+                                WhatsApp is not yet available on Dr Business
+                                Flow. You can switch it on now; messages go by
+                                SMS until it is.
                             </p>
                         )}
                         <p className="mb-3 text-xs text-muted">

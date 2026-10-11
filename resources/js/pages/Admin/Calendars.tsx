@@ -34,9 +34,10 @@ function AppCard({ a }: { a: App }) {
             className="mb-4"
         >
             <p className="mb-2 text-xs text-muted">
-                Redirect URL to register: <code>{a.callback}</code>
+                Redirect URL to register:{" "}
+                <code className="break-all">{a.callback}</code>
             </p>
-            <div className="mb-2 grid grid-cols-2 gap-2 text-sm">
+            <div className="mb-2 grid gap-2 text-sm sm:grid-cols-2">
                 <input
                     aria-label="Client ID"
                     placeholder="Client ID"

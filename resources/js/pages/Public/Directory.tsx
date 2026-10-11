@@ -30,13 +30,13 @@ export default function Directory({
                     Verified clinics, doctors, pharmacies and labs on Clinic
                     Flow.
                 </p>
-                <div className="mt-6 flex gap-2">
+                <div className="mt-6 flex flex-col gap-2 sm:flex-row">
                     <input
                         aria-label="Search"
                         value={term}
                         onChange={(e) => setTerm(e.target.value)}
                         placeholder="Practice name"
-                        className="flex-1 rounded-lg border border-line px-3 py-2"
+                        className="min-w-0 flex-1 rounded-lg border border-line px-3 py-2"
                     />
                     <select
                         aria-label="Type"

@@ -42,7 +42,7 @@ function DriverCard({ d }: { d: Driver }) {
             }
             className="mb-3"
         >
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid sm:grid-cols-3 gap-2">
                 {Object.entries(d.fields).map(([k, label]) => (
                     <input
                         key={k}
