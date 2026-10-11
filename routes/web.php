@@ -33,6 +33,9 @@ use App\Domains\Scheduling\Http\Controllers\CalendarAdminController;
 use App\Domains\Scheduling\Http\Controllers\CalendarController;
 use App\Domains\Scribe\Http\ScribeController;
 use App\Domains\Telemedicine\Http\Controllers\TelemedicineAdminController;
+use App\Domains\Translation\Http\Controllers\LanguagesController;
+use App\Domains\Translation\Http\Controllers\TranslateController;
+use App\Domains\Translation\Http\Controllers\TranslatorInvitationController;
 use App\Domains\Wallet\Http\Controllers\WalletController;
 use App\Domains\Website\Http\Controllers\FlaggedReviewsController;
 use Illuminate\Support\Facades\Route;
@@ -94,6 +97,10 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/workspaces', [WorkspaceController::class, 'index'])->name('workspaces');
             Route::get('/confirm-identity', [ConfirmIdentityController::class, 'show'])->name('identity.confirm');
             Route::post('/confirm-identity', [ConfirmIdentityController::class, 'store'])->middleware('throttle:10,1')->name('identity.confirm.store');
+            Route::get('/translate', [TranslateController::class, 'index'])->name('translate.index');
+            Route::post('/translate/{language}/save', [TranslateController::class, 'save'])->middleware('throttle:120,1')->name('translate.save');
+            Route::post('/translate/{language}/approve', [TranslateController::class, 'approve'])->middleware('throttle:120,1')->name('translate.approve');
+            Route::post('/translate/invite/{token}/accept', [TranslatorInvitationController::class, 'accept'])->middleware('throttle:10,1')->name('translate.invite.accept');
             Route::post('/account/security/password', [SecurityController::class, 'changePassword'])->middleware('throttle:5,1')->name('account.security.password');
             Route::post('/account/security/sign-out-others', [SecurityController::class, 'signOutOthers'])->middleware('throttle:5,1')->name('account.security.signout');
             Route::post('/account/security/devices/{device}/forget', [SecurityController::class, 'forgetDevice'])->name('account.security.device.forget');
@@ -120,6 +127,10 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/locums', [LocumController::class, 'admin'])->name('locums.index');
             Route::get('/ai-scribe', [ScribeController::class, 'admin'])->name('ai-scribe.index');
             Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
+            Route::get('/languages', [LanguagesController::class, 'index'])->name('languages.index');
+            Route::post('/languages/invite', [LanguagesController::class, 'invite'])->middleware(['step-up', 'throttle:20,1'])->name('languages.invite');
+            Route::post('/languages/{code}', [LanguagesController::class, 'toggle'])->middleware('step-up')->name('languages.toggle');
+            Route::delete('/languages/reviewers/{reviewer}', [LanguagesController::class, 'removeReviewer'])->middleware('step-up')->name('languages.reviewers.remove');
             Route::get('/security', [SecuritySettingsController::class, 'index'])->name('security.index');
             Route::post('/security/bot', [SecuritySettingsController::class, 'updateBot'])->middleware('step-up')->name('security.bot');
             Route::post('/security', [SecuritySettingsController::class, 'update'])->middleware('step-up')->name('security.update');
@@ -178,5 +189,7 @@ foreach ($centralDomains as $index => $domain) {
 // Staff invitations (link from email or SMS).
 Route::middleware('web')->group(function (): void {
     Route::get('/invitations/{token}', [InvitationController::class, 'show'])->middleware('throttle:30,1')->name('invitations.show');
+    Route::get('/translate/invite/{token}', [TranslatorInvitationController::class, 'show'])->middleware('throttle:30,1')->name('translate.invite.show');
+    Route::post('/translate/invite/{token}/register', [TranslatorInvitationController::class, 'register'])->middleware('throttle:10,1')->name('translate.invite.register');
     Route::post('/invitations/{token}/register', [InvitationController::class, 'register'])->middleware('throttle:10,1')->name('invitations.register');
 });

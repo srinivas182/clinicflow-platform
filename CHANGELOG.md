@@ -4,6 +4,17 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.77.0] — Sprint W8a-1: translations with native-speaker review
+
+### Added
+- Languages (Admin → Languages): the 11 South African official languages; English is always on; the super admin switches others on or off and sees review progress per language.
+- Native-speaker reviewers: invited by the super admin for specific languages (optionally as clinical reviewers) with a single-use 7-day link; they create an account and see only the review screen — no patient data, no practices, no admin. After sign-in, reviewers land on the review screen.
+- Review screen: English beside the translation, where the text appears, highlighted placeholders, SMS length, filters (to review, English changed, live) and progress; Save, Approve, and Approve medical wording.
+- Safety rules: placeholders must match the English; only assigned reviewers approve; medical wording also needs a clinical reviewer; any edit resets approvals; an English change flags the translation and falls back to English until re-checked; email subject and body publish together. Only fully approved translations reach patients — everything else is sent in English.
+
+### Changed
+- The admin message-wording editor edits English (the source) only; translations go through review.
+
 ## [0.76.0] — Sprint W9: data saving and weak signals
 
 ### Added

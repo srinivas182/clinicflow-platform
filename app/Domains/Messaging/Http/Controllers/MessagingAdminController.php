@@ -11,6 +11,8 @@ use App\Domains\Messaging\Models\MessageTemplate;
 use App\Domains\Messaging\Models\MessagingProvider;
 use App\Domains\Messaging\Support\MessageCatalogue;
 use App\Domains\Platform\Models\Package;
+use App\Domains\Translation\Actions\Translations;
+use App\Domains\Translation\Models\Language;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -126,8 +128,9 @@ class MessagingAdminController extends Controller
 
     public function saveTemplate(Request $request): RedirectResponse
     {
+        // English only: translations go through native-speaker review in Admin → Languages.
         $data = $request->validate([
-            'key' => ['required', 'string'], 'channel' => ['required', Rule::in(['sms', 'email'])], 'language' => ['required', Rule::in(MessageCatalogue::LANGUAGES)],
+            'key' => ['required', 'string'], 'channel' => ['required', Rule::in(['sms', 'email'])], 'language' => ['required', Rule::in(['en'])],
             'subject' => ['nullable', 'string', 'max:150'], 'body' => ['required', 'string', 'max:2000'],
         ]);
         $entry = MessageCatalogue::get($data['key']);
@@ -144,7 +147,12 @@ class MessagingAdminController extends Controller
             ['subject' => $data['subject'] ?? null, 'body' => $data['body'], 'updated_by' => $request->user()?->getAuthIdentifier()],
         );
 
-        return back()->with('success', 'Default wording saved.');
+        // Translations of this wording are now re-checked against the new English.
+        foreach (Language::query()->where('code', '!=', 'en')->pluck('code') as $language) {
+            app(Translations::class)->publish((string) $language, $data['key']);
+        }
+
+        return back()->with('success', 'Default wording saved. Any translations of it will show in English until a reviewer re-checks them.');
     }
 
     public function savePackage(Request $request, Package $package): RedirectResponse
