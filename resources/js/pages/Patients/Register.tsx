@@ -1,10 +1,22 @@
 import { Head, useForm } from "@inertiajs/react";
-import type { FormEvent } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { Checkbox, Field } from "@/components/form/Field";
 import { Button, Card } from "@/components/ui";
 import { AppShell } from "@/layouts/AppShell";
 
 type IdType = "sa_id" | "passport" | "permit" | "none";
+
+/** Registration in four short steps; every field stays in the form, so nothing typed is lost. */
+const STEPS = ["Identity", "Contact", "Medical aid", "Consent"] as const;
+
+/** Which step a field belongs to (used to open the step with a problem). */
+function stepOf(field: string): number {
+    if (/^(cell|no_cell|email|preferred_|address|guardian_)/.test(field))
+        return 1;
+    if (field.startsWith("medical_aid")) return 2;
+    if (/^(popia_|treatment_|consent_|maturity_)/.test(field)) return 3;
+    return 0;
+}
 
 /**
  * Register patient. Server-side rules (RegisterPatient action) are authoritative;
@@ -37,12 +49,23 @@ export default function RegisterPatient() {
         medical_aid_dependant_code: "",
     });
 
+    const [step, setStep] = useState(0);
+    const last = STEPS.length - 1;
     const submit = (e: FormEvent) => {
         e.preventDefault();
+        // Enter on an earlier step moves on, rather than saving half a registration.
+        if (step < last) return setStep(step + 1);
         form.post("/patients");
     };
 
     const e = form.errors;
+    // If the server finds a problem, open the step that has it.
+    useEffect(() => {
+        const first = Object.keys(form.errors)[0];
+        if (first) setStep(stepOf(first));
+    }, [form.errors]);
+    useEffect(() => window.scrollTo({ top: 0, behavior: "smooth" }), [step]);
+    const show = (n: number) => (step === n ? "sm:col-span-3" : "hidden");
     const select =
         "min-h-10 rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm";
 
@@ -59,7 +82,20 @@ export default function RegisterPatient() {
                 className="mt-6 grid sm:grid-cols-3 gap-4"
                 noValidate
             >
-                <Card title="Identity" className="sm:col-span-2">
+                <div className="sm:col-span-3">
+                    <p className="text-sm font-medium" aria-live="polite">
+                        Step {step + 1} of {STEPS.length}: {STEPS[step]}
+                    </p>
+                    <ol className="mt-2 flex gap-1.5" aria-hidden="true">
+                        {STEPS.map((s, i) => (
+                            <li
+                                key={s}
+                                className={`h-1.5 flex-1 rounded-full ${i <= step ? "bg-teal" : "bg-line"}`}
+                            />
+                        ))}
+                    </ol>
+                </div>
+                <Card title="Identity" className={show(0)}>
                     <div className="grid sm:grid-cols-2 gap-3">
                         <Field
                             label="First names"
@@ -161,7 +197,7 @@ export default function RegisterPatient() {
                         )}
                     </div>
                 </Card>
-                <Card title="Medical aid">
+                <Card title="Medical aid (optional)" className={show(2)}>
                     <div className="flex flex-col gap-3">
                         <Field
                             label="Scheme"
@@ -188,7 +224,7 @@ export default function RegisterPatient() {
                         />
                     </div>
                 </Card>
-                <Card title="Contact" className="sm:col-span-2">
+                <Card title="Contact" className={show(1)}>
                     <div className="grid sm:grid-cols-2 gap-3">
                         <Field
                             label="Cell number"
@@ -250,7 +286,7 @@ export default function RegisterPatient() {
                         </div>
                     </div>
                 </Card>
-                <Card title="Consent">
+                <Card title="Consent" className={show(3)}>
                     <div className="flex flex-col gap-3">
                         <div className="flex flex-col gap-1.5">
                             <label
@@ -309,10 +345,36 @@ export default function RegisterPatient() {
                         />
                     </div>
                 </Card>
-                <div className="sm:col-span-3 flex justify-end gap-2">
-                    <Button type="submit" size="lg" disabled={form.processing}>
-                        Register patient
-                    </Button>
+                <div className="sm:col-span-3 flex flex-wrap justify-between gap-2">
+                    {step > 0 ? (
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            size="lg"
+                            onClick={() => setStep(step - 1)}
+                        >
+                            Back
+                        </Button>
+                    ) : (
+                        <span />
+                    )}
+                    {step < last ? (
+                        <Button
+                            type="button"
+                            size="lg"
+                            onClick={() => setStep(step + 1)}
+                        >
+                            Next: {STEPS[step + 1]}
+                        </Button>
+                    ) : (
+                        <Button
+                            type="submit"
+                            size="lg"
+                            disabled={form.processing}
+                        >
+                            Register patient
+                        </Button>
+                    )}
                 </div>
             </form>
         </AppShell>

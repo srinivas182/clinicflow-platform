@@ -56,7 +56,7 @@ class PatientController extends Controller
 
         $patient = $action->handle($request->toData(), $this->user($request));
         $provider = tenant();
-        $message = "{$patient->fullName()} is registered.";
+        $message = "{$patient->fullName()} is registered. Next: check them in below for today's visit, or book an appointment.";
 
         if ($provider instanceof Provider) {
             $network = app(NetworkIdentity::class);

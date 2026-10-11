@@ -4,6 +4,13 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.75.0] — Sprint W7: plain language and shorter forms
+
+### Changed
+- Every validation message is in plain language and says what to do (e.g. "Please fill in the mobile number.", "Please tick the privacy consent box to continue."), with field names that read naturally; rules without a plain-language version keep readable standard wording.
+- Patient registration in four short steps (Identity, Contact, Medical aid (optional), Consent) with a progress bar, Back/Next, Enter moving to the next step, and the step with a problem opened automatically; nothing typed is lost between steps.
+- Clearer confirmations: after registering a patient (what to do next) and after check-in (give the ticket number to the patient; the screen and their phone will call it).
+
 ## [0.74.1] — Sprint W6c: phone checks for practice pages
 
 ### Fixed
