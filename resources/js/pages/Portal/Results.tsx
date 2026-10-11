@@ -65,7 +65,9 @@ export default function Results({
                         {o.note && <p className="mb-2 text-sm">{o.note}</p>}
                         {o.note && o.noteAi && (
                             <p className="mb-2 text-xs text-muted">
-                                Explained with AI help, reviewed by {o.noteAi}.
+                                {t("portal.results.explained_by", {
+                                    name: o.noteAi,
+                                })}
                             </p>
                         )}
                         {o.bookUrl && (
@@ -108,7 +110,9 @@ export default function Results({
                         )}
                         {o.comment && (
                             <p className="mt-2 text-sm text-muted">
-                                Doctor: {o.comment}
+                                {t("portal.results.doctor_comment", {
+                                    comment: o.comment,
+                                })}
                             </p>
                         )}
                         <div className="mt-3 flex gap-2">

@@ -4,14 +4,17 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.81.0] — Sprint W8d: portal sentences with live values
+
+### Added
+- The 17 portal sentences that contain live values (queue position, amounts, dates, doctors' comments, stock counts, booking rules) are translatable as whole sentences with placeholders — e.g. "{{ available }} of {{ total }} in stock" — so each language can place the values where its grammar needs them. Placeholders are checked like messages. The portal now has 88 translatable texts.
+
 ## [0.80.0] — Sprint W8c: patient portal screens in the patient's language
 
 ### Added
 - The patient portal's screen texts (67 across its 8 pages) are translatable with the same review process: they appear on the reviewers' screen and in AI drafts; results-page wording also needs a clinical reviewer. The portal shows approved translations only, English otherwise.
 - The portal's language: the patient's chosen language after sign-in (if switched on), a language choice on the portal sign-in page before sign-in, and changing the language on the portal home switches the screens at once.
 
-### Known gap
-- 39 portal texts that sit next to live values (for example a date or queue position) are still English; they follow with placeholders.
 
 ## [0.79.0] — Sprint W8b: patients' messages in their language
 

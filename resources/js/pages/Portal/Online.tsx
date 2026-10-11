@@ -69,14 +69,15 @@ export default function Online({
                 {t("portal.online.online_consults")}
             </h1>
             <p className="mb-5 text-sm text-muted">
-                Pay when you book. Free cancellation up to{" "}
-                {Math.round(rules.cutoffMinutes / 60)} hours before. You can ask
-                follow-up questions for {rules.followupDays} days afterwards.
+                {t("portal.online.booking_rules", {
+                    hours: Math.round(rules.cutoffMinutes / 60),
+                    days: rules.followupDays,
+                })}
             </p>
             <Flash />
             {!enabled ? (
                 <p className="text-sm text-muted">
-                    {providerName} does not offer online consults yet.
+                    {t("portal.online.not_offered", { practice: providerName })}
                 </p>
             ) : (
                 <Card title={t("portal.online.book")} className="mb-4">
@@ -130,7 +131,7 @@ export default function Online({
                                 }
                                 onClick={() => setDuration(d)}
                             >
-                                {d} min
+                                {t("portal.online.minutes", { minutes: d })}
                             </Button>
                         ))}
                         <input
@@ -142,10 +143,8 @@ export default function Online({
                         />
                     </div>
                     <p className="mt-3 text-sm">
-                        {mode === "video"
-                            ? "Video uses about 15 MB of data per minute; audio under 1 MB."
-                            : ""}{" "}
-                        Price: <b>{rand(price, 2)}</b>
+                        {mode === "video" ? t("portal.online.video_data") : ""}{" "}
+                        {t("portal.online.price")} <b>{rand(price, 2)}</b>
                     </p>
                     <div className="mt-2 flex flex-wrap gap-2">
                         {slots.length === 0 && (
@@ -264,10 +263,16 @@ export default function Online({
                                     className="text-teal-deep"
                                 >
                                     {c.kind === "consult"
-                                        ? "Chat consult"
-                                        : "Follow-up questions"}{" "}
-                                    — open until{" "}
-                                    {c.closes_at.slice(0, 16).replace("T", " ")}
+                                        ? t("portal.online.chat_consult")
+                                        : t(
+                                              "portal.online.follow_up_questions",
+                                          )}{" "}
+                                    —{" "}
+                                    {t("portal.online.open_until", {
+                                        date: c.closes_at
+                                            .slice(0, 16)
+                                            .replace("T", " "),
+                                    })}
                                 </Link>
                             </li>
                         ))}

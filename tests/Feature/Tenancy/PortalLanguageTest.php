@@ -9,6 +9,7 @@ use App\Domains\Translation\Support\PortalText;
 use App\Domains\Translation\Support\TranslationUnits;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Validation\ValidationException;
 
 uses(DatabaseMigrations::class);
 
@@ -58,4 +59,10 @@ it('offers portal texts to reviewers alongside messages', function (): void {
     expect(collect($units)->keys()->filter(fn ($k) => str_starts_with($k, 'ui:portal.'))->count())->toBe(count(PortalText::STRINGS))
         ->and($units['ui:portal.login.sign_in']['context'])->toBe('Patient portal — Login page')
         ->and($units['ui:portal.results.your_results']['medical'])->toBeTrue();
+});
+
+it('keeps the live values in portal sentences exactly, like messages', function (): void {
+    expect(TranslationUnits::all()['ui:portal.online.booking_rules']['placeholders'])->toBe(['hours', 'days']);
+    expect(fn () => $this->t->save($this->reviewer, 'zu', 'ui:portal.online.booking_rules', 'Khokha uma ubhukha. Ukukhansela mahhala kuze kube ngamahora angu-{{ hours }} ngaphambili.'))
+        ->toThrow(ValidationException::class, 'Please keep {{ days }}');
 });

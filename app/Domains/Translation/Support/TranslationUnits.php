@@ -45,7 +45,8 @@ final class TranslationUnits
 
         foreach (PortalText::STRINGS as $key => $text) {
             $page = ucfirst((string) explode('.', $key)[1]);
-            $units["ui:{$key}"] = ['source' => $text, 'placeholders' => [], 'context' => "Patient portal — {$page} page", 'medical' => PortalText::medical($key), 'sms' => false];
+            preg_match_all('/\{\{\s*([a-z_]+)\s*\}\}/', $text, $m);
+            $units["ui:{$key}"] = ['source' => $text, 'placeholders' => array_values(array_unique($m[1])), 'context' => "Patient portal — {$page} page", 'medical' => PortalText::medical($key), 'sms' => false];
         }
 
         return $units;
