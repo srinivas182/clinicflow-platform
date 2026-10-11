@@ -9,6 +9,7 @@ use App\Domains\Platform\Branding\Brands;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Security\BotProtection;
 use App\Domains\Translation\Support\Languages;
+use App\Domains\Translation\Support\PortalText;
 use App\Domains\Wallet\Support\WalletSettings;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -38,6 +39,11 @@ class HandleInertiaRequests extends Middleware
             // Developer credit, shown in every footer; practices cannot change it.
             'credit' => ['text' => (string) WalletSettings::get('platform.credit_text'), 'url' => (string) WalletSettings::get('platform.credit_url')],
             // Languages switched on (Admin → Languages): offered to patients.
+            // Patient portal texts in the portal's language (approved translations only, English otherwise).
+            'portalLanguage' => fn () => $request->is('my', 'my/*') ? Languages::for(is_string($l = $request->session()->get('portal_language')) ? $l : null) : null,
+            'portalText' => fn () => $request->is('my', 'my/*')
+                ? PortalText::dictionary(Languages::for(is_string($l = $request->session()->get('portal_language')) ? $l : null))
+                : null,
             'languages' => fn () => Languages::options(),
             'centralUrl' => rtrim((string) config('app.url'), '/'),
             'auth' => [

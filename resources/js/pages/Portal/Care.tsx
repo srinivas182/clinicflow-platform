@@ -1,3 +1,4 @@
+import { usePortalText } from "@/lib/portalText";
 import { Head, router } from "@inertiajs/react";
 import { useState } from "react";
 import { Flash } from "@/components/Flash";
@@ -61,15 +62,21 @@ export default function PortalCare({
     connected = [],
     fhirCategories = {},
 }: Props) {
+    const t = usePortalText();
     const [chosen, setChosen] = useState<string[]>(sharing);
 
     return (
         <PortalLayout provider={providerName}>
-            <Head title="My care" />
-            <h1 className="mb-5 text-2xl font-semibold">My care</h1>
+            <Head title={t("portal.care.my_care")} />
+            <h1 className="mb-5 text-2xl font-semibold">
+                {t("portal.care.my_care")}
+            </h1>
             <Flash />
             {whatsapp.available && (
-                <Card title="Messages on WhatsApp" className="mb-4">
+                <Card
+                    title={t("portal.care.messages_on_whatsapp")}
+                    className="mb-4"
+                >
                     <p className="mb-2 text-sm">
                         {whatsapp.optedIn
                             ? "You get reminders and notices on WhatsApp."
@@ -93,7 +100,9 @@ export default function PortalCare({
                 </Card>
             )}
             <Card
-                title="What this practice may see from your network history"
+                title={t(
+                    "portal.care.what_this_practice_may_see_from_your_net",
+                )}
                 className="mb-4"
             >
                 <div className="flex flex-wrap gap-3 text-sm">
@@ -126,16 +135,20 @@ export default function PortalCare({
                         )
                     }
                 >
-                    Save
+                    {t("portal.care.save")}
                 </Button>
             </Card>
             <Card
-                title="Who discussed your care and what was shared"
+                title={t(
+                    "portal.care.who_discussed_your_care_and_what_was_sha",
+                )}
                 className="mb-4"
             >
                 <ul className="text-sm">
                     {log.length === 0 && (
-                        <li className="text-muted">Nothing yet.</li>
+                        <li className="text-muted">
+                            {t("portal.care.nothing_yet")}
+                        </li>
                     )}
                     {log.map((l, i) => (
                         <li key={i} className="py-1">
@@ -148,7 +161,7 @@ export default function PortalCare({
                 </ul>
             </Card>
             {referrals.length > 0 && (
-                <Card title="Referrals" className="mb-4">
+                <Card title={t("portal.care.referrals")} className="mb-4">
                     {referrals.map((r, i) => (
                         <p key={i} className="text-sm">
                             {r.to} ({r.specialty}) — <Badge>{r.status}</Badge>{" "}
@@ -163,7 +176,10 @@ export default function PortalCare({
                 </Card>
             )}
             {messages.length > 0 && (
-                <Card title="Notes from your clinicians" className="mb-4">
+                <Card
+                    title={t("portal.care.notes_from_your_clinicians")}
+                    className="mb-4"
+                >
                     {messages.map((m, i) => (
                         <p key={i} className="mb-2 text-sm">
                             <span className="text-xs text-muted">
@@ -177,7 +193,7 @@ export default function PortalCare({
             )}
             {(immunisations.due.length > 0 ||
                 immunisations.given.length > 0) && (
-                <Card title="Immunisations" className="mb-4">
+                <Card title={t("portal.care.immunisations")} className="mb-4">
                     {immunisations.due.map((d, i) => (
                         <p key={i} className="text-sm">
                             {d.vaccine} ({d.dose}) —{" "}
@@ -209,7 +225,9 @@ export default function PortalCare({
             )}
             {wellness.length > 0 && (
                 <Card
-                    title="Your wellness screenings (private to you)"
+                    title={t(
+                        "portal.care.your_wellness_screenings_private_to_you",
+                    )}
                     className="mb-4"
                 >
                     {wellness.map((w, i) => (
@@ -232,7 +250,9 @@ export default function PortalCare({
                                 </p>
                             ) : (
                                 <p className="text-xs text-muted">
-                                    All checks in the healthy range.
+                                    {t(
+                                        "portal.care.all_checks_in_the_healthy_range",
+                                    )}
                                 </p>
                             )}
                         </div>
@@ -243,7 +263,7 @@ export default function PortalCare({
                 Object.keys(connected[0]?.patients ?? {}).map((pid) => (
                     <ConnectedSystems
                         key={pid}
-                        title="Connected systems"
+                        title={t("portal.care.connected_systems")}
                         intro="Other health systems your practice connected to. They can read only what you allow here, and every time they do, it shows below. You can stop sharing at any time. Your consultation notes are never shared."
                         systems={connected.map((c) => ({
                             key: c.key,

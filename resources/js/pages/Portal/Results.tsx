@@ -1,3 +1,4 @@
+import { usePortalText } from "@/lib/portalText";
 import { Head, router } from "@inertiajs/react";
 import { Download } from "lucide-react";
 import { Flash } from "@/components/Flash";
@@ -32,17 +33,22 @@ export default function Results({
     providerName: string;
     orders: Order[];
 }) {
+    const t = usePortalText();
     return (
         <PortalLayout provider={providerName}>
-            <Head title="Results" />
-            <h1 className="mb-1 text-2xl font-semibold">Your results</h1>
+            <Head title={t("portal.results.results")} />
+            <h1 className="mb-1 text-2xl font-semibold">
+                {t("portal.results.your_results")}
+            </h1>
             <p className="mb-5 text-sm text-muted">
-                Your doctor reviews results before you see them.
+                {t("portal.results.your_doctor_reviews_results_before_you_s")}
             </p>
             <Flash />
             <div className="flex flex-col gap-3">
                 {orders.length === 0 && (
-                    <p className="text-sm text-muted">No lab tests yet.</p>
+                    <p className="text-sm text-muted">
+                        {t("portal.results.no_lab_tests_yet")}
+                    </p>
                 )}
                 {orders.map((o) => (
                     <Card
@@ -64,7 +70,9 @@ export default function Results({
                         )}
                         {o.bookUrl && (
                             <a href={o.bookUrl}>
-                                <Button size="sm">Book a follow-up</Button>
+                                <Button size="sm">
+                                    {t("portal.results.book_a_follow_up")}
+                                </Button>
                             </a>
                         )}
                         {o.results.length > 0 && (
@@ -111,7 +119,7 @@ export default function Results({
                                         variant="secondary"
                                         icon={<Download className="size-3.5" />}
                                     >
-                                        Results PDF
+                                        {t("portal.results.results_pdf")}
                                     </Button>
                                 </a>
                             )}
@@ -122,7 +130,7 @@ export default function Results({
                                         variant="secondary"
                                         icon={<Download className="size-3.5" />}
                                     >
-                                        Lab's report
+                                        {t("portal.results.lab_s_report")}
                                     </Button>
                                 </a>
                             )}
@@ -137,12 +145,14 @@ export default function Results({
                                         )
                                     }
                                 >
-                                    Request my results
+                                    {t("portal.results.request_my_results")}
                                 </Button>
                             )}
                             {o.requested && o.results.length === 0 && (
                                 <span className="text-xs text-muted">
-                                    You asked your doctor for these results.
+                                    {t(
+                                        "portal.results.you_asked_your_doctor_for_these_results",
+                                    )}
                                 </span>
                             )}
                         </div>

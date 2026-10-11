@@ -65,6 +65,7 @@ class PortalController extends Controller
         $request->session()->forget('portal_challenge');
         $request->session()->regenerate();
         $request->session()->put('portal_cell', $cell);
+        $request->session()->put('portal_language', Languages::for($signIn->profiles($cell)->first()?->preferred_language));
 
         return redirect()->route('portal.home');
     }
@@ -186,7 +187,17 @@ class PortalController extends Controller
         $data = $request->validate(['language' => ['required', Rule::in(Languages::enabled())]]);
         $patient = $this->current($request, $signIn->profiles($this->cell($request))->all());
         $patient->forceFill(['preferred_language' => $data['language']])->save();
+        $request->session()->put('portal_language', $data['language']);
 
         return back()->with('success', 'Saved. Your messages will come in this language.');
+    }
+
+    /** Before sign-in: the language of the portal's screens for this visit. */
+    public function displayLanguage(Request $request): RedirectResponse
+    {
+        $data = $request->validate(['language' => ['required', Rule::in(Languages::enabled())]]);
+        $request->session()->put('portal_language', $data['language']);
+
+        return back();
     }
 }

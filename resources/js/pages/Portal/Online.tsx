@@ -1,3 +1,4 @@
+import { usePortalText } from "@/lib/portalText";
 import { Head, Link, router } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 import { Flash } from "@/components/Flash";
@@ -35,6 +36,7 @@ export default function Online({
     chats,
     rules,
 }: Props) {
+    const t = usePortalText();
     const [patient, setPatient] = useState(patients[0]?.id ?? "");
     const [doctor, setDoctor] = useState<number | null>(doctors[0]?.id ?? null);
     const [mode, setMode] = useState("video");
@@ -62,8 +64,10 @@ export default function Online({
 
     return (
         <PortalLayout provider={providerName}>
-            <Head title="Online consults" />
-            <h1 className="mb-1 text-2xl font-semibold">Online consults</h1>
+            <Head title={t("portal.online.online_consults")} />
+            <h1 className="mb-1 text-2xl font-semibold">
+                {t("portal.online.online_consults")}
+            </h1>
             <p className="mb-5 text-sm text-muted">
                 Pay when you book. Free cancellation up to{" "}
                 {Math.round(rules.cutoffMinutes / 60)} hours before. You can ask
@@ -75,11 +79,11 @@ export default function Online({
                     {providerName} does not offer online consults yet.
                 </p>
             ) : (
-                <Card title="Book" className="mb-4">
+                <Card title={t("portal.online.book")} className="mb-4">
                     <div className="flex flex-wrap gap-2 text-sm">
                         {patients.length > 1 && (
                             <select
-                                aria-label="Patient"
+                                aria-label={t("portal.online.patient")}
                                 className="rounded-md border border-line px-2 py-1"
                                 value={patient}
                                 onChange={(e) => setPatient(e.target.value)}
@@ -92,7 +96,7 @@ export default function Online({
                             </select>
                         )}
                         <select
-                            aria-label="Doctor"
+                            aria-label={t("portal.online.doctor")}
                             className="rounded-md border border-line px-2 py-1"
                             value={doctor ?? ""}
                             onChange={(e) => setDoctor(Number(e.target.value))}
@@ -130,7 +134,7 @@ export default function Online({
                             </Button>
                         ))}
                         <input
-                            aria-label="Date"
+                            aria-label={t("portal.online.date")}
                             type="date"
                             className="rounded-md border border-line px-2 py-1"
                             value={date}
@@ -146,7 +150,7 @@ export default function Online({
                     <div className="mt-2 flex flex-wrap gap-2">
                         {slots.length === 0 && (
                             <span className="text-sm text-muted">
-                                No free times on this day.
+                                {t("portal.online.no_free_times_on_this_day")}
                             </span>
                         )}
                         {slots.map((t) => (
@@ -171,10 +175,15 @@ export default function Online({
                     </div>
                 </Card>
             )}
-            <Card title="Your online consults" className="mb-4">
+            <Card
+                title={t("portal.online.your_online_consults")}
+                className="mb-4"
+            >
                 <ul className="divide-y divide-line-soft text-sm">
                     {consults.length === 0 && (
-                        <li className="py-2 text-muted">None yet.</li>
+                        <li className="py-2 text-muted">
+                            {t("portal.online.none_yet")}
+                        </li>
                     )}
                     {consults.map((c) => (
                         <li
@@ -205,7 +214,9 @@ export default function Online({
                             </Badge>
                             {c.payUrl && (
                                 <a href={c.payUrl}>
-                                    <Button size="sm">Pay now</Button>
+                                    <Button size="sm">
+                                        {t("portal.online.pay_now")}
+                                    </Button>
                                 </a>
                             )}
                             {c.status === "booked" && c.payment === "paid" && (
@@ -235,7 +246,7 @@ export default function Online({
                                                 );
                                         }}
                                     >
-                                        Cancel
+                                        {t("portal.online.cancel")}
                                     </Button>
                                 </>
                             )}
@@ -244,7 +255,7 @@ export default function Online({
                 </ul>
             </Card>
             {chats.length > 0 && (
-                <Card title="Chats">
+                <Card title={t("portal.online.chats")}>
                     <ul className="text-sm">
                         {chats.map((c) => (
                             <li key={c.id} className="py-1">
