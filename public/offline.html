@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>You're offline</title>
+<style>
+  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+         font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #F5F7F6; color: #12232E; text-align: center; }
+  .box { max-width: 22rem; }
+  svg { width: 3.5rem; height: 3.5rem; }
+  h1 { font-size: 1.4rem; margin: 1rem 0 0.5rem; }
+  p { color: #4D5F68; line-height: 1.5; margin: 0 0 1.5rem; }
+  a { display: inline-block; min-height: 44px; line-height: 44px; padding: 0 1.5rem; border-radius: 0.6rem; background: #0F7C74; color: #fff; font-weight: 600; text-decoration: none; }
+  @media (prefers-color-scheme: dark) { body { background: #0F1B22; color: #E8EEF0; } p { color: #A9BCC2; } }
+</style>
+</head>
+<body>
+<div class="box">
+  <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0F7C74"/><polyline points="27 16 22 16 19 25 13 7 10 16 5 16" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <h1>You're offline</h1>
+  <p>There's no internet connection right now. Nothing you entered is lost on the server — try again when you have signal.</p>
+  <a href="">Try again</a>
+</div>
+</body>
+</html>

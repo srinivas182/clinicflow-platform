@@ -4,6 +4,15 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.76.0] — Sprint W9: data saving and weak signals
+
+### Added
+- Add to home screen: an installable app (manifest, icons including a maskable icon, theme colour). A service worker keeps the app's built code on the device between visits and shows a friendly offline page instead of a browser error; it never stores pages or data. Registered only on secure addresses in production; the worker, manifest and offline page are never cached long (Apache/LiteSpeed and nginx rules).
+
+### Changed
+- Self-refreshing screens (front desk, triage, doctor queue, chat, patient portal) stop refreshing while hidden and refresh at once on return; in data-saver mode or on 2G they refresh three times less often. The waiting-room TV is never slowed.
+- The device's own interface font replaces downloaded web fonts (about 80–100 KB less on a first visit; text appears immediately).
+
 ## [0.75.0] — Sprint W7: plain language and shorter forms
 
 ### Changed

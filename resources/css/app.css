@@ -8,7 +8,8 @@
  * Red, orange, yellow and green are reserved for triage and status only.
  */
 @theme {
-    --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    /* Built-in interface font of the device: nothing to download, text shows at once. */
+    --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
 
     --color-ink: #12232e;
     --color-ink-2: #1d3544;
