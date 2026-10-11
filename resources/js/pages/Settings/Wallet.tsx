@@ -176,7 +176,7 @@ export default function WalletPage({
                         </select>
                     </div>
                 </Card>
-                <Card title="Statement" className="col-span-2">
+                <Card title="Statement" className="sm:col-span-2">
                     <table className="w-full text-sm">
                         <tbody>
                             {statement.map((t, i) => (

@@ -313,7 +313,7 @@ export default function Catalogue({
                 </Card>
             )}
             <div className="grid sm:grid-cols-3 gap-4">
-                <div className="col-span-2">
+                <div className="sm:col-span-2">
                     {tests.map((t) => (
                         <TestCard key={t.id} t={t} />
                     ))}

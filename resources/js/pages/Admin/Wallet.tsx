@@ -46,7 +46,7 @@ export default function AdminWallet({
             <Head title="Telemedicine wallet" />
             <h1 className="mb-5 text-2xl font-semibold">Telemedicine wallet</h1>
             <Flash />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid sm:grid-cols-2 gap-4">
                 <Card title="Usage pricing and rules">
                     <form onSubmit={submit} className="flex flex-col gap-3">
                         <div className="grid sm:grid-cols-3 gap-2">
@@ -87,7 +87,7 @@ export default function AdminWallet({
                             Top-up packs (R) and bonus credit
                         </div>
                         {form.data.packs.map((p, i) => (
-                            <div key={i} className="grid grid-cols-2 gap-2">
+                            <div key={i} className="grid sm:grid-cols-2 gap-2">
                                 <Field
                                     label="Pack"
                                     name={`pack-${i}`}

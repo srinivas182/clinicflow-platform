@@ -64,7 +64,7 @@ export default function Start({
                 className="mx-auto grid max-w-5xl sm:grid-cols-3 gap-5 px-6 py-10"
                 noValidate
             >
-                <div className="col-span-3">
+                <div className="sm:col-span-3">
                     <h1 className="text-2xl font-semibold">
                         Set up your practice
                     </h1>
@@ -73,7 +73,7 @@ export default function Start({
                         verify your registrations before you appear in search.
                     </p>
                 </div>
-                <Card title="Practice" className="col-span-2">
+                <Card title="Practice" className="sm:col-span-2">
                     <div className="grid gap-3 sm:grid-cols-2">
                         <div className="flex flex-col gap-1.5">
                             <label
@@ -181,7 +181,7 @@ export default function Start({
                             ))}
                     </div>
                 </Card>
-                <Card title="Owner account" className="col-span-2">
+                <Card title="Owner account" className="sm:col-span-2">
                     <div className="grid gap-3 sm:grid-cols-2">
                         <Field
                             label="Full name"

@@ -267,7 +267,7 @@ export default function LocumsPractice({ shifts, locums, branches }: Props) {
                     <input
                         aria-label="Requirements"
                         placeholder="Requirements (optional)"
-                        className={`${input} col-span-2`}
+                        className={`${input} sm:col-span-2`}
                         value={form.data.requirements}
                         onChange={(e) =>
                             form.setData("requirements", e.target.value)

@@ -161,7 +161,7 @@ export default function WebsiteSettings({
                 {current && (
                     <Card
                         title={`Edit: ${current.menu_label ?? current.slug}`}
-                        className="col-span-3"
+                        className="sm:col-span-3"
                     >
                         <div className="mb-4 grid sm:grid-cols-3 gap-3">
                             <Field

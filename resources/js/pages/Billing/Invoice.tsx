@@ -122,7 +122,7 @@ export default function InvoicePage({
                 </div>
             )}
             <div className="grid sm:grid-cols-3 gap-4">
-                <Card title="Lines" className="col-span-2">
+                <Card title="Lines" className="sm:col-span-2">
                     <table className="w-full text-sm">
                         <tbody>
                             {invoice.lines.map((l) => (
@@ -231,7 +231,7 @@ export default function InvoicePage({
                         <Field
                             label="Description"
                             name="description"
-                            className="col-span-2"
+                            className="sm:col-span-2"
                             value={line.data.description}
                             onChange={(e) =>
                                 line.setData("description", e.target.value)

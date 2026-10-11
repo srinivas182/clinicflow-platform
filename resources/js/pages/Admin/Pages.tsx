@@ -131,7 +131,7 @@ export default function Pages({ pages }: { pages: CmsPage[] }) {
                 </Card>
                 <Card
                     title={form.id ? `Edit: ${form.title}` : "New page"}
-                    className="col-span-3"
+                    className="sm:col-span-3"
                 >
                     <div className="mb-4 grid sm:grid-cols-3 gap-3">
                         <Field
