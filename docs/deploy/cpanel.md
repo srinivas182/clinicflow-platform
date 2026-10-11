@@ -37,6 +37,10 @@ People change their own password in Account → Security, or use "Forgot your pa
 
 Set `APP_NAME="Dr Business Flow"` in `.env` (used as the email sender name and in page titles), then `php artisan optimize`.
 
+## PHP version
+
+Set PHP 8.4 for drbusinessflow.com in cPanel → MultiPHP Manager (the version CI tests). cPanel writes this into `public/.htaccess`; `deploy.sh` keeps that block across updates.
+
 ## Cron jobs (cPanel → Cron Jobs)
 
 | When | Command |
