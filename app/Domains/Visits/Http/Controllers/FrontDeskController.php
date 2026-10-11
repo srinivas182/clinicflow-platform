@@ -92,7 +92,7 @@ class FrontDeskController extends Controller
             $this->user($request),
         );
 
-        return redirect()->route('frontdesk')->with('success', "Checked in — ticket {$visit->ticket}.");
+        return redirect()->route('frontdesk')->with('success', "Checked in. Ticket {$visit->ticket}: give this number to the patient — the waiting-room screen and their phone will call it.");
     }
 
     public function move(Request $request, Visit $visit, TransitionVisit $action): RedirectResponse
