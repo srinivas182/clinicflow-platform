@@ -4,6 +4,11 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.81.2] — Centred website footer
+
+### Changed
+- Website footer in three centred lines: the footer links; © year and the site's name (the practice's name on practice websites, with "Powered by Dr Business Flow" where shown); and the developer credit. Links wrap neatly on phones with finger-sized spacing.
+
 ## [0.81.1] — deploy.sh keeps cPanel's PHP setting
 
 ### Fixed

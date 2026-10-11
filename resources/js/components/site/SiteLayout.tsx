@@ -101,26 +101,27 @@ export function SiteLayout({
             </header>
             <main>{children}</main>
             <footer className="border-t border-line bg-paper">
-                <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-6 py-8 text-sm text-muted">
-                    <span>
+                <div className="mx-auto max-w-6xl px-6 py-8 text-center text-sm text-muted">
+                    <nav
+                        aria-label="Footer"
+                        className="flex flex-wrap justify-center gap-x-6 gap-y-1"
+                    >
+                        {site.footer.map((f) => (
+                            <a
+                                key={f.href}
+                                href={f.href}
+                                className="py-1.5 hover:text-ink"
+                            >
+                                {f.label}
+                            </a>
+                        ))}
+                    </nav>
+                    <p className="mt-4">
                         © {new Date().getFullYear()} {site.name}
-                    </span>
-                    {site.footer.map((f) => (
-                        <a
-                            key={f.href}
-                            href={f.href}
-                            className="hover:text-ink"
-                        >
-                            {f.label}
-                        </a>
-                    ))}
-                    {site.poweredBy && (
-                        <span className="ml-auto text-xs">
-                            Powered by Dr Business Flow
-                        </span>
-                    )}
+                        {site.poweredBy && " · Powered by Dr Business Flow"}
+                    </p>
+                    <DeveloperCredit className="mt-2" />
                 </div>
-                <DeveloperCredit className="pb-6" />
             </footer>
         </div>
     );
