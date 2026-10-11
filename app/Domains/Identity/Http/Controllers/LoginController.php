@@ -13,6 +13,7 @@ use App\Domains\Identity\Models\LoginChallenge;
 use App\Domains\Identity\Models\Membership;
 use App\Domains\Identity\Support\TwoFactorPolicy;
 use App\Domains\Platform\Models\Provider;
+use App\Domains\Translation\Models\TranslatorLanguage;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -52,6 +53,9 @@ class LoginController extends Controller
         }
         if ((bool) $user->is_platform_admin && ! (clone $memberships)->exists()) {
             return redirect()->route('admin.providers.index');
+        }
+        if (! (clone $memberships)->exists() && TranslatorLanguage::query()->where('user_id', $user->id)->exists()) {
+            return redirect()->route('translate.index');
         }
 
         return redirect()->route('workspaces');
