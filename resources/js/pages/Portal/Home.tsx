@@ -1,3 +1,4 @@
+import { usePortalText } from "@/lib/portalText";
 import { Head, router, usePage } from "@inertiajs/react";
 import { useLiveReload } from "@/lib/realtime";
 import { useState } from "react";
@@ -43,6 +44,7 @@ interface Props {
 }
 
 export default function PortalHome(p: Props) {
+    const t = usePortalText();
     const languages =
         usePage<{ languages: { code: string; name: string }[] }>().props
             .languages ?? [];
@@ -55,11 +57,11 @@ export default function PortalHome(p: Props) {
 
     return (
         <PortalLayout provider={p.provider}>
-            <Head title="My health" />
+            <Head title={t("portal.home.my_health")} />
             <Flash />
             {languages.length > 1 && (
                 <label className="mb-4 flex flex-wrap items-center gap-2 text-sm">
-                    Language for your messages
+                    {t("portal.home.language_for_your_messages")}
                     <select
                         className="min-h-10 rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm"
                         value={p.language}
@@ -95,7 +97,7 @@ export default function PortalHome(p: Props) {
             )}
             <h1 className="mb-4 text-2xl font-semibold">{current?.name}</h1>
             {p.visit && (
-                <Card title="Today's visit" className="mb-4">
+                <Card title={t("portal.home.today_s_visit")} className="mb-4">
                     <div className="flex items-center gap-4">
                         <Ticket number={p.visit.ticket} size="lg" />
                         <div className="text-sm">
@@ -121,7 +123,7 @@ export default function PortalHome(p: Props) {
                     </div>
                 </Card>
             )}
-            <Card title="Appointments" className="mb-4">
+            <Card title={t("portal.home.appointments")} className="mb-4">
                 {p.appointments.map((a) => (
                     <div
                         key={a.id}
@@ -138,14 +140,14 @@ export default function PortalHome(p: Props) {
                                 router.post(`/my/appointments/${a.id}/cancel`)
                             }
                         >
-                            Cancel
+                            {t("portal.home.cancel")}
                         </button>
                     </div>
                 ))}
                 <div className="mt-3 flex items-center gap-2 text-sm">
-                    <span>Book for</span>
+                    <span>{t("portal.home.book_for")}</span>
                     <input
-                        aria-label="Booking date"
+                        aria-label={t("portal.home.booking_date")}
                         type="date"
                         value={date}
                         onChange={(e) => {
@@ -164,7 +166,7 @@ export default function PortalHome(p: Props) {
                 </div>
                 {p.slots.length === 0 && (
                     <p className="mt-2 text-sm text-muted">
-                        No open times on this day.
+                        {t("portal.home.no_open_times_on_this_day")}
                     </p>
                 )}
                 {p.slots.map((d) => (
@@ -194,9 +196,11 @@ export default function PortalHome(p: Props) {
                     </div>
                 ))}
             </Card>
-            <Card title="Results" className="mb-4">
+            <Card title={t("portal.home.results")} className="mb-4">
                 {p.results.length === 0 && (
-                    <p className="text-sm text-muted">No results yet.</p>
+                    <p className="text-sm text-muted">
+                        {t("portal.home.no_results_yet")}
+                    </p>
                 )}
                 {p.results.map((o) => (
                     <div key={o.id} className="mb-3 text-sm">
@@ -223,7 +227,7 @@ export default function PortalHome(p: Props) {
                     </div>
                 ))}
             </Card>
-            <Card title="Invoices and scripts">
+            <Card title={t("portal.home.invoices_and_scripts")}>
                 {p.invoices.map((i) => (
                     <div
                         key={i.id}
@@ -243,7 +247,9 @@ export default function PortalHome(p: Props) {
                                 Pay {rand(i.balance, 2)}
                             </Button>
                         ) : (
-                            <Badge tone="success">Paid</Badge>
+                            <Badge tone="success">
+                                {t("portal.home.paid")}
+                            </Badge>
                         )}
                     </div>
                 ))}
@@ -261,7 +267,7 @@ export default function PortalHome(p: Props) {
                 className="mt-6 text-sm text-teal-deep"
                 onClick={() => router.post("/my/logout")}
             >
-                Sign out
+                {t("portal.home.sign_out")}
             </button>
         </PortalLayout>
     );

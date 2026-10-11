@@ -24,7 +24,8 @@ class Translations
         foreach (TranslationUnits::all() as $unit => $u) {
             Translation::query()->firstOrCreate(['language' => $language, 'unit' => $unit], ['source' => $u['source'], 'medical' => $u['medical'], 'status' => 'missing']);
         }
-        foreach (array_unique(array_map(fn (string $unit) => explode(':', $unit)[1], array_keys(TranslationUnits::all()))) as $key) {
+        $messages = array_filter(array_keys(TranslationUnits::all()), fn (string $unit) => str_starts_with($unit, 'message:'));
+        foreach (array_unique(array_map(fn (string $unit) => explode(':', $unit)[1], $messages)) as $key) {
             $this->publish($language, $key);
         }
     }
@@ -42,7 +43,7 @@ class Translations
         // Any change needs fresh approvals.
         $t->fill(['source' => $u['source'], 'text' => $text === '' ? null : $text, 'medical' => $u['medical'], 'status' => $text === '' ? 'missing' : $status,
             'approved_by' => null, 'approved_at' => null, 'clinical_approved_by' => null, 'clinical_approved_at' => null, 'updated_by' => $user->id])->save();
-        $this->publish($language, explode(':', $unit)[1]);
+        $this->publishUnit($language, $unit);
 
         return $t;
     }
@@ -53,7 +54,7 @@ class Translations
         $t = $this->current($language, $unit);
         $t->forceFill(['status' => 'approved', 'approved_by' => $user->id, 'approved_at' => now()])->save();
         activity('translation')->causedBy($user)->withProperties(['language' => $language, 'unit' => $unit])->log('Translation approved');
-        $this->publish($language, explode(':', $unit)[1]);
+        $this->publishUnit($language, $unit);
 
         return $t;
     }
@@ -69,7 +70,7 @@ class Translations
         }
         $t->forceFill(['clinical_approved_by' => $user->id, 'clinical_approved_at' => now()])->save();
         activity('translation')->causedBy($user)->withProperties(['language' => $language, 'unit' => $unit])->log('Medical wording approved');
-        $this->publish($language, explode(':', $unit)[1]);
+        $this->publishUnit($language, $unit);
 
         return $t;
     }
@@ -95,6 +96,13 @@ class Translations
     public function canReview(User $user, string $language): bool
     {
         return TranslatorLanguage::query()->where(['user_id' => $user->id, 'language' => $language])->exists();
+    }
+
+    private function publishUnit(string $language, string $unit): void
+    {
+        if (str_starts_with($unit, 'message:')) {
+            $this->publish($language, explode(':', $unit)[1]);
+        }
     }
 
     /**

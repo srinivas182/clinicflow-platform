@@ -1,3 +1,4 @@
+import { usePortalText } from "@/lib/portalText";
 import { Head, router } from "@inertiajs/react";
 import { Flash } from "@/components/Flash";
 import { Button, Card } from "@/components/ui";
@@ -10,21 +11,21 @@ export default function Practices({
     practices: { provider: string; linked_at: string; provider_id: string }[];
     providerName: string;
 }) {
+    const t = usePortalText();
     return (
         <PortalLayout provider={providerName}>
-            <Head title="Linked practices" />
+            <Head title={t("portal.practices.linked_practices")} />
             <h1 className="mb-1 text-2xl font-semibold">
-                Practices linked to you
+                {t("portal.practices.practices_linked_to_you")}
             </h1>
             <p className="mb-5 text-sm text-muted">
-                These practices can find your records on the Dr Business Flow
-                network and send your e-scripts. Remove one at any time.
+                {t("portal.practices.these_practices_can_find_your_records_on")}
             </p>
             <Flash />
             <Card>
                 {practices.length === 0 && (
                     <p className="text-sm text-muted">
-                        No practices are linked.
+                        {t("portal.practices.no_practices_are_linked")}
                     </p>
                 )}
                 <ul className="divide-y divide-line-soft text-sm">
@@ -51,7 +52,7 @@ export default function Practices({
                                         );
                                 }}
                             >
-                                Remove
+                                {t("portal.practices.remove")}
                             </Button>
                         </li>
                     ))}

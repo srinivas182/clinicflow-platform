@@ -43,6 +43,11 @@ final class TranslationUnits
             }
         }
 
+        foreach (PortalText::STRINGS as $key => $text) {
+            $page = ucfirst((string) explode('.', $key)[1]);
+            $units["ui:{$key}"] = ['source' => $text, 'placeholders' => [], 'context' => "Patient portal — {$page} page", 'medical' => PortalText::medical($key), 'sms' => false];
+        }
+
         return $units;
     }
 
