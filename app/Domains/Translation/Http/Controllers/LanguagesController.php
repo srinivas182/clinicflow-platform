@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Domains\Translation\Http\Controllers;
 
 use App\Domains\Messaging\Actions\SendMessage;
+use App\Domains\Scribe\Models\AiProvider;
 use App\Domains\Translation\Actions\Translations;
+use App\Domains\Translation\Jobs\CreateDraftTranslations;
 use App\Domains\Translation\Models\Language;
 use App\Domains\Translation\Models\Translation;
 use App\Domains\Translation\Models\TranslatorInvitation;
@@ -17,6 +19,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -34,6 +37,7 @@ class LanguagesController extends Controller
             $live = $rows->filter(fn (Translation $t) => isset($units[$t->unit]) && $t->isLive($units[$t->unit]['source']))->count();
 
             return ['code' => $l->code, 'name' => $l->name, 'nativeName' => $l->native_name, 'enabled' => $l->enabled,
+                'aiDrafts' => $rows->where('status', 'ai_draft')->count(), 'missing' => $rows->where('status', 'missing')->count(),
                 'live' => $l->code === 'en' ? count($units) : $live, 'total' => count($units),
                 'reviewers' => TranslatorLanguage::query()->where('language', $l->code)->get()->map(fn (TranslatorLanguage $r) => [
                     'id' => $r->id, 'name' => (string) User::query()->whereKey($r->user_id)->value('name'), 'clinical' => $r->clinical,
@@ -57,6 +61,19 @@ class LanguagesController extends Controller
         activity('translation')->causedBy($request->user())->withProperties(['language' => $code])->log($on ? 'Language switched on' : 'Language switched off');
 
         return back()->with('success', $on ? "{$language->name} is on. Anything not yet approved shows in English." : "{$language->name} is off.");
+    }
+
+    /** AI first drafts for every text with no translation yet (in the background; reviewers then check them). */
+    public function drafts(Request $request, string $code): RedirectResponse
+    {
+        abort_if($code === 'en' || ! Language::query()->whereKey($code)->exists(), 404);
+        if (AiProvider::active('notes') === null) {
+            throw ValidationException::withMessages(['drafts' => 'Set up an AI provider first (Admin → AI scribe) to create draft translations.']);
+        }
+        CreateDraftTranslations::dispatch($code, (int) $request->user()?->getAuthIdentifier());
+        activity('translation')->causedBy($request->user())->withProperties(['language' => $code])->log('AI draft translations requested');
+
+        return back()->with('success', 'Creating AI drafts in the background — they appear for reviewers within a few minutes, marked "AI draft — needs review".');
     }
 
     public function invite(Request $request, SendMessage $messages): RedirectResponse

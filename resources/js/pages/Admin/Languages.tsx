@@ -1,4 +1,4 @@
-import { Head, router, useForm } from "@inertiajs/react";
+import { Head, router, useForm, usePage } from "@inertiajs/react";
 import { Flash } from "@/components/Flash";
 import { Checkbox, Field } from "@/components/form/Field";
 import { Badge, Button, Card } from "@/components/ui";
@@ -16,6 +16,8 @@ interface Language {
     enabled: boolean;
     live: number;
     total: number;
+    aiDrafts: number;
+    missing: number;
     reviewers: Reviewer[];
 }
 interface Invitation {
@@ -42,6 +44,7 @@ export default function Languages({
         clinical: false,
     });
     const others = languages.filter((l) => l.code !== "en");
+    const errors = usePage().props.errors as Record<string, string | undefined>;
     const toggleLanguage = (code: string) =>
         form.setData(
             "languages",
@@ -61,6 +64,11 @@ export default function Languages({
                 English.
             </p>
             <Flash />
+            {errors.drafts && (
+                <p role="alert" className="mb-4 text-sm text-status-danger">
+                    {errors.drafts}
+                </p>
+            )}
             <div className="grid gap-4 sm:grid-cols-2">
                 {languages.map((l) => (
                     <Card
@@ -105,6 +113,27 @@ export default function Languages({
                                         {l.enabled ? "Switch off" : "Switch on"}
                                     </Button>
                                 </div>
+                                <p className="mt-2 text-xs text-muted">
+                                    {l.missing} not translated yet ·{" "}
+                                    {l.aiDrafts} AI drafts waiting for review
+                                </p>
+                                {l.missing > 0 && (
+                                    <div className="mt-2">
+                                        <Button
+                                            size="sm"
+                                            variant="secondary"
+                                            onClick={() =>
+                                                router.post(
+                                                    `/admin/languages/${l.code}/drafts`,
+                                                    {},
+                                                    { preserveScroll: true },
+                                                )
+                                            }
+                                        >
+                                            Create AI drafts
+                                        </Button>
+                                    </div>
+                                )}
                                 <p className="mt-3 text-xs font-medium text-muted">
                                     Reviewers
                                 </p>
