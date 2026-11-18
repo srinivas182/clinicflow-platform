@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Platform\Http\Controllers;
 
+use App\Domains\Platform\Storage\CopyFiles;
 use App\Domains\Platform\Storage\FileStore;
 use App\Domains\Platform\Storage\StorageTargets;
 use App\Http\Controllers\Controller;
@@ -18,13 +19,18 @@ use Inertia\Response;
  */
 class StorageController extends Controller
 {
-    public function index(): Response
+    public function index(CopyFiles $copy): Response
     {
+        $source = $copy->currentSource();
+
         return Inertia::render('Admin/Storage', [
             'targets' => DB::connection((string) config('tenancy.database.central_connection'))->table('storage_targets')->orderByDesc('active')->orderBy('name')->get()
                 ->map(fn ($t) => ['id' => $t->id, 'name' => $t->name, 'driver' => $t->driver, 'provider' => $t->provider, 'bucket' => $t->bucket, 'region' => $t->region,
                     'endpoint' => $t->endpoint, 'pathStyle' => (bool) $t->path_style, 'encrypt' => (bool) $t->encrypt, 'root' => $t->root, 'active' => (bool) $t->active,
-                    'verified' => $t->verified_at !== null, 'lastError' => $t->last_error, 'hasKeys' => $t->credentials !== null])->values(),
+                    'verified' => $t->verified_at !== null, 'lastError' => $t->last_error, 'hasKeys' => $t->credentials !== null,
+                    // A copy counts only if it was made from where the files are now.
+                    'copy' => ['status' => $t->copy_status, 'current' => $t->copy_source === $source, 'at' => $t->copied_at,
+                        'counts' => $t->copy_progress === null ? null : json_decode((string) $t->copy_progress, true)]])->values(),
             'providers' => FileStore::PROVIDERS,
             'current' => config('filesystems.disks.'.FileStore::DISK.'.driver'),
         ]);
@@ -53,8 +59,13 @@ class StorageController extends Controller
                 ? back()->with('success', 'Connection works: a test file was written, read back and deleted.')
                 : back()->with('error', 'The connection test failed. Check the details and the bucket permissions.');
         }
+        if ($action === 'copy') {
+            $targets->startCopy($target);
+
+            return back()->with('success', 'Copying the files in the background. Every file is checked; nothing is deleted.');
+        }
         $targets->activate($target);
 
-        return back()->with('success', 'Storage activated. New files now go here.');
+        return back()->with('success', 'Storage activated. New files now go here; files uploaded since the copy are being copied too.');
     }
 }

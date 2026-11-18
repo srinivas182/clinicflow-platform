@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Platform\Storage;
 
+use App\Domains\Platform\Jobs\CopyFilesToStorage;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -12,8 +13,10 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Super admin: storage targets. A target must pass a connection test (write, read, delete)
- * before it can be activated; activating one deactivates the others.
+ * Super admin: storage targets. A target must pass a connection test (write, read, delete) and have
+ * the existing files copied into it and checked before it can be activated; activating one
+ * deactivates the others. The active target's location cannot be edited (files would seem lost);
+ * new keys for it are tested before they are saved.
  */
 class StorageTargets
 {
@@ -59,19 +62,56 @@ class StorageTargets
         if ($errors !== []) {
             throw ValidationException::withMessages($errors);
         }
+        $current = $id === null ? null : $this->db()->table('storage_targets')->where('id', $id)->first();
+        if ($current !== null && (bool) $current->active) {
+            return $this->saveActive((array) $current, $data);
+        }
         $row = ['name' => trim($data['name']), 'driver' => $data['driver'], 'provider' => $data['driver'] === 's3' ? $data['provider'] : null,
             'bucket' => $data['bucket'], 'region' => $data['region'], 'endpoint' => $data['endpoint'] ?: null, 'path_style' => $data['path_style'],
-            'encrypt' => $data['encrypt'], 'root' => $data['root'] ?: null, 'verified_at' => null, 'updated_at' => now()];
+            'encrypt' => $data['encrypt'], 'root' => $data['root'] ?: null, 'verified_at' => null,
+            // Changed details: test again and copy the files again before activating.
+            'copy_status' => null, 'copy_progress' => null, 'copy_source' => null, 'copied_at' => null, 'updated_at' => now()];
         if (filled($data['key']) && filled($data['secret'])) {
             $row['credentials'] = Crypt::encryptString((string) json_encode(['key' => $data['key'], 'secret' => $data['secret']]));
         }
         if ($id === null) {
             return (int) $this->db()->table('storage_targets')->insertGetId($row + ['active' => false, 'created_at' => now()]);
         }
-        // Changing an active target's settings takes effect only after a new test and activation.
         $this->db()->table('storage_targets')->where('id', $id)->update($row);
 
         return $id;
+    }
+
+    /**
+     * The active target: only its name and keys may change, and new keys are used only after they
+     * pass the connection test. Moving files elsewhere is done by adding a new target and copying.
+     *
+     * @param  array<string, mixed>  $current
+     * @param  array{name: string, driver: string, provider: ?string, bucket: ?string, region: ?string, endpoint: ?string, path_style: bool, encrypt: bool, root: ?string, key: ?string, secret: ?string}  $data
+     */
+    private function saveActive(array $current, array $data): int
+    {
+        $same = fn (?string $a, mixed $b): bool => (string) ($a ?? '') === (string) ($b ?? '');
+        $moved = $data['driver'] !== $current['driver'] || ! $same($data['bucket'], $current['bucket']) || ! $same($data['region'], $current['region'])
+            || ! $same($data['endpoint'], $current['endpoint']) || ! $same($data['root'], $current['root']) || $data['path_style'] !== (bool) $current['path_style']
+            || ($data['driver'] === 's3' && ! $same($data['provider'], $current['provider'])) || $data['encrypt'] !== (bool) $current['encrypt'];
+        if ($moved) {
+            throw ValidationException::withMessages(['target' => 'This storage is in use, so only its name and keys can change. To move files to another bucket or folder, add a new storage, copy the files and activate it.']);
+        }
+        $row = ['name' => trim($data['name']), 'updated_at' => now()];
+        if (filled($data['key']) && filled($data['secret'])) {
+            $credentials = Crypt::encryptString((string) json_encode(['key' => $data['key'], 'secret' => $data['secret']]));
+            $error = $this->probe(['credentials' => $credentials] + $current);
+            if ($error !== null) {
+                throw ValidationException::withMessages(['key' => "The new keys did not pass the connection test, so the current keys are still in use. {$error}"]);
+            }
+            $row += ['credentials' => $credentials, 'verified_at' => now(), 'last_error' => null];
+        }
+        $this->db()->table('storage_targets')->where('id', $current['id'])->update($row);
+        FileStore::forget();
+        activity('platform')->withProperties(['storage_target' => $current['id'], 'keys_changed' => isset($row['credentials'])])->log('Active file storage edited');
+
+        return (int) $current['id'];
     }
 
     /** Local folders must be absolute and outside the application, except its private storage folder. */
@@ -93,6 +133,20 @@ class StorageTargets
         if ($target === []) {
             throw ValidationException::withMessages(['target' => 'Storage target not found.']);
         }
+        $error = $this->probe($target);
+        $ok = $error === null;
+        $this->db()->table('storage_targets')->where('id', $id)->update(['verified_at' => $ok ? now() : null, 'last_error' => $error, 'updated_at' => now()]);
+
+        return $ok;
+    }
+
+    /**
+     * Writes, reads back and deletes a probe file; null when that worked, else the problem.
+     *
+     * @param  array<string, mixed>  $target
+     */
+    private function probe(array $target): ?string
+    {
         $probe = '_clinicflow-probe/'.Str::random(16).'.txt';
         $body = 'probe '.now()->toIso8601String();
         try {
@@ -100,14 +154,28 @@ class StorageTargets
             $disk->put($probe, $body);
             $ok = $disk->get($probe) === $body;
             $disk->delete($probe);
-            $error = $ok ? null : 'The file read back did not match.';
-        } catch (\Throwable $e) {
-            $ok = false;
-            $error = mb_substr($e->getMessage(), 0, 250);
-        }
-        $this->db()->table('storage_targets')->where('id', $id)->update(['verified_at' => $ok ? now() : null, 'last_error' => $error, 'updated_at' => now()]);
 
-        return $ok;
+            return $ok ? null : 'The file read back did not match.';
+        } catch (\Throwable $e) {
+            return mb_substr($e->getMessage(), 0, 250);
+        }
+    }
+
+    /** Starts copying the existing files into a target in the background. */
+    public function startCopy(int $id): void
+    {
+        $target = $this->db()->table('storage_targets')->where('id', $id)->first();
+        if ($target === null || $target->verified_at === null) {
+            throw ValidationException::withMessages(['target' => 'Test the connection successfully before copying files.']);
+        }
+        if ((bool) $target->active) {
+            throw ValidationException::withMessages(['target' => 'This storage already holds the files.']);
+        }
+        if (in_array($target->copy_status, ['queued', 'running'], true) && $target->updated_at !== null && now()->subHours(2)->lt($target->updated_at)) {
+            throw ValidationException::withMessages(['target' => 'The files are already being copied.']);
+        }
+        $this->db()->table('storage_targets')->where('id', $id)->update(['copy_status' => 'queued', 'copy_progress' => null, 'copied_at' => null, 'updated_at' => now()]);
+        CopyFilesToStorage::dispatch($id, app(CopyFiles::class)->currentSource());
     }
 
     public function activate(int $id): void
@@ -116,11 +184,23 @@ class StorageTargets
         if ($target === null || $target->verified_at === null) {
             throw ValidationException::withMessages(['target' => 'Test the connection successfully before activating.']);
         }
+        $source = app(CopyFiles::class)->currentSource();
+        if ((bool) $target->active) {
+            return;
+        }
+        // Files stay where they are when storage is switched: they must be copied and checked first.
+        if ($target->copy_status !== 'done' || $target->copy_source !== $source) {
+            throw ValidationException::withMessages(['target' => $target->copy_status === 'failed'
+                ? 'Some files could not be copied. Copy the files again; activate once the copy has no failures.'
+                : 'Copy the existing files into this storage first (Copy files), then activate.']);
+        }
         $this->db()->transaction(function () use ($id): void {
             $this->db()->table('storage_targets')->update(['active' => false]);
             $this->db()->table('storage_targets')->where('id', $id)->update(['active' => true, 'updated_at' => now()]);
         });
         FileStore::forget();
-        activity('platform')->withProperties(['storage_target' => $id])->log('File storage switched');
+        activity('platform')->withProperties(['storage_target' => $id, 'from' => $source])->log('File storage switched');
+        // Catch files uploaded between the copy and now (the copy skips files already there).
+        CopyFilesToStorage::dispatch($id, $source);
     }
 }

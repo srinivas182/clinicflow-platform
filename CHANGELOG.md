@@ -4,6 +4,15 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.84.0] — Beta testing T1c: switching file storage safely
+
+### Fixed
+- Activating a new file storage made existing files (lab reports, documents) seem to disappear: they stayed in the old place and had to be copied by hand (#179). Admin → File storage now has **Copy files**, which copies every file in the background and checks each one; **Activate** is refused until a copy with no failures was made from where the files are now. After activation, files uploaded in between are copied automatically.
+- Editing the storage in use left it untested, and the new settings could take over later (#180). Its location (bucket, region, endpoint, folder) can no longer be changed — add a new storage and copy instead — and new keys are used only after they pass the connection test.
+
+### Changed
+- `php artisan storage:copy-to-active <id>` uses the same checked copy and also works for server-disk targets.
+
 ## [0.83.0] — Beta testing T1b: money and data integrity
 
 ### Fixed

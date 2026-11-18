@@ -58,6 +58,7 @@ it('applies a storage switch on the next request under Octane, without a restart
     $id = $targets->save(null, ['name' => 'Second disk', 'driver' => 'local', 'provider' => null, 'bucket' => null, 'region' => null, 'endpoint' => null,
         'path_style' => false, 'encrypt' => true, 'root' => $root, 'key' => null, 'secret' => null]);
     expect($targets->test($id))->toBeTrue();
+    $targets->startCopy($id);
     $targets->activate($id);
     expect(config('filesystems.disks.files.root'))->not->toBe($root);
 
