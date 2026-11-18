@@ -1,0 +1,1 @@
+import{t as e}from"./SiteLayout-DugX1MQl.js";import{t}from"./SiteSections-CzbF5qzd.js";import{t as n}from"./jsx-runtime-Cy2wntuM.js";var r=n();function i({page:n,sections:i,site:a}){return(0,r.jsx)(e,{site:a,title:n.title,description:n.description,children:(0,r.jsx)(t,{sections:i,site:a})})}export{i as default};

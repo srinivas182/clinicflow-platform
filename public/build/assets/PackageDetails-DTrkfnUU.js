@@ -1,0 +1,1 @@
+export{t as PackageDetails}from"./PackageDetails-w8eiTAfv.js";
