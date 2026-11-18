@@ -282,6 +282,24 @@ function TemplateEditor({ t }: { t: TemplateRow }) {
                 >
                     Save {lang.toUpperCase()}
                 </Button>
+                {lang === "en" && (
+                    <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() =>
+                            window.confirm(
+                                "Go back to the original wording? Your edits to this message are removed.",
+                            ) &&
+                            router.post(
+                                "/admin/messaging/templates/reset",
+                                { key: t.key, channel: t.channel },
+                                { preserveScroll: true },
+                            )
+                        }
+                    >
+                        Reset to original
+                    </Button>
+                )}
             </div>
         </li>
     );

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Platform\Support;
 
+use App\Domains\Billing\Gateways\GatewayFactory;
 use App\Domains\Identity\Models\Membership;
 use App\Domains\Messaging\Models\MessagingProvider;
 use App\Domains\Platform\Enums\ProviderStatus;
@@ -12,6 +13,7 @@ use App\Domains\Platform\Notifications\PracticeNotice;
 use App\Domains\Telemedicine\Models\VideoConfig;
 use App\Models\User;
 use Illuminate\Database\ConnectionInterface;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Throwable;
@@ -44,12 +46,15 @@ class StatusPage
     public function check(): array
     {
         $this->ensureComponents();
+        // A hand-set status that has run out goes back to automatic (beta #232).
+        $this->db()->table('status_components')->where('manual', true)->whereNotNull('manual_until')->where('manual_until', '<', now())
+            ->update(['manual' => false, 'manual_until' => null]);
         $results = [
             'app' => $this->probe(fn () => $this->db()->select('select 1')),
             'network' => $this->probe(fn () => DB::connection('hub')->select('select 1')),
             'messaging' => MessagingProvider::query()->where('enabled', true)->exists() ? 'operational' : 'degraded',
             'video' => VideoConfig::query()->where('enabled', true)->exists() ? 'operational' : 'degraded',
-            'payments' => 'operational',
+            'payments' => $this->paymentsStatus(),
         ];
         foreach ($results as $key => $status) {
             $this->db()->table('status_components')->where('key', $key)->where('manual', false)->update(['status' => $status, 'checked_at' => now()]);
@@ -58,9 +63,37 @@ class StatusPage
         return $results;
     }
 
-    public function setManual(string $key, ?string $status): void
+    /**
+     * Sets a component's status by hand for $hours (default 4), or back to automatic (null), which
+     * re-checks at once (beta #232).
+     */
+    public function setManual(string $key, ?string $status, int $hours = 4): void
     {
-        $this->db()->table('status_components')->where('key', $key)->update($status === null ? ['manual' => false] : ['manual' => true, 'status' => $status]);
+        $this->db()->table('status_components')->where('key', $key)->update($status === null
+            ? ['manual' => false, 'manual_until' => null]
+            : ['manual' => true, 'status' => $status, 'manual_until' => now()->addHours(max(1, min(72, $hours)))]);
+        if ($status === null) {
+            $this->check();
+        }
+    }
+
+    /**
+     * Online payments: the platform's default gateway is switched on and answers a connection test
+     * (beta #233). Cached for 5 minutes so the status page never hammers the gateway.
+     */
+    private function paymentsStatus(): string
+    {
+        return Cache::remember('status:payments', 300, function (): string {
+            $config = GatewayFactory::platformDefault();
+            if ($config === null) {
+                return 'degraded';
+            }
+            try {
+                return GatewayFactory::fromConfig($config)->testConnection()->ok ? 'operational' : 'outage';
+            } catch (Throwable) {
+                return 'outage';
+            }
+        });
     }
 
     /**
@@ -118,8 +151,15 @@ class StatusPage
     public function summary(): array
     {
         $this->ensureComponents();
-        $components = $this->db()->table('status_components')->orderBy('id')->get(['key', 'name', 'status', 'checked_at']);
+        $components = $this->db()->table('status_components')->orderBy('id')->get(['key', 'name', 'status', 'checked_at', 'manual', 'manual_until']);
         $worst = $components->contains('status', 'outage') ? 'outage' : ($components->contains('status', 'degraded') ? 'degraded' : 'operational');
+        // Open major or critical incidents set the top banner too (beta #234).
+        $open = $this->db()->table('status_incidents')->where('kind', 'incident')->whereNull('resolved_at')->pluck('impact');
+        if ($open->contains('critical')) {
+            $worst = 'outage';
+        } elseif ($open->contains('major') && $worst === 'operational') {
+            $worst = 'degraded';
+        }
         $incidents = $this->db()->table('status_incidents')->where(fn ($q) => $q->whereNull('resolved_at')->orWhere('resolved_at', '>', now()->subDays(14)))
             ->orderByDesc('created_at')->get()->map(fn ($i) => [
                 'id' => $i->id, 'title' => $i->title, 'kind' => $i->kind, 'status' => $i->status, 'impact' => $i->impact,

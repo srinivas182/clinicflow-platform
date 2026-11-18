@@ -185,9 +185,11 @@ foreach ($centralDomains as $index => $domain) {
             Route::put('/messaging/providers/{driver}', [MessagingAdminController::class, 'saveProvider'])->whereIn('driver', ['clickatell', 'bulksms', 'smsportal', 'twilio', 'ses', 'smtp', 'sendgrid', 'brevo'])->name('messaging.providers.save')->middleware('step-up.live');
             Route::post('/messaging/providers/{driver}/test', [MessagingAdminController::class, 'testProvider'])->whereIn('driver', ['clickatell', 'bulksms', 'smsportal', 'twilio', 'ses', 'smtp', 'sendgrid', 'brevo'])->name('messaging.providers.test');
             Route::put('/messaging/templates', [MessagingAdminController::class, 'saveTemplate'])->name('messaging.templates.save');
+            Route::post('/messaging/templates/reset', [MessagingAdminController::class, 'resetTemplate'])->name('messaging.templates.reset');
             Route::put('/messaging/packages/{package}', [MessagingAdminController::class, 'savePackage'])->name('messaging.packages.save');
             Route::get('/pages', [CmsAdminController::class, 'index'])->name('pages.index');
             Route::post('/pages', [CmsAdminController::class, 'save'])->name('pages.save');
+            Route::post('/pages/{page}/archive', [CmsAdminController::class, 'archive'])->name('pages.archive');
             Route::put('/packages/{package}', [PackageAdminController::class, 'update'])->name('packages.update');
             Route::post('/packages', [PackageAdminController::class, 'store'])->name('packages.store');
             Route::put('/packages/{package}/details', [PackageAdminController::class, 'details'])->name('packages.details');

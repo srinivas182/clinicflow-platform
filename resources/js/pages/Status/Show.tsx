@@ -7,6 +7,8 @@ export interface StatusProps {
         name: string;
         status: string;
         checked_at: string | null;
+        manual?: boolean | number;
+        manual_until?: string | null;
     }[];
     incidents: {
         id: number;

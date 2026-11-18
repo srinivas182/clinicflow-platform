@@ -19,8 +19,9 @@ export default function AdminCouriers({
             <h1 className="mb-1 text-2xl font-semibold">Courier partners</h1>
             <p className="mb-5 text-sm text-muted">
                 Enable the couriers practices may link their own accounts to.
-                Mark "API connected" once the courier's API has been set up and
-                tested with sandbox credentials.
+                Deliveries are booked on the courier's own website and the
+                tracking number is typed in; a direct courier connection is not
+                built yet.
             </p>
             <Flash />
             {partners.map((p) => (
@@ -32,11 +33,7 @@ export default function AdminCouriers({
                             <Badge tone={p.enabled ? "success" : "neutral"}>
                                 {p.enabled ? "enabled" : "off"}
                             </Badge>
-                            <Badge>
-                                {p.apiReady
-                                    ? "API connected"
-                                    : "manual booking"}
-                            </Badge>
+                            <Badge>manual booking</Badge>
                         </span>
                     }
                     className="mb-3"
@@ -56,24 +53,6 @@ export default function AdminCouriers({
                             }
                         >
                             {p.enabled ? "Disable" : "Enable"}
-                        </Button>
-                        <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() =>
-                                router.put(
-                                    `/admin/couriers/${p.driver}`,
-                                    {
-                                        enabled: p.enabled,
-                                        api_ready: !p.apiReady,
-                                    },
-                                    { preserveScroll: true },
-                                )
-                            }
-                        >
-                            {p.apiReady
-                                ? "Mark API not connected"
-                                : "Mark API connected"}
                         </Button>
                     </div>
                 </Card>

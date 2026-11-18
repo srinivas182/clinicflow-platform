@@ -10,7 +10,9 @@ use App\Domains\Platform\Models\CmsPage;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Support\Website\SiteData;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -37,9 +39,18 @@ class PublicSiteController extends Controller
             : Inertia::render('Welcome', ['region' => config('clinicflow.region')]);
     }
 
-    public function page(string $slug): Response
+    public function page(string $slug): Response|RedirectResponse
     {
-        return $this->render(CmsPage::query()->where('slug', $slug)->where('published', true)->firstOrFail());
+        $page = CmsPage::query()->where('slug', $slug)->where('published', true)->first();
+        if (! $page instanceof CmsPage) {
+            // Old addresses redirect to the page's new one (beta #295).
+            $to = DB::connection((string) config('tenancy.database.central_connection'))->table('cms_redirects')->where('from_slug', $slug)->value('to_slug');
+            abort_if($to === null, 404);
+
+            return redirect("/pages/{$to}", 301);
+        }
+
+        return $this->render($page);
     }
 
     public function directory(Request $request): Response

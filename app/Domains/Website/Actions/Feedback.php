@@ -90,7 +90,8 @@ class Feedback
         DB::table('reviews')->where('id', $reviewId)->update(['flagged_at' => now(), 'flag_reason' => mb_substr(trim($reason), 0, 255)]);
         DB::connection((string) config('tenancy.database.central_connection'))->table('flagged_reviews')->updateOrInsert(
             ['tenant_id' => $provider->id, 'review_id' => $reviewId],
-            ['rating' => $review->rating, 'comment' => $review->comment, 'reason' => mb_substr(trim($reason), 0, 255), 'created_at' => now(), 'updated_at' => now()],
+            // A new report after "Keep" goes back on the admin's list (beta #110).
+            ['rating' => $review->rating, 'comment' => $review->comment, 'reason' => mb_substr(trim($reason), 0, 255), 'decision' => null, 'decided_at' => null, 'created_at' => now(), 'updated_at' => now()],
         );
     }
 

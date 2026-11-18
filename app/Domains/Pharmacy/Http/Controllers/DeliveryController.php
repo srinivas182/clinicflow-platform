@@ -38,7 +38,7 @@ class DeliveryController extends Controller
                 'tracking' => $d->tracking_number, 'fee' => $d->fee_cents / 100, 'payer' => $d->payer, 'failure' => $d->failure_reason,
             ]),
             'couriers' => Deliveries::available(),
-            'partners' => CourierPartner::query()->where('enabled', true)->get()->map(fn (CourierPartner $p) => ['driver' => $p->driver, 'label' => CourierPartner::LABELS[$p->driver] ?? $p->driver, 'apiReady' => $p->api_ready,
+            'partners' => CourierPartner::query()->where('enabled', true)->get()->map(fn (CourierPartner $p) => ['driver' => $p->driver, 'label' => CourierPartner::LABELS[$p->driver] ?? $p->driver, 'apiReady' => false, // no direct courier connection yet (decision on beta #258)
                 'linked' => CourierAccount::query()->where('driver', $p->driver)->where('enabled', true)->exists()])->values(),
             'rules' => [...Deliveries::rules(), 'fee' => Deliveries::rules()['fee_cents'] / 100, 'threshold' => Deliveries::rules()['threshold_cents'] / 100, 'publish_stock' => (bool) Setting::get('pharmacy', 'publish_stock', false)],
         ]);
@@ -111,7 +111,7 @@ class DeliveryController extends Controller
     public function savePartner(Request $request, string $driver): RedirectResponse
     {
         abort_unless(array_key_exists($driver, CourierPartner::LABELS), 404);
-        CourierPartner::query()->updateOrCreate(['driver' => $driver], ['enabled' => $request->boolean('enabled'), 'api_ready' => $request->boolean('api_ready')]);
+        CourierPartner::query()->updateOrCreate(['driver' => $driver], ['enabled' => $request->boolean('enabled'), 'api_ready' => false]);
 
         return back()->with('success', CourierPartner::LABELS[$driver].' saved.');
     }

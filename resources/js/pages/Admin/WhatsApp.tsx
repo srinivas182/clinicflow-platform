@@ -171,9 +171,19 @@ export default function AdminWhatsApp({
                 <table className="w-full text-sm">
                     <tbody>
                         {messages.map((m) => {
-                            const t = templates.find(
-                                (x) => x.message_key === m.key,
-                            );
+                            // One template per language (beta #247); English shown first.
+                            const all = templates
+                                .filter((x) => x.message_key === m.key)
+                                .sort((a, b) =>
+                                    a.language === "en"
+                                        ? -1
+                                        : b.language === "en"
+                                          ? 1
+                                          : a.language.localeCompare(
+                                                b.language,
+                                            ),
+                                );
+                            const t = all[0];
                             return (
                                 <tr
                                     key={m.key}
@@ -181,7 +191,17 @@ export default function AdminWhatsApp({
                                 >
                                     <td className="py-1.5">{m.label}</td>
                                     <td className="text-xs text-muted">
-                                        {t?.template_name ?? "—"}
+                                        {all.length === 0
+                                            ? "—"
+                                            : all.map((x) => (
+                                                  <span
+                                                      key={x.language}
+                                                      className="block"
+                                                  >
+                                                      {x.template_name} (
+                                                      {x.language}, {x.status})
+                                                  </span>
+                                              ))}
                                     </td>
                                     <td>
                                         <Badge>
@@ -204,7 +224,23 @@ export default function AdminWhatsApp({
                                     <td>
                                         <button
                                             className="text-xs text-teal-deep"
-                                            onClick={() =>
+                                            onClick={() => {
+                                                const language = ask(
+                                                    "Language code (one template per language)",
+                                                    "en",
+                                                );
+                                                if (!language) return;
+                                                const current = all.find(
+                                                    (x) =>
+                                                        x.language === language,
+                                                );
+                                                const status = ask(
+                                                    "Status: pending or rejected (Approved comes from Sync with Meta)",
+                                                    current?.status ===
+                                                        "rejected"
+                                                        ? "rejected"
+                                                        : "pending",
+                                                );
                                                 router.post(
                                                     "/admin/whatsapp/templates",
                                                     {
@@ -217,22 +253,24 @@ export default function AdminWhatsApp({
                                                                     "_",
                                                                 ),
                                                         ),
-                                                        language: ask(
-                                                            "Language code",
-                                                            t?.language ?? "en",
-                                                        ),
+                                                        language,
                                                         category:
-                                                            t?.category ??
+                                                            current?.category ??
                                                             m.category,
-                                                        status: ask(
-                                                            "Status (pending / approved / rejected)",
-                                                            t?.status ??
-                                                                "pending",
-                                                        ),
+                                                        status,
+                                                        rejected_reason:
+                                                            status ===
+                                                            "rejected"
+                                                                ? ask(
+                                                                      "Reason Meta gave",
+                                                                      current?.rejected_reason ??
+                                                                          "",
+                                                                  )
+                                                                : null,
                                                     },
                                                     { preserveScroll: true },
-                                                )
-                                            }
+                                                );
+                                            }}
                                         >
                                             edit
                                         </button>
