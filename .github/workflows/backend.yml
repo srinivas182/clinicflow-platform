@@ -224,7 +224,7 @@ jobs:
         if: success()
         run: grep -E "Tests:" .ci-pest.txt | tail -1 | sed 's/\x1b\[[0-9;]*m//g' > ci-summary-${{ matrix.shard }}.txt
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: success()
         with:
           name: test-summary-${{ matrix.shard }}
