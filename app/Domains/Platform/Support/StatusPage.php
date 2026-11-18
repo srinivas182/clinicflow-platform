@@ -81,7 +81,8 @@ class StatusPage
      */
     private function tellOwners(object $incident, string $status, string $body): void
     {
-        if ($incident->kind !== 'incident' || ! in_array($incident->impact, ['major', 'critical'], true)) {
+        $incident = (array) $incident;
+        if (($incident['kind'] ?? null) !== 'incident' || ! in_array($incident['impact'] ?? null, ['major', 'critical'], true)) {
             return;
         }
         $resolved = $status === 'resolved';
@@ -91,7 +92,7 @@ class StatusPage
         $page = rtrim((string) config('app.url'), '/').'/status';
         foreach ($owners as $owner) {
             $owner->notify(new PracticeNotice(
-                ($resolved ? 'Resolved: ' : 'Service problem: ').$incident->title,
+                ($resolved ? 'Resolved: ' : 'Service problem: ').(string) ($incident['title'] ?? ''),
                 array_values(array_filter([$resolved ? 'This problem has been fixed.' : 'We are working on a problem that may affect your practice.', $body,
                     'Stop these emails: '.URL::signedRoute('status-emails.off', ['user' => $owner->id])])),
                 'Status page', $page, $resolved ? 'incident_resolved' : 'incident_started',

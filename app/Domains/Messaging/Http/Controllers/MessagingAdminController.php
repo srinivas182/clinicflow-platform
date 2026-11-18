@@ -222,6 +222,9 @@ class MessagingAdminController extends Controller
         }
         $tenants = Subscription::query()->where('package_id', $package->id)->whereIn('status', [SubscriptionStatus::Trialing->value, SubscriptionStatus::Active->value, SubscriptionStatus::PastDue->value, SubscriptionStatus::ReadOnly->value])->pluck('tenant_id');
         foreach (Provider::query()->whereIn('id', $tenants)->get() as $provider) {
+            if (! $provider instanceof Provider) {
+                continue;
+            }
             Notification::send(PracticeContacts::owners($provider->id), new PracticeNotice("Messaging on your {$package->name} plan has changed", ["The messaging included in {$package->name} has changed for {$provider->name}:", ...$lines],
                 'Messaging settings', PracticeContacts::url($provider, '/settings/messaging'), 'package_changed'));
             $provider->run(fn () => activity('settings')->withProperties(['package' => $package->code])->log('Package messaging changed by Dr Business Flow: '.implode(' ', $lines)));
