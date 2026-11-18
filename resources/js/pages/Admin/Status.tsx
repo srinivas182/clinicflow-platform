@@ -58,7 +58,15 @@ export default function AdminStatus({
                         key={c.key}
                         className="flex flex-wrap items-center gap-2 py-1 text-sm"
                     >
-                        <span className="min-w-0 flex-1">{c.name}</span>
+                        <span className="min-w-0 flex-1">
+                            {c.name}
+                            {c.manual && c.manual_until ? (
+                                <span className="block text-xs text-muted">
+                                    Set by hand until{" "}
+                                    {new Date(c.manual_until).toLocaleString()}
+                                </span>
+                            ) : null}
+                        </span>
                         <Badge
                             tone={
                                 c.status === "operational"
@@ -74,12 +82,22 @@ export default function AdminStatus({
                             aria-label={`Set ${c.name}`}
                             className="rounded border border-line px-1 text-xs"
                             defaultValue=""
-                            onChange={(e) =>
+                            onChange={(e) => {
+                                const status = e.target.value || null;
+                                // A hand-set status runs out (default 4 hours), so it is never forgotten.
+                                const hours = status
+                                    ? window.prompt(
+                                          `Show ${c.name} as ${status} for how many hours (1–72)?`,
+                                          "4",
+                                      )
+                                    : "";
+                                if (status && !hours) return;
                                 act("component", {
                                     key: c.key,
-                                    status: e.target.value || null,
-                                })
-                            }
+                                    status,
+                                    hours: hours || undefined,
+                                });
+                            }}
                         >
                             <option value="">Automatic</option>
                             <option value="operational">Operational</option>

@@ -4,6 +4,21 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.88.0] — Beta testing T4b: content, status page and messaging
+
+### Added
+- Admin → Messaging: **Reset to original** wording for each message (#283).
+- Website pages: **Archive page** (out of the website and menu, can be restored); Home, Privacy and Terms are protected (#296). A changed page address keeps working: the old address redirects (301) to the new one (#295).
+
+### Changed
+- The public menu follows each page's menu label and position. Fixed items sit at Solutions 10, Find Care 20 and Pricing 30; Solutions stays a group ordered by its pages' positions. Contact moved to position 40 so the menu looks as before (#293).
+- Status page: a status set by hand expires (default 4 hours, up to 72); choosing **Automatic** re-checks at once (#232). Online payments is checked against the platform's payment gateway (#233). Open major incidents show the top banner as degraded, critical ones as an outage (#234).
+- WhatsApp templates: one per message per language (a translation no longer replaces English); patients get the template in their language when approved, otherwise English. **Approved** comes only from Sync with Meta; the admin can mark Pending or Rejected with Meta's reason (#246, #247).
+- Couriers: the "API connected" label is gone. Deliveries are booked on the courier's site and the tracking number is typed in, as built (decision on #258).
+
+### Fixed
+- Removing an abusive review comment kept the review hidden; now only the words go and the stars stay visible and in the average (#109). A review reported again after **Keep** returns to the admin's list (#110).
+
 ## [0.87.0] — Beta testing T4a: billing admin
 
 ### Added

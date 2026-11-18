@@ -69,6 +69,9 @@ final class SiteData
         ];
     }
 
+    /** Pages shown under the Solutions group of the platform menu. */
+    public const SOLUTION_PAGES = ['for-clinics', 'for-doctors', 'for-pharmacies-and-labs', 'for-patients'];
+
     /**
      * The platform website's header, menu and footer (shared by every public page, including pricing).
      *
@@ -76,20 +79,25 @@ final class SiteData
      */
     public static function platformSite(): array
     {
-        $pages = CmsPage::query()->where('published', true)->get(['slug', 'title'])->keyBy('slug');
-        $solutions = collect([['for-clinics', 'Clinics'], ['for-doctors', 'Individual Doctors'], ['for-pharmacies-and-labs', 'Pharmacies & Labs'], ['for-patients', 'Patients']])
-            ->filter(fn (array $p) => $pages->has($p[0]))->map(fn (array $p) => ['label' => $p[1], 'href' => "/pages/{$p[0]}"])->values()->all();
+        $pages = CmsPage::query()->where('published', true)->get(['slug', 'title', 'menu_label', 'menu_order'])->keyBy('slug')->toBase(); // a plain collection: only()/except() by slug
+        // Solutions stays a group; its pages are ordered by their menu position (beta #293).
+        $solutions = $pages->only(self::SOLUTION_PAGES)->sortBy(fn (CmsPage $p) => $p->menu_order ?? 99)
+            ->map(fn (CmsPage $p) => ['label' => $p->menu_label ?? $p->title, 'href' => "/pages/{$p->slug}"])->values()->all();
         $page = fn (string $slug, string $label) => $pages->has($slug) ? ['label' => $label, 'href' => "/pages/{$slug}"] : null;
+        // The public menu follows the label and position set in Admin → Website pages (beta #293):
+        // fixed items sit at Solutions 10, Find Care 20 and Pricing 30; pages go before, between or after.
+        $items = $pages->except([...self::SOLUTION_PAGES, 'home'])->filter(fn (CmsPage $p) => $p->menu_order !== null)
+            ->map(fn (CmsPage $p) => ['order' => (int) $p->menu_order, 'item' => ['label' => $p->menu_label ?? $p->title, 'href' => "/pages/{$p->slug}"]])->values()->all();
+        if ($solutions !== []) {
+            $items[] = ['order' => 10, 'item' => ['label' => 'Solutions', 'href' => $solutions[0]['href'], 'children' => $solutions]];
+        }
+        $items[] = ['order' => 20, 'item' => ['label' => 'Find Care', 'href' => '/find-care']];
+        $items[] = ['order' => 30, 'item' => ['label' => 'Pricing', 'href' => '/pricing']];
+        usort($items, fn (array $a, array $b) => $a['order'] <=> $b['order']);
 
         return [
             'name' => 'Dr Business Flow', 'colour' => '#0F7C74', 'platform' => true,
-            'menu' => array_values(array_filter([
-                $page('about', 'About'),
-                $solutions === [] ? null : ['label' => 'Solutions', 'href' => $solutions[0]['href'], 'children' => $solutions],
-                ['label' => 'Find Care', 'href' => '/find-care'],
-                ['label' => 'Pricing', 'href' => '/pricing'],
-                $page('contact', 'Contact Us'),
-            ])),
+            'menu' => array_column($items, 'item'),
             'signIn' => ['label' => 'Sign In', 'href' => '/login'],
             'cta' => ['label' => 'Start Free Trial', 'href' => '/start'],
             'contact' => [

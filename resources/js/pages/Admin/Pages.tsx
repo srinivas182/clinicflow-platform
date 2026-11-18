@@ -18,6 +18,7 @@ interface CmsPage {
     menu_label: string | null;
     menu_order: number | null;
     published: boolean;
+    archived_at?: string | null;
 }
 
 const blank = {
@@ -36,7 +37,13 @@ const blank = {
  * clinicflow.co.za pages. Pages built from sections are edited field by
  * field; older HTML pages keep the HTML box.
  */
-export default function Pages({ pages }: { pages: CmsPage[] }) {
+export default function Pages({
+    pages,
+    protected: locked = ["home", "privacy", "terms"],
+}: {
+    pages: CmsPage[];
+    protected?: string[];
+}) {
     const credit = usePage<{ credit: { text: string; url: string } }>().props
         .credit;
     const [form, setForm] = useState(blank);
@@ -108,7 +115,11 @@ export default function Pages({ pages }: { pages: CmsPage[] }) {
                                     <span className="flex-1">
                                         {p.menu_label ?? p.title}
                                     </span>
-                                    {!p.published && <Badge>Draft</Badge>}
+                                    {p.archived_at ? (
+                                        <Badge>Archived</Badge>
+                                    ) : (
+                                        !p.published && <Badge>Draft</Badge>
+                                    )}
                                 </button>
                             </li>
                         ))}
@@ -170,7 +181,7 @@ export default function Pages({ pages }: { pages: CmsPage[] }) {
                             }
                         />
                         <Field
-                            label="Menu position (empty = not in menu)"
+                            label="Menu position (empty = not in menu; Solutions is 10, Find Care 20, Pricing 30)"
                             name="menu_order"
                             value={String(form.menu_order)}
                             onChange={(e) =>
@@ -214,6 +225,36 @@ export default function Pages({ pages }: { pages: CmsPage[] }) {
                     <Button className="mt-4" onClick={save}>
                         Save page
                     </Button>
+                    {form.id !== null &&
+                        !locked.includes(
+                            pages.find((p) => p.id === form.id)?.slug ?? "",
+                        ) && (
+                            <Button
+                                className="mt-4 ml-2"
+                                variant="secondary"
+                                onClick={() => {
+                                    const archived = pages.find(
+                                        (p) => p.id === form.id,
+                                    )?.archived_at;
+                                    if (
+                                        archived ||
+                                        window.confirm(
+                                            "Archive this page? It leaves the website and the menu; you can restore it later.",
+                                        )
+                                    )
+                                        router.post(
+                                            `/admin/pages/${form.id}/archive`,
+                                            {},
+                                            { preserveScroll: true },
+                                        );
+                                }}
+                            >
+                                {pages.find((p) => p.id === form.id)
+                                    ?.archived_at
+                                    ? "Restore"
+                                    : "Archive page"}
+                            </Button>
+                        )}
                 </Card>
             </div>
             <Card

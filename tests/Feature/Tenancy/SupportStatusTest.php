@@ -84,7 +84,8 @@ it('checks components automatically, keeps manual overrides and publishes incide
     $status->setManual('payments', null);
     $status->check();
     expect(($this->central)()->table('status_incidents')->value('resolved_at'))->not->toBeNull()
-        ->and($status->summary()['components']->firstWhere('key', 'payments')->status)->toBe('operational');
+        // Back to automatic: payments is checked against the platform gateway; none is set up here (beta #233).
+        ->and($status->summary()['components']->firstWhere('key', 'payments')->status)->toBe('degraded');
 });
 
 it('lets only the practice owner grant support access, while a practice admin may end it', function (): void {

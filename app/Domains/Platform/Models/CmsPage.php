@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Domains\Platform\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Stancl\Tenancy\Database\Concerns\CentralConnection;
 
 /**
@@ -17,6 +18,7 @@ use Stancl\Tenancy\Database\Concerns\CentralConnection;
  * @property string|null $menu_label
  * @property int|null $menu_order
  * @property bool $published
+ * @property Carbon|null $archived_at
  */
 class CmsPage extends Model
 {
@@ -29,6 +31,7 @@ class CmsPage extends Model
      */
     protected function casts(): array
     {
-        return ['published' => 'boolean', 'sections' => 'array'];
+        return ['published' => 'boolean',
+            'archived_at' => 'datetime', 'sections' => 'array'];
     }
 }

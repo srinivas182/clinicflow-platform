@@ -145,6 +145,19 @@ class MessagingAdminController extends Controller
         return back()->with($result['ok'] ? 'success' : 'error', $result['ok'] ? "Test message sent with {$d->label()}." : "Test failed: {$result['error']}");
     }
 
+    /** Reset to original wording (beta #283): the edited default is removed and the built-in text is used again. */
+    public function resetTemplate(Request $request): RedirectResponse
+    {
+        $data = $request->validate(['key' => ['required', 'string', Rule::in(array_keys(MessageCatalogue::all()))], 'channel' => ['required', Rule::in(['sms', 'email'])]]);
+        $deleted = MessageTemplate::query()->where(['key' => $data['key'], 'channel' => $data['channel'], 'language' => 'en'])->delete();
+        foreach (Language::query()->where('code', '!=', 'en')->pluck('code') as $language) {
+            app(Translations::class)->publish((string) $language, $data['key']);
+        }
+        activity('platform')->causedBy($request->user())->withProperties($data)->log('Message wording reset to original');
+
+        return back()->with('success', $deleted > 0 ? 'Back to the original wording.' : 'This message already uses the original wording.');
+    }
+
     public function saveTemplate(Request $request): RedirectResponse
     {
         // English only: translations go through native-speaker review in Admin → Languages.

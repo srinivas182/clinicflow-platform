@@ -75,11 +75,17 @@ class WhatsAppController extends Controller
         $data = $request->validate([
             'message_key' => ['required', 'string', Rule::in(array_keys(MessageCatalogue::all()))], 'template_name' => ['required', 'string', 'max:100'],
             'language' => ['required', 'string', 'max:8'], 'category' => ['required', Rule::in(['utility', 'marketing', 'authentication'])],
-            'status' => ['required', Rule::in(['pending', 'approved', 'rejected'])],
-        ]);
-        WhatsAppTemplate::query()->updateOrCreate(['message_key' => $data['message_key']], $data);
+            // "Approved" comes only from the supplier's sync; the admin can mark Pending or Rejected (beta #246).
+            'status' => ['required', Rule::in(['pending', 'rejected'])],
+            'rejected_reason' => ['nullable', 'string', 'max:255'],
+        ], ['status.in' => 'Approved is set by Sync from Meta once Meta approves the template.']);
+        // One template per message per language (beta #247).
+        $template = WhatsAppTemplate::query()->firstOrNew(['message_key' => $data['message_key'], 'language' => $data['language']]);
+        $keepApproved = $template->exists && $template->status === 'approved' && $template->template_name === $data['template_name']
+            && $template->category === $data['category'] && $data['status'] === 'pending';
+        $template->fill([...$data, 'status' => $keepApproved ? 'approved' : $data['status'], 'rejected_reason' => $data['status'] === 'rejected' ? ($data['rejected_reason'] ?? null) : null])->save();
 
-        return back()->with('success', 'Template saved.');
+        return back()->with('success', $keepApproved ? 'Template saved; it stays approved.' : 'Template saved. Submit it to Meta and press Sync once it is approved.');
     }
 
     public function sync(WhatsAppClient $client): RedirectResponse

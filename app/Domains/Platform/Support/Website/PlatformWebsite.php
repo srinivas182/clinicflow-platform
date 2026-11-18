@@ -93,7 +93,7 @@ final class PlatformWebsite
                 ],
             ],
             [
-                'slug' => 'contact', 'title' => 'Contact us', 'menu_label' => 'Contact', 'menu_order' => 6, 'published' => true,
+                'slug' => 'contact', 'title' => 'Contact us', 'menu_label' => 'Contact Us', 'menu_order' => 40, 'published' => true,
                 'meta_description' => 'Talk to the Dr Business Flow team.',
                 'sections' => [
                     ['type' => 'hero', 'heading' => 'Talk to us', 'text' => 'Questions about packages, moving your patient records or a demo for your practice? Send us a message and we\'ll get back to you within one working day.'],

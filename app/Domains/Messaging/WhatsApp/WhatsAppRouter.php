@@ -49,8 +49,11 @@ class WhatsAppRouter
             return false;
         }
         $provider = WhatsAppProvider::active();
-        $template = WhatsAppTemplate::query()->where('message_key', $key)->where('status', 'approved')->first();
         $patient = Patient::query()->where('cell', $cell)->where('preferred_channel', Channel::WhatsApp->value)->whereNotNull('whatsapp_opt_in_at')->first();
+        // The patient's language if a template is approved in it, otherwise English.
+        $language = $patient instanceof Patient ? (string) ($patient->getAttribute('preferred_language') ?: 'en') : 'en';
+        $template = WhatsAppTemplate::query()->where('message_key', $key)->where('status', 'approved')->whereIn('language', array_unique([$language, 'en']))
+            ->orderByRaw('language = ? desc', [$language])->first();
         if (! $provider instanceof WhatsAppProvider || ! $template instanceof WhatsAppTemplate || ! $patient instanceof Patient) {
             return false;
         }

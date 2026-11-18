@@ -56,8 +56,9 @@ class StatusController extends Controller
                 $status->update((int) $incident->id, $d['status'], $d['body']);
             })(),
             'component' => (function () use ($request, $status): void {
-                $d = $request->validate(['key' => ['required', Rule::in(array_keys(StatusPage::COMPONENTS))], 'status' => ['nullable', Rule::in(['operational', 'degraded', 'outage'])]]);
-                $status->setManual($d['key'], $d['status'] ?? null);
+                $d = $request->validate(['key' => ['required', Rule::in(array_keys(StatusPage::COMPONENTS))], 'status' => ['nullable', Rule::in(['operational', 'degraded', 'outage'])],
+                    'hours' => ['nullable', 'integer', 'min:1', 'max:72']]);
+                $status->setManual($d['key'], $d['status'] ?? null, (int) ($d['hours'] ?? 4));
             })(),
             default => abort(404),
         };

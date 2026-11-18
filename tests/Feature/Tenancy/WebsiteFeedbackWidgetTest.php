@@ -96,6 +96,19 @@ it('asks for feedback once after a visit, keeps it private by default and shows 
     $admin->forceFill(['is_platform_admin' => true])->save();
     $this->actingAs($admin)->post("http://localhost/admin/reviews/{$flag->id}", ['decision' => 'keep'])->assertRedirect()->assertSessionHasNoErrors();
     $this->clinic->run(fn () => expect(Feedback::publicReviews())->toHaveCount(1));
+
+    // Reported again after Keep: back on the admin's list (beta #110).
+    $this->flushSession();
+    $this->actingAs($this->ownerUser)->post("http://sunrise.clinicflow.test/settings/website/feedback/{$reviewId}/flag", ['reason' => 'Still abusive'])->assertSessionHasNoErrors();
+    tenancy()->end();
+    $this->flushSession();
+    $this->actingAs($admin)->get('http://localhost/admin/reviews')->assertInertia(fn ($p) => $p->count('flags', 1)->where('flags.0.reason', 'Still abusive'));
+    // Remove takes only the words: the stars stay visible (beta #109).
+    $this->actingAs($admin)->post("http://localhost/admin/reviews/{$flag->id}", ['decision' => 'remove'])->assertSessionHasNoErrors();
+    $this->clinic->run(function (): void {
+        $shown = Feedback::publicReviews();
+        expect($shown)->toHaveCount(1)->and($shown[0]['rating'] ?? null)->toBe(5)->and($shown[0])->toHaveKey('comment', null);
+    });
 });
 
 it('serves an embeddable booking widget with free times only, plus a sitemap and robots file', function (): void {

@@ -34,12 +34,13 @@ class FlaggedReviewsController extends Controller
         abort_if($f === null, 404);
         Provider::query()->findOrFail((string) $f->tenant_id)->run(function () use ($f, $data): void {
             $data['decision'] === 'remove'
-                ? DB::table('reviews')->where('id', $f->review_id)->update(['comment' => null, 'public_ok' => false])
+                // Only the abusive words go: the stars stay visible and in the average (beta #109).
+                ? DB::table('reviews')->where('id', $f->review_id)->update(['comment' => null, 'flagged_at' => null, 'flag_reason' => null])
                 : DB::table('reviews')->where('id', $f->review_id)->update(['flagged_at' => null, 'flag_reason' => null]);
         });
         DB::connection((string) config('tenancy.database.central_connection'))->table('flagged_reviews')->where('id', $flag)->update(['decision' => $data['decision'], 'decided_at' => now(), 'updated_at' => now()]);
         activity('platform')->withProperties(['flag' => $flag, 'decision' => $data['decision']])->log('Reported review decided');
 
-        return back()->with('success', $data['decision'] === 'remove' ? 'Review comment removed.' : 'Review restored.');
+        return back()->with('success', $data['decision'] === 'remove' ? 'Review comment removed; the rating stays.' : 'Review restored.');
     }
 }
