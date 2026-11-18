@@ -59,61 +59,272 @@ import type { ReactNode } from "react";
 import { Logo } from "@/components/Logo";
 import type { SharedProps } from "@/types";
 
-const nav = [
+/** Menu items; `needs` lists the permissions that open the page (any one is enough). */
+const nav: {
+    label: string;
+    icon: typeof LayoutDashboard;
+    href: string;
+    needs?: string[];
+}[] = [
     { label: "Overview", icon: LayoutDashboard, href: "/workspace" },
-    { label: "Front desk", icon: ClipboardList, href: "/front-desk" },
-    { label: "Triage", icon: Activity, href: "/triage" },
-    { label: "My queue", icon: Stethoscope, href: "/doctor" },
-    { label: "Patients", icon: Users, href: "/patients" },
-    { label: "Appointments", icon: CalendarDays, href: "/appointments" },
-    { label: "Rosters", icon: Clock, href: "/rosters" },
-    { label: "Templates", icon: FileText, href: "/settings/templates" },
-    { label: "Pharmacy", icon: Pill, href: "/pharmacy" },
-    { label: "Lab", icon: FlaskConical, href: "/lab" },
-    { label: "Unmatched results", icon: FileQuestion, href: "/lab/unmatched" },
-    { label: "Lab catalogue", icon: BookOpen, href: "/lab/catalogue" },
-    { label: "Results", icon: Inbox, href: "/results" },
-    { label: "Finance", icon: ChartColumn, href: "/finance" },
-    { label: "Network", icon: Share2, href: "/network" },
-    { label: "Online consults", icon: Video, href: "/telemedicine" },
-    { label: "Chats", icon: MessagesSquare, href: "/chats" },
-    { label: "Messages", icon: Mail, href: "/messages" },
-    { label: "Referrals", icon: Forward, href: "/referrals" },
-    { label: "Debtors", icon: HandCoins, href: "/finance/debtors" },
-    { label: "Prepaid packages", icon: Ticket, href: "/packages" },
-    { label: "Locums", icon: UserPlus, href: "/locums" },
+    {
+        label: "Front desk",
+        icon: ClipboardList,
+        href: "/front-desk",
+        needs: ["visits.manage"],
+    },
+    {
+        label: "Triage",
+        icon: Activity,
+        href: "/triage",
+        needs: ["triage.record"],
+    },
+    {
+        label: "My queue",
+        icon: Stethoscope,
+        href: "/doctor",
+        needs: ["consults.write"],
+    },
+    {
+        label: "Patients",
+        icon: Users,
+        href: "/patients",
+        needs: ["patients.view"],
+    },
+    {
+        label: "Appointments",
+        icon: CalendarDays,
+        href: "/appointments",
+        needs: ["appointments.view"],
+    },
+    {
+        label: "Rosters",
+        icon: Clock,
+        href: "/rosters",
+        needs: ["rosters.manage"],
+    },
+    {
+        label: "Templates",
+        icon: FileText,
+        href: "/settings/templates",
+        needs: ["settings.manage"],
+    },
+    {
+        label: "Pharmacy",
+        icon: Pill,
+        href: "/pharmacy",
+        needs: ["pharmacy.dispense"],
+    },
+    { label: "Lab", icon: FlaskConical, href: "/lab", needs: ["lab.process"] },
+    {
+        label: "Unmatched results",
+        icon: FileQuestion,
+        href: "/lab/unmatched",
+        needs: ["lab.manage"],
+    },
+    {
+        label: "Lab catalogue",
+        icon: BookOpen,
+        href: "/lab/catalogue",
+        needs: ["lab.manage"],
+    },
+    {
+        label: "Results",
+        icon: Inbox,
+        href: "/results",
+        needs: ["consults.write"],
+    },
+    {
+        label: "Finance",
+        icon: ChartColumn,
+        href: "/finance",
+        needs: ["finance.view"],
+    },
+    {
+        label: "Network",
+        icon: Share2,
+        href: "/network",
+        needs: ["patients.register"],
+    },
+    {
+        label: "Online consults",
+        icon: Video,
+        href: "/telemedicine",
+        needs: ["consults.write"],
+    },
+    {
+        label: "Chats",
+        icon: MessagesSquare,
+        href: "/chats",
+        needs: ["consults.write"],
+    },
+    {
+        label: "Messages",
+        icon: Mail,
+        href: "/messages",
+        needs: ["consults.write"],
+    },
+    {
+        label: "Referrals",
+        icon: Forward,
+        href: "/referrals",
+        needs: ["consults.write"],
+    },
+    {
+        label: "Debtors",
+        icon: HandCoins,
+        href: "/finance/debtors",
+        needs: ["billing.collect"],
+    },
+    {
+        label: "Prepaid packages",
+        icon: Ticket,
+        href: "/packages",
+        needs: ["billing.collect"],
+    },
+    {
+        label: "Locums",
+        icon: UserPlus,
+        href: "/locums",
+        needs: ["staff.manage"],
+    },
     {
         label: "Corporate wellness",
         icon: HeartPulse,
         href: "/corporate-wellness",
     },
-    { label: "Staff", icon: UserCog, href: "/staff" },
-    { label: "Reports", icon: BarChart3, href: "/reports" },
-    { label: "Analytics", icon: TrendingUp, href: "/analytics" },
-    { label: "API", icon: KeyRound, href: "/settings/api" },
-    { label: "AI scribe", icon: Sparkles, href: "/settings/ai-scribe" },
-    { label: "Support", icon: LifeBuoy, href: "/support" },
-    { label: "VAT", icon: Percent, href: "/finance/vat" },
-    { label: "Stock and ordering", icon: PackageSearch, href: "/procurement" },
-    { label: "Deliveries", icon: Truck, href: "/deliveries" },
-    { label: "WhatsApp", icon: MessageCircle, href: "/settings/whatsapp" },
-    { label: "Accounting", icon: BookText, href: "/settings/accounting" },
-    { label: "Branches", icon: Building2, href: "/settings/branches" },
-    { label: "Your domain", icon: Globe, href: "/settings/domains" },
-    { label: "Website images", icon: Image, href: "/settings/website/media" },
+    { label: "Staff", icon: UserCog, href: "/staff", needs: ["staff.view"] },
+    {
+        label: "Reports",
+        icon: BarChart3,
+        href: "/reports",
+        needs: [
+            "appointments.view",
+            "audit.view",
+            "finance.view",
+            "lab.manage",
+        ],
+    },
+    {
+        label: "Analytics",
+        icon: TrendingUp,
+        href: "/analytics",
+        needs: ["finance.view"],
+    },
+    {
+        label: "API",
+        icon: KeyRound,
+        href: "/settings/api",
+        needs: ["settings.manage"],
+    },
+    {
+        label: "AI scribe",
+        icon: Sparkles,
+        href: "/settings/ai-scribe",
+        needs: ["settings.manage"],
+    },
+    {
+        label: "Support",
+        icon: LifeBuoy,
+        href: "/support",
+        needs: ["settings.manage"],
+    },
+    {
+        label: "VAT",
+        icon: Percent,
+        href: "/finance/vat",
+        needs: ["finance.view"],
+    },
+    {
+        label: "Stock and ordering",
+        icon: PackageSearch,
+        href: "/procurement",
+        needs: ["pharmacy.dispense"],
+    },
+    {
+        label: "Deliveries",
+        icon: Truck,
+        href: "/deliveries",
+        needs: ["pharmacy.dispense"],
+    },
+    {
+        label: "WhatsApp",
+        icon: MessageCircle,
+        href: "/settings/whatsapp",
+        needs: ["settings.manage"],
+    },
+    {
+        label: "Accounting",
+        icon: BookText,
+        href: "/settings/accounting",
+        needs: ["settings.manage"],
+    },
+    {
+        label: "Branches",
+        icon: Building2,
+        href: "/settings/branches",
+        needs: ["settings.manage"],
+    },
+    {
+        label: "Your domain",
+        icon: Globe,
+        href: "/settings/domains",
+        needs: ["settings.manage"],
+    },
+    {
+        label: "Website images",
+        icon: Image,
+        href: "/settings/website/media",
+        needs: ["settings.manage"],
+    },
     {
         label: "Patient feedback",
         icon: Star,
         href: "/settings/website/feedback",
     },
     { label: "My calendar", icon: CalendarDays, href: "/me/calendar" },
-    { label: "Compliance", icon: ShieldAlert, href: "/compliance/break-glass" },
-    { label: "E-scripts", icon: FileSignature, href: "/escripts" },
-    { label: "Wallet", icon: Wallet, href: "/settings/wallet" },
-    { label: "Claims", icon: FileCheck, href: "/claims" },
-    { label: "Audit", icon: ShieldCheck, href: "/compliance/audit" },
-    { label: "Website", icon: Globe, href: "/settings/website" },
-    { label: "Settings", icon: Settings, href: "/settings/billing" },
+    {
+        label: "Compliance",
+        icon: ShieldAlert,
+        href: "/compliance/break-glass",
+        needs: ["audit.view"],
+    },
+    {
+        label: "E-scripts",
+        icon: FileSignature,
+        href: "/escripts",
+        needs: ["pharmacy.dispense"],
+    },
+    {
+        label: "Wallet",
+        icon: Wallet,
+        href: "/settings/wallet",
+        needs: ["payments.configure"],
+    },
+    {
+        label: "Claims",
+        icon: FileCheck,
+        href: "/claims",
+        needs: ["claims.manage"],
+    },
+    {
+        label: "Audit",
+        icon: ShieldCheck,
+        href: "/compliance/audit",
+        needs: ["audit.view"],
+    },
+    {
+        label: "Website",
+        icon: Globe,
+        href: "/settings/website",
+        needs: ["settings.manage"],
+    },
+    {
+        label: "Settings",
+        icon: Settings,
+        href: "/settings/billing",
+        needs: ["settings.manage"],
+    },
 ];
 
 /**
@@ -127,14 +338,19 @@ export function AppShell({
     children: ReactNode;
     active?: string;
 }) {
-    const { provider, branches } = usePage<
+    const {
+        provider,
+        branchSwitcher: branches,
+        auth,
+    } = usePage<
         SharedProps & {
-            branches: {
+            branchSwitcher: {
                 options: { id: number; name: string }[];
                 current: number | null;
             } | null;
         }
     >().props;
+    const permissions = auth.permissions ?? [];
     const initials = (provider?.name ?? "CF")
         .split(" ")
         .map((word) => word[0])
@@ -221,17 +437,25 @@ export function AppShell({
                     </select>
                 )}
                 <nav aria-label="Main">
-                    {nav.map(({ label, icon: Icon, href }) => (
-                        <Link
-                            key={label}
-                            href={href}
-                            aria-current={label === active ? "page" : undefined}
-                            className={`mb-0.5 flex items-center gap-3 rounded-md px-2.5 py-2 text-sm ${label === active ? "bg-white/10 font-medium text-white" : "hover:bg-white/5"}`}
-                        >
-                            <Icon className="size-4" aria-hidden="true" />
-                            {label}
-                        </Link>
-                    ))}
+                    {nav
+                        .filter(
+                            (item) =>
+                                !item.needs ||
+                                item.needs.some((p) => permissions.includes(p)),
+                        )
+                        .map(({ label, icon: Icon, href }) => (
+                            <Link
+                                key={label}
+                                href={href}
+                                aria-current={
+                                    label === active ? "page" : undefined
+                                }
+                                className={`mb-0.5 flex items-center gap-3 rounded-md px-2.5 py-2 text-sm ${label === active ? "bg-white/10 font-medium text-white" : "hover:bg-white/5"}`}
+                            >
+                                <Icon className="size-4" aria-hidden="true" />
+                                {label}
+                            </Link>
+                        ))}
                 </nav>
                 <ThemeToggle className="mt-3 self-start" />
                 <AccountMenu area="practice" />

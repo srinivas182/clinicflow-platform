@@ -41,7 +41,7 @@ export default function FinanceDashboard({
         <AppShell active="Finance">
             <Head title="Finance" />
             <h1 className="mb-5 text-2xl font-semibold">Finance</h1>
-            <div className="mb-4 flex gap-4">
+            <div className="mb-4 flex flex-wrap gap-4">
                 <Kpi
                     label="Takings today"
                     value={rand(today)}

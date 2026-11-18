@@ -46,7 +46,7 @@ export function Kpi({
     trend?: "up" | "down";
 }) {
     return (
-        <div className="flex-1 rounded-xl border border-line bg-surface px-4 py-3.5">
+        <div className="min-w-0 flex-1 basis-40 rounded-xl border border-line bg-surface px-4 py-3.5">
             <div className="text-xs text-muted">{label}</div>
             <div className="mt-1 text-2xl font-semibold tracking-tight">
                 {value}

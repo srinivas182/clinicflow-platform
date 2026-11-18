@@ -14,6 +14,8 @@ export interface SharedProps {
     };
     auth: {
         user: { name: string; email: string } | null;
+        /** The person's permissions in the current practice (empty outside a practice). */
+        permissions?: string[];
     };
     flash: {
         success: string | null;

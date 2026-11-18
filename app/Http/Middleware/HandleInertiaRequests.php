@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Domains\Branches\Support\BranchContext;
+use App\Domains\Identity\Enums\Permission;
 use App\Domains\Platform\Branding\Brands;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Security\BotProtection;
@@ -13,6 +14,7 @@ use App\Domains\Translation\Support\PortalText;
 use App\Domains\Wallet\Support\WalletSettings;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Middleware;
 
 /**
@@ -48,6 +50,11 @@ class HandleInertiaRequests extends Middleware
             'centralUrl' => rtrim((string) config('app.url'), '/'),
             'auth' => [
                 'user' => $user instanceof User ? ['name' => $user->name, 'email' => $user->email] : null,
+                // What this person may do in this practice: the staff menu shows only screens they can open.
+                // The server still checks every action; this only keeps the menu honest.
+                'permissions' => fn () => $provider instanceof Provider && $user instanceof User
+                    ? array_values(array_filter(Permission::all(), fn (string $p): bool => Gate::allows($p)))
+                    : [],
             ],
             'flash' => [
                 'success' => $request->session()->get('success'),
@@ -73,8 +80,9 @@ class HandleInertiaRequests extends Middleware
                 'type' => $provider->type->value,
                 'typeLabel' => $provider->type->label(),
             ] : null,
-            // Branch switcher: only shown once a practice has more than one branch.
-            'branches' => $provider instanceof Provider && $user instanceof User && BranchContext::filterId() !== null
+            // Branch switcher: only shown once a practice has more than one branch. Named apart from the
+            // 'branches' lists that pages send (Staff, Reports), which would otherwise replace it.
+            'branchSwitcher' => $provider instanceof Provider && $user instanceof User && BranchContext::filterId() !== null
                 ? ['options' => BranchContext::options(), 'current' => BranchContext::current()]
                 : null,
         ];

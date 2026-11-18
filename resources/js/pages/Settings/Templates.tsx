@@ -62,7 +62,7 @@ export default function Templates({
                     </Button>
                 ))}
             </div>
-            <div className="grid sm:grid-cols-3 gap-4">
+            <div className="grid gap-4 sm:grid-cols-3 *:min-w-0">
                 <Card
                     title={`Body · version ${template.version}`}
                     className="sm:col-span-2"

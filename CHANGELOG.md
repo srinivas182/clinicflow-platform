@@ -4,6 +4,20 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.82.0] — Beta testing T1a: practice screens and security
+
+### Fixed
+- Practice pages rendered blank with the built front end: they loaded their scripts and styles from the practice's file store (asset tenancy). Practice pages now use the built front end; no code used asset() for practice files.
+- Patient registration went blank on the first step change in current Chrome (a smooth scrollTo returns a promise, which React ran as the effect's clean-up).
+- Staff, Reports, Branches and Locums went blank: their branch lists replaced the layout's branch switcher. The switcher is now shared as `branchSwitcher`.
+- The staff menu offered screens the person's role cannot open (the owner saw My queue and Results, then a permission error). The menu now shows only screens the person may open; the server still checks every action.
+- Security: any signed-in staff member could read an AI scribe draft clinical note; only the doctor who started the session can now.
+- Search engines could index patient and staff areas: a fixed robots.txt overrode each site's own rules. Removed; the platform site now has its own rules.
+- Finance, Rosters and Templates were wider than a phone screen; KPI tile rows wrap on phones.
+
+### Changed
+- The phone check also fails when a page raises a script error, cannot load its scripts or styles, or shows no content — a blank page used to pass.
+
 ## [0.81.3] — Security: dependency advisories
 
 ### Security

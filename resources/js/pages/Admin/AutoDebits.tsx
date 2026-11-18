@@ -32,7 +32,7 @@ export default function AutoDebits({
                 Saved cards are held by the gateway; Dr Business Flow keeps only
                 an encrypted token, the card brand and last four digits.
             </p>
-            <div className="mb-4 flex gap-4">
+            <div className="mb-4 flex flex-wrap gap-4">
                 <Kpi label="Providers on auto-debit" value={String(active)} />
                 <Kpi
                     label="Failed debits (14 days)"

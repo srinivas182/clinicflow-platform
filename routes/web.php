@@ -54,6 +54,7 @@ foreach ($centralDomains as $index => $domain) {
     Route::domain($domain)->name($index === 0 ? '' : "central{$index}.")->group(function (): void {
         Route::get('/', [PublicSiteController::class, 'home'])->name('home');
         Route::get('/find-care', [PublicSiteController::class, 'directory'])->name('directory');
+        Route::get('/robots.txt', [PublicSiteController::class, 'robots'])->name('robots');
         Route::get('/pages/{slug}', [PublicSiteController::class, 'page'])->where('slug', '[a-z0-9-]+')->name('cms.page');
         Route::get('/pricing', PricingController::class)->name('pricing');
         Route::get('/billing/pay/{token}', [SubscriptionBillingController::class, 'pay'])->middleware('throttle:30,1')->name('billing.pay');

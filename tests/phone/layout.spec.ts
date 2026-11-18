@@ -18,12 +18,24 @@ const SIGNED_IN = [...new Set(routes
     .map((r) => `/${r.uri}`))].sort();
 
 async function noSidewaysScroll(page: Page, path: string, skipBlocked = false): Promise<void> {
+    // A page that crashes or loses its scripts and styles renders blank, which is "narrow enough"
+    // for a width check; so it must also load every asset, raise no script errors and show content.
+    const scriptErrors: string[] = [];
+    const missingAssets: string[] = [];
+    page.on("pageerror", (e) => scriptErrors.push(e.message));
+    page.on("response", (r) => {
+        if (r.status() >= 400 && /\.(js|css|woff2?)(\?|$)/.test(r.url())) missingAssets.push(`${r.status()} ${r.url()}`);
+    });
     const response = await page.goto(path, { waitUntil: "networkidle" });
     const status = response?.status() ?? 0;
     if (skipBlocked && (status === 403 || status === 404)) {
         test.skip(true, `${path} is not available to the demo clinic owner (HTTP ${status})`);
     }
     expect(status, `${path} loads`).toBeLessThan(400);
+    expect(missingAssets, `${path} loads all its scripts and styles`).toEqual([]);
+    expect(scriptErrors, `${path} runs without script errors`).toEqual([]);
+    const shown = (await page.locator("body").innerText()).trim().length;
+    expect(shown, `${path} shows content (not a blank page)`).toBeGreaterThan(20);
     const extra = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     if (extra > 1) {
         await test.info().attach(`${path} at phone width`, { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });

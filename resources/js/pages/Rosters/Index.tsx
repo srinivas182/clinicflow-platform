@@ -76,7 +76,7 @@ export default function RostersIndex({
                 </label>
             </div>
             <Flash />
-            <div className="grid sm:grid-cols-3 gap-4">
+            <div className="grid gap-4 sm:grid-cols-3 *:min-w-0">
                 <Card title="This week" className="sm:col-span-2">
                     {sessions.length === 0 && (
                         <p className="text-sm text-muted">No sessions yet.</p>
