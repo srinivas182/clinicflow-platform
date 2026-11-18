@@ -13,6 +13,7 @@ use App\Domains\Messaging\Http\Controllers\MessagingAdminController;
 use App\Domains\Messaging\Http\Controllers\WhatsAppController;
 use App\Domains\Pharmacy\Http\Controllers\DeliveryController;
 use App\Domains\Platform\Branding\BrandController;
+use App\Domains\Platform\Http\Controllers\Admin\ActivityAdminController;
 use App\Domains\Platform\Http\Controllers\Admin\AutoDebitAdminController;
 use App\Domains\Platform\Http\Controllers\Admin\CmsAdminController;
 use App\Domains\Platform\Http\Controllers\Admin\PackageAdminController;
@@ -115,9 +116,10 @@ foreach ($centralDomains as $index => $domain) {
             Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
         });
 
-        Route::middleware(['auth', 'platform.admin'])->prefix('admin')->name('admin.')->group(function (): void {
+        Route::middleware(['auth', 'platform.admin', 'admin.audit'])->prefix('admin')->name('admin.')->group(function (): void {
             Route::get('/', fn () => redirect()->route('admin.providers.index'))->name('home');
             Route::get('/providers', [ProviderAdminController::class, 'index'])->name('providers.index');
+            Route::get('/activity', [ActivityAdminController::class, 'index'])->name('activity.index');
             Route::get('/providers/{provider}', [ProviderAdminController::class, 'show'])->name('providers.show');
             Route::post('/providers/{provider}/approve', [ProviderAdminController::class, 'approve'])->name('providers.approve');
             Route::post('/verification-checks/{check}', [ProviderAdminController::class, 'review'])->name('checks.review');
@@ -171,11 +173,11 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/accounting/{driver}/connect', [AccountingAdminController::class, 'connect'])->whereIn('driver', ['xero', 'sage', 'zoho'])->name('accounting.connect');
             Route::put('/accounting/{driver}/platform', [AccountingAdminController::class, 'updatePlatform'])->whereIn('driver', ['xero', 'sage', 'zoho'])->name('accounting.platform');
             Route::post('/accounting/export', [AccountingAdminController::class, 'exportPlatform'])->middleware('step-up')->name('accounting.export');
-            Route::put('/telemedicine/{driver}', [TelemedicineAdminController::class, 'save'])->whereIn('driver', ['cloud', 'self_hosted'])->name('telemedicine.save');
+            Route::put('/telemedicine/{driver}', [TelemedicineAdminController::class, 'save'])->whereIn('driver', ['cloud', 'self_hosted'])->name('telemedicine.save')->middleware('step-up.live');
             Route::post('/telemedicine/{driver}/test', [TelemedicineAdminController::class, 'test'])->whereIn('driver', ['cloud', 'self_hosted'])->name('telemedicine.test');
             Route::put('/wallet', [WalletController::class, 'saveAdminSettings'])->name('wallet.settings.save');
             Route::get('/messaging', [MessagingAdminController::class, 'index'])->name('messaging.index');
-            Route::put('/messaging/providers/{driver}', [MessagingAdminController::class, 'saveProvider'])->whereIn('driver', ['clickatell', 'bulksms', 'smsportal', 'twilio', 'ses', 'smtp', 'sendgrid', 'brevo'])->name('messaging.providers.save');
+            Route::put('/messaging/providers/{driver}', [MessagingAdminController::class, 'saveProvider'])->whereIn('driver', ['clickatell', 'bulksms', 'smsportal', 'twilio', 'ses', 'smtp', 'sendgrid', 'brevo'])->name('messaging.providers.save')->middleware('step-up.live');
             Route::post('/messaging/providers/{driver}/test', [MessagingAdminController::class, 'testProvider'])->whereIn('driver', ['clickatell', 'bulksms', 'smsportal', 'twilio', 'ses', 'smtp', 'sendgrid', 'brevo'])->name('messaging.providers.test');
             Route::put('/messaging/templates', [MessagingAdminController::class, 'saveTemplate'])->name('messaging.templates.save');
             Route::put('/messaging/packages/{package}', [MessagingAdminController::class, 'savePackage'])->name('messaging.packages.save');
@@ -183,7 +185,7 @@ foreach ($centralDomains as $index => $domain) {
             Route::post('/pages', [CmsAdminController::class, 'save'])->name('pages.save');
             Route::put('/packages/{package}', [PackageAdminController::class, 'update'])->name('packages.update');
             Route::get('/payments', [PaymentAdminController::class, 'index'])->name('payments.index');
-            Route::put('/payments/{gateway}', [PaymentAdminController::class, 'update'])->name('payments.update');
+            Route::put('/payments/{gateway}', [PaymentAdminController::class, 'update'])->name('payments.update')->middleware('step-up.live');
             Route::post('/payments/{gateway}/test', [PaymentAdminController::class, 'test'])->name('payments.test');
         });
     });

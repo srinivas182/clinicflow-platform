@@ -41,6 +41,10 @@ class SaveGatewayConfig
             }
         }
 
+        // New keys or a new mode: the earlier connection test no longer counts (beta #47).
+        if ($merged !== ($config->credentials ?? []) || $config->mode !== $mode) {
+            $config->forceFill(['last_tested_at' => null, 'last_test_ok' => null]);
+        }
         $config->fill(['mode' => $mode, 'enabled' => $enabled, 'is_default' => $enabled && $isDefault, ...$extra]);
         $config->credentials = $merged;
         $config->save();

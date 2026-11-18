@@ -34,6 +34,10 @@ class SupportDesk
         if (trim($subject) === '' || trim($body) === '') {
             throw ValidationException::withMessages(['body' => 'Describe the problem.']);
         }
+        // Too long: say so instead of cutting the text (beta #211).
+        if (mb_strlen(trim($subject)) > 200) {
+            throw ValidationException::withMessages(['subject' => 'Keep the subject to 200 characters.']);
+        }
         $id = (int) $this->db()->table('support_tickets')->insertGetId(['tenant_id' => $provider->id, 'user_id' => $by->id, 'subject' => mb_substr(trim($subject), 0, 200), 'status' => 'open', 'created_at' => now(), 'updated_at' => now()]);
         $this->reply($id, $by, 'practice', $body);
 
@@ -44,6 +48,15 @@ class SupportDesk
     {
         if (trim($body) === '') {
             throw ValidationException::withMessages(['body' => 'Write a message.']);
+        }
+        if (mb_strlen(trim($body)) > 5000) {
+            throw ValidationException::withMessages(['body' => 'Keep the message to 5 000 characters, or split it into two.']);
+        }
+        // Unknown ticket: not found (beta #213). Closed tickets stay closed (beta #214).
+        $status = $this->db()->table('support_tickets')->where('id', $ticketId)->value('status');
+        abort_if($status === null, 404);
+        if ($status === 'closed') {
+            throw ValidationException::withMessages(['body' => 'This ticket is closed. Open a new ticket if you still need help.']);
         }
         $this->db()->table('support_messages')->insert(['support_ticket_id' => $ticketId, 'author' => $author, 'user_id' => $by->id, 'body' => mb_substr(trim($body), 0, 5000), 'created_at' => now()]);
         $this->db()->table('support_tickets')->where('id', $ticketId)->update(['status' => $author === 'support' ? 'answered' : 'open', 'updated_at' => now()]);
@@ -74,6 +87,7 @@ class SupportDesk
 
     public function close(int $ticketId): void
     {
+        abort_unless($this->db()->table('support_tickets')->where('id', $ticketId)->exists(), 404);
         $this->db()->table('support_tickets')->where('id', $ticketId)->update(['status' => 'closed', 'updated_at' => now()]);
     }
 

@@ -131,7 +131,7 @@ it('tells practices on a package when its messaging allowance or message types c
     $admin->forceFill(['is_platform_admin' => true])->save();
     $limits = $this->free->limits;
     $this->actingAs($admin)->withSession([RequireRecentConfirmation::SESSION_KEY => now()->getTimestamp()])->put("http://localhost/admin/messaging/packages/{$this->free->id}", [
-        'sms' => ($limits['sms'] ?? 0) + 100, 'email' => $limits['email'] ?? 0, 'sms_overage' => ($limits['sms_overage_cents'] ?? 0) / 100, 'email_overage' => ($limits['email_overage_cents'] ?? 0) / 100,
+        'sms' => ($limits['sms'] ?? 0) + 100, 'email' => $limits['email'] ?? 0, 'sms_overage' => max(0.5, ($limits['sms_overage_cents'] ?? 0) / 100), 'email_overage' => max(0.1, ($limits['email_overage_cents'] ?? 0) / 100),
         'message_types' => ['msg_booking'],
     ])->assertSessionHasNoErrors();
     Notification::assertSentTo($this->owner, PracticeNotice::class, fn (PracticeNotice $n) => $n->kind === 'package_changed'

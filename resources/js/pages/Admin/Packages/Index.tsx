@@ -14,6 +14,8 @@ interface Pkg {
     limits: Record<string, number>;
     features: string[];
     isActive: boolean;
+    pending?: { from: string; current: number } | null;
+    paying?: number;
 }
 
 function Row({ pkg }: { pkg: Pkg }) {
@@ -42,6 +44,16 @@ function Row({ pkg }: { pkg: Pkg }) {
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                 />
+                {pkg.pending && (
+                    <div className="mt-1 text-xs text-muted">
+                        From {pkg.pending.from}; now R{pkg.pending.current}
+                    </div>
+                )}
+                {!!pkg.paying && (
+                    <div className="mt-1 text-xs text-muted">
+                        {pkg.paying} on this plan
+                    </div>
+                )}
             </td>
             <td className="px-4 py-3">
                 <label className="sr-only" htmlFor={`trial-${pkg.id}`}>
@@ -67,6 +79,11 @@ function Row({ pkg }: { pkg: Pkg }) {
                 <Button
                     size="sm"
                     onClick={() =>
+                        (Number(price) <= pkg.priceMonthly ||
+                            !pkg.paying ||
+                            window.confirm(
+                                `${pkg.paying} practice(s) are on ${pkg.name}. They will be emailed 30 days' notice and the new price applies from then. Continue?`,
+                            )) &&
                         router.put(
                             `/admin/packages/${pkg.id}`,
                             {

@@ -26,6 +26,14 @@ function ConfigCard({ c }: { c: Config }) {
     });
     const submit = (e: FormEvent) => {
         e.preventDefault();
+        if (
+            form.data.mode === "live" &&
+            c.mode !== "live" &&
+            !window.confirm(
+                `Switch ${c.label} to Live? Real video calls are charged to practice wallets.`,
+            )
+        )
+            return;
         form.put(`/admin/telemedicine/${c.driver}`, {
             preserveScroll: true,
             onSuccess: () => form.setData("api_secret", ""),
@@ -105,7 +113,12 @@ function ConfigCard({ c }: { c: Config }) {
                     <Button
                         type="button"
                         variant="secondary"
-                        disabled={!c.url}
+                        disabled={
+                            !c.url || !c.apiKey || !c.hasSecret || form.isDirty
+                        }
+                        title={
+                            form.isDirty ? "Save first, then test" : undefined
+                        }
                         onClick={() =>
                             router.post(
                                 `/admin/telemedicine/${c.driver}/test`,

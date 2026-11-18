@@ -42,7 +42,10 @@ class ResellerController extends Controller
     {
         $n = $programme->markPaid($reseller, $request->string('period')->toString(), $request->string('reference')->toString());
 
-        return back()->with('success', "{$n} commission line(s) marked paid.");
+        // Nothing pending for that month: say so instead of reporting success (beta #120).
+        return $n === 0
+            ? back()->with('error', 'Nothing to pay: no unpaid commission for this reseller in that month.')
+            : back()->with('success', "{$n} commission line(s) marked paid.");
     }
 
     public function portal(Request $request, ResellerProgramme $programme): Response

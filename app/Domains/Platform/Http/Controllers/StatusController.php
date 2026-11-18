@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -39,12 +40,20 @@ class StatusController extends Controller
         match ($action) {
             'report' => (function () use ($request, $status): void {
                 $d = $request->validate(['title' => ['required', 'string', 'max:160'], 'kind' => ['required', Rule::in(['incident', 'maintenance'])], 'impact' => ['required', Rule::in(['minor', 'major', 'critical'])],
-                    'components' => ['array'], 'components.*' => ['string'], 'body' => ['required', 'string', 'max:2000'], 'scheduled_for' => ['nullable', 'date']]);
+                    // Known components only (beta #226); maintenance is scheduled in the future (beta #227).
+                    'components' => ['array'], 'components.*' => ['string', Rule::in(array_keys(StatusPage::COMPONENTS))], 'body' => ['required', 'string', 'max:2000'],
+                    'scheduled_for' => ['nullable', 'date', 'after:now', Rule::requiredIf($request->input('kind') === 'maintenance')]],
+                    ['components.*.in' => 'Choose components from the list.', 'scheduled_for.after' => 'Maintenance must be scheduled in the future.', 'scheduled_for.required' => 'Give the maintenance date and time.']);
                 $status->report($d['title'], $d['kind'], $d['impact'], array_values($d['components'] ?? []), $d['body'], $d['scheduled_for'] ?? null);
             })(),
             'update' => (function () use ($request, $status): void {
-                $d = $request->validate(['incident_id' => ['required', 'integer'], 'status' => ['required', Rule::in(['investigating', 'identified', 'monitoring', 'resolved', 'scheduled', 'in_progress', 'completed'])], 'body' => ['required', 'string', 'max:2000']]);
-                $status->update((int) $d['incident_id'], $d['status'], $d['body']);
+                // Unknown incident: not found (beta #229). Statuses depend on the kind (beta #230).
+                $incident = DB::connection((string) config('tenancy.database.central_connection'))->table('status_incidents')->where('id', $request->integer('incident_id'))->first();
+                abort_if($incident === null, 404);
+                $allowed = $incident->kind === 'maintenance' ? ['scheduled', 'in_progress', 'completed'] : ['investigating', 'identified', 'monitoring', 'resolved'];
+                $d = $request->validate(['status' => ['required', Rule::in($allowed)], 'body' => ['required', 'string', 'max:2000']],
+                    ['status.in' => 'For '.($incident->kind === 'maintenance' ? 'maintenance' : 'an incident').' choose: '.implode(', ', $allowed).'.']);
+                $status->update((int) $incident->id, $d['status'], $d['body']);
             })(),
             'component' => (function () use ($request, $status): void {
                 $d = $request->validate(['key' => ['required', Rule::in(array_keys(StatusPage::COMPONENTS))], 'status' => ['nullable', Rule::in(['operational', 'degraded', 'outage'])]]);

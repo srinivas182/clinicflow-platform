@@ -86,6 +86,11 @@ class MessagingAdminController extends Controller
         if ($d->channel() === 'email' && filled($data['sender'] ?? null) && ! filter_var($data['sender'], FILTER_VALIDATE_EMAIL)) {
             throw ValidationException::withMessages(['sender' => 'Enter a from address on the platform domain.']);
         }
+        // SMS sender (beta #277): a phone number, or an approved alphanumeric sender of up to 11 letters and digits.
+        $sender = trim((string) ($data['sender'] ?? ''));
+        if ($d->channel() === 'sms' && $sender !== '' && preg_match('/^(\+?\d{6,15}|(?=.*[A-Za-z])[A-Za-z0-9]{1,11})$/', $sender) !== 1) {
+            throw ValidationException::withMessages(['sender' => 'Use a phone number or an approved sender name of up to 11 letters and digits (no spaces).']);
+        }
 
         $row = MessagingProvider::query()->firstOrNew(['driver' => $d->value], ['channel' => $d->channel()]);
         $credentials = $row->credentials ?? [];
@@ -101,6 +106,14 @@ class MessagingAdminController extends Controller
             throw ValidationException::withMessages(['credentials' => "Enter all {$d->label()} credentials before switching it on."]);
         }
 
+        // Live sends real messages (beta #278): a test message must have gone through first, with these keys.
+        $keysChanged = $credentials !== ($row->credentials ?? []);
+        if ($data['mode'] === 'live' && $row->mode !== 'live' && ($keysChanged || $row->last_test_ok !== true)) {
+            throw ValidationException::withMessages(['mode' => "Save {$d->label()} in Test mode and send a test message successfully before switching to Live."]);
+        }
+        if ($keysChanged) {
+            $row->forceFill(['last_tested_at' => null, 'last_test_ok' => null]);
+        }
         // Only one active supplier per channel: switching one on switches the others off (their keys are kept).
         $row->forceFill([
             'channel' => $d->channel(), 'mode' => $data['mode'], 'enabled' => $active, 'is_default' => $active,
@@ -129,7 +142,7 @@ class MessagingAdminController extends Controller
 
         $row->forceFill(['last_tested_at' => now(), 'last_test_ok' => $result['ok']])->save();
 
-        return back()->with('success', $result['ok'] ? "Test message sent with {$d->label()}." : "Test failed: {$result['error']}");
+        return back()->with($result['ok'] ? 'success' : 'error', $result['ok'] ? "Test message sent with {$d->label()}." : "Test failed: {$result['error']}");
     }
 
     public function saveTemplate(Request $request): RedirectResponse
@@ -169,7 +182,8 @@ class MessagingAdminController extends Controller
     {
         $data = $request->validate([
             'sms' => ['required', 'integer', 'min:0', 'max:1000000'], 'email' => ['required', 'integer', 'min:0', 'max:1000000'],
-            'sms_overage' => ['required', 'numeric', 'min:0', 'max:100'], 'email_overage' => ['required', 'numeric', 'min:0', 'max:100'],
+            // Extra messages are charged (beta #285): above R0.
+            'sms_overage' => ['required', 'numeric', 'gt:0', 'max:100'], 'email_overage' => ['required', 'numeric', 'gt:0', 'max:100'],
             'message_types' => ['array'], 'message_types.*' => ['string', Rule::in(['msg_booking', 'msg_reminders', 'msg_queue_alerts', 'msg_billing', 'msg_pharmacy', 'msg_recalls'])],
         ]);
 

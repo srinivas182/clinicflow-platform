@@ -54,16 +54,20 @@ class GroupController extends Controller
     public function adminAction(Request $request, string $action, ProviderGroups $groups): RedirectResponse
     {
         $group = $action === 'create' ? null : ProviderGroup::query()->findOrFail($request->integer('group_id'));
+        $message = 'Saved.';
         match ($action) {
-            'create' => ProviderGroup::create($request->validate(['name' => ['required', 'string', 'max:120'], 'billing' => ['required', Rule::in(['separate', 'combined'])]])),
+            // Unique names (beta #83); billing must be one of the two options (beta #86).
+            'create' => ProviderGroup::create($request->validate(['name' => ['required', 'string', 'max:120', Rule::unique(ProviderGroup::class, 'name')], 'billing' => ['required', Rule::in(['separate', 'combined'])]],
+                ['name.unique' => 'A group with this name already exists.'])),
             'member' => $groups->addMember($group ?? abort(404), Provider::query()->findOrFail($request->string('tenant_id')->toString())),
             'admin' => $groups->addAdmin($group ?? abort(404), $request->string('email')->toString()),
-            'billing' => $group?->forceFill(['billing' => $request->string('billing')->toString() === 'combined' ? 'combined' : 'separate'])->save(),
-            'invoice' => $groups->issueCombinedInvoice($group ?? abort(404)),
+            'billing' => $group?->forceFill(['billing' => (string) $request->validate(['billing' => ['required', Rule::in(['separate', 'combined'])]])['billing']])->save(),
+            // "Nothing to invoice" instead of "Saved" when no practice has an unpaid invoice (beta #87).
+            'invoice' => $message = $groups->issueCombinedInvoice($group ?? abort(404)) === null ? 'Nothing to invoice: no practice in this group has an unpaid invoice.' : 'Combined invoice issued.',
             'settle' => $groups->settleCombined($group ?? abort(404), $request->integer('group_invoice_id'), 'eft', $request->string('reference')->toString() ?: 'EFT'),
             default => abort(404),
         };
 
-        return back()->with('success', 'Saved.');
+        return back()->with('success', $message);
     }
 }

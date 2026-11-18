@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -36,11 +37,15 @@ class CmsAdminController extends Controller
             'body' => ['nullable', 'string', 'max:100000'],
             'sections' => ['nullable', 'array'],
             'menu_label' => ['nullable', 'string', 'max:40'],
-            'menu_order' => ['nullable', 'integer', 'min:0', 'max:50'],
+            // Each menu position once, so the order is clear (beta #294).
+            'menu_order' => ['nullable', 'integer', 'min:0', 'max:50', Rule::unique('cms_pages', 'menu_order')->ignore($request->integer('id') ?: null)],
             'published' => ['boolean'],
-        ]);
-        $reserved = ['admin', 'login', 'logout', 'start', 'pricing', 'workspaces', 'billing', 'api', 'find-care'];
-        abort_if(in_array($data['slug'], $reserved, true), 422, 'That address is reserved.');
+        ], ['menu_order.unique' => 'Another page already uses this menu position.']);
+        // Reserved addresses: a message next to the address box, not an error screen (beta #291).
+        $reserved = ['admin', 'login', 'logout', 'start', 'pricing', 'workspaces', 'billing', 'api', 'find-care', 'status', 'robots.txt'];
+        if (in_array($data['slug'], $reserved, true)) {
+            throw ValidationException::withMessages(['slug' => 'That address is used by the platform. Choose another, e.g. '.$data['slug'].'-info.']);
+        }
 
         CmsPage::query()->updateOrCreate(['id' => $data['id'] ?? null], [
             'slug' => $data['slug'], 'title' => $data['title'], 'meta_description' => $data['meta_description'] ?? null,

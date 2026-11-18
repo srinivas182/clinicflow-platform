@@ -24,6 +24,7 @@ The super admin runs the platform: practices and packages, providers for messagi
 - **Groups** (/admin/groups): practices that report together (totals only, never patient records).
 - **Resellers** (/admin/resellers) and **Brands** (/admin/brands): white-label partners. A brand has its own name, logo, colours, practice domain, verified email sender and approved SMS sender; practices that sign up through the brand link join it.
 - **Support** (/admin/support): practices grant time-limited, logged access; you cannot open a practice without it.
+- **Activity log** (/admin/activity): every change made in Admin with who made it and what was submitted (secrets are masked), and every platform setting change with its old and new value. Switching a payment, video or messaging supplier to Live asks you to confirm your identity again.
 
 ## 3. File storage
 

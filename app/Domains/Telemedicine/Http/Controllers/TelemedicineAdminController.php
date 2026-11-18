@@ -45,7 +45,10 @@ class TelemedicineAdminController extends Controller
         ]);
 
         $config = VideoConfig::query()->firstOrNew(['driver' => $driver]);
-        $config->fill(['mode' => $data['mode'], 'url' => $data['url'] ?? $config->url, 'api_key' => $data['api_key'] ?? $config->api_key]);
+        // Address and key can be cleared (beta #65): a field sent empty clears it; a field not sent is kept.
+        $config->fill(['mode' => $data['mode'],
+            'url' => $request->exists('url') ? ($data['url'] ?? null) : $config->url,
+            'api_key' => $request->exists('api_key') ? ($data['api_key'] ?? null) : $config->api_key]);
         if (filled($data['api_secret'] ?? null)) {
             $config->api_secret = trim((string) $data['api_secret']);
         }
@@ -66,8 +69,11 @@ class TelemedicineAdminController extends Controller
 
     public function test(string $driver): RedirectResponse
     {
-        $config = VideoConfig::query()->where('driver', $driver)->firstOrFail();
-        abort_unless($config->isComplete(), 422, 'Enter the server address, API key and secret first.');
+        $config = VideoConfig::query()->where('driver', $driver)->first();
+        // A clear message instead of an error page (beta #66).
+        if (! $config instanceof VideoConfig || ! $config->isComplete()) {
+            return back()->with('error', 'Save the server address, API key and secret first, then test.');
+        }
         $result = (new LiveKit($config))->testConnection();
         $config->forceFill(['last_tested_at' => now(), 'last_test_ok' => $result['ok']])->save();
 

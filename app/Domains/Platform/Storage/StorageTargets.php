@@ -31,6 +31,13 @@ class StorageTargets
     public function save(?int $id, array $data): int
     {
         $errors = [];
+        // Unique storage names (beta #173).
+        if ($this->db()->table('storage_targets')->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($data['name']))])->when($id !== null, fn ($q) => $q->where('id', '!=', $id))->exists()) {
+            $errors['name'] = 'Another storage has this name.';
+        }
+        if ($id !== null && ! $this->db()->table('storage_targets')->where('id', $id)->exists()) {
+            abort(404);
+        }
         if (! in_array($data['driver'], ['local', 's3'], true)) {
             $errors['driver'] = 'Choose local disk or S3-compatible storage.';
         }

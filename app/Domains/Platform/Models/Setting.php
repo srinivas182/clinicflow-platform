@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Platform\Models;
 
+use App\Domains\Platform\Support\AuditRedactor;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
@@ -44,8 +45,15 @@ class Setting extends Model
 
     public static function put(string $group, string $key, mixed $value): void
     {
+        $existing = static::query()->where('group', $group)->where('key', $key)->first();
+        $old = $existing?->getAttribute('value');
         static::query()->updateOrCreate(['group' => $group, 'key' => $key], ['value' => $value]);
         Cache::forget(self::cacheKey($group, $key));
+        if ($old !== $value) {
+            // Every practice setting change is in the practice's activity log with old and new values (beta T3).
+            activity('settings')->causedBy(auth()->user())->withProperties(['key' => "{$group}.{$key}", 'old' => AuditRedactor::value($key, $old), 'new' => AuditRedactor::value($key, $value)])
+                ->log("Setting changed: {$group}.{$key}");
+        }
     }
 
     private static function cacheKey(string $group, string $key): string

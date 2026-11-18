@@ -138,9 +138,15 @@ class WalletController extends Controller
     public function saveAdminSettings(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'video' => ['required', 'numeric', 'min:0'], 'audio' => ['required', 'numeric', 'min:0'], 'chat' => ['required', 'numeric', 'min:0'],
-            'threshold' => ['required', 'numeric', 'min:0'],
-            'packs' => ['required', 'array', 'min:1', 'max:6'], 'packs.*.amount' => ['required', 'numeric', 'min:10'], 'packs.*.bonus' => ['required', 'numeric', 'min:0'],
+            // Sensible limits (beta #54, #55): prices above R0 and below a ceiling; unique packs; bonus never above the pack.
+            'video' => ['required', 'numeric', 'gt:0', 'max:50'], 'audio' => ['required', 'numeric', 'gt:0', 'max:50'], 'chat' => ['required', 'numeric', 'gt:0', 'max:500'],
+            'threshold' => ['required', 'numeric', 'min:0', 'max:100000'],
+            'packs' => ['required', 'array', 'min:1', 'max:6'], 'packs.*.amount' => ['required', 'numeric', 'min:10', 'max:100000', 'distinct'],
+            'packs.*.bonus' => ['required', 'numeric', 'min:0', 'lte:packs.*.amount'],
+        ], [
+            'video.max' => 'Video may be at most R50 a minute.', 'audio.max' => 'Audio may be at most R50 a minute.', 'chat.max' => 'A chat may be at most R500.',
+            'video.gt' => 'Enter a price above R0.', 'audio.gt' => 'Enter a price above R0.', 'chat.gt' => 'Enter a price above R0.',
+            'packs.*.amount.distinct' => 'Each pack needs a different amount.', 'packs.*.bonus.lte' => 'A bonus may not be more than its pack.',
         ]);
         $c = fn ($v) => (int) round(((float) $v) * 100);
         WalletSettings::put('wallet.price_video_per_minute_cents', $c($data['video']));

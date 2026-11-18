@@ -60,6 +60,7 @@ class BrandController extends Controller
 
     public function senders(Request $request, int $brand, string $action, Brands $brands, DnsResolver $dns): RedirectResponse
     {
+        abort_unless(DB::connection((string) config('tenancy.database.central_connection'))->table('brands')->where('id', $brand)->exists(), 404);
         if ($action === 'email') {
             $brands->setEmailFrom($brand, $request->string('email_from')->toString());
 

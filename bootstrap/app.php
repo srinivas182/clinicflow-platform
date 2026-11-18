@@ -2,12 +2,15 @@
 
 use App\Domains\Api\Http\Middleware\AuthenticateApiKey;
 use App\Domains\Identity\Http\Middleware\EnsureWorkspaceMember;
+use App\Domains\Platform\Http\Middleware\AuditAdminChanges;
 use App\Domains\Platform\Http\Middleware\EnsurePlatformAdmin;
 use App\Domains\Platform\Http\Middleware\EnsureProviderWritable;
 use App\Http\Middleware\CaptureResellerRef;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\NormalizeSouthAfricanPhones;
 use App\Http\Middleware\RequireAuthenticator;
 use App\Http\Middleware\RequireRecentConfirmation;
+use App\Http\Middleware\RequireStepUpForLive;
 use App\Http\Middleware\ScanUploads;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\TrackRecordAccess;
@@ -54,12 +57,18 @@ return Application::configure(basePath: dirname(__DIR__))
             'workspace' => EnsureWorkspaceMember::class,
             'platform.admin' => EnsurePlatformAdmin::class,
             'provider.writable' => EnsureProviderWritable::class,
+            'admin.audit' => AuditAdminChanges::class,
             'api.key' => AuthenticateApiKey::class,
             'step-up' => RequireRecentConfirmation::class,
+            'step-up.live' => RequireStepUpForLive::class,
             'record-access' => TrackRecordAccess::class,
             'human' => VerifyHuman::class,
         ]);
+        $middleware->api(append: [
+            NormalizeSouthAfricanPhones::class,
+        ]);
         $middleware->web(append: [
+            NormalizeSouthAfricanPhones::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
             CaptureResellerRef::class,

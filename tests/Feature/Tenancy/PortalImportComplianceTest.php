@@ -153,7 +153,7 @@ it('publishes sanitised website pages and lists only verified providers', functi
     $admin = User::factory()->create();
     $admin->forceFill(['is_platform_admin' => true])->save();
 
-    $this->actingAs($admin)->post('http://localhost/admin/pages', ['slug' => 'login', 'title' => 'x', 'body' => 'x'])->assertStatus(422);
+    $this->actingAs($admin)->post('http://localhost/admin/pages', ['slug' => 'login', 'title' => 'x', 'body' => 'x'])->assertSessionHasErrors('slug');
     $this->actingAs($admin)->post('http://localhost/admin/pages', [
         'slug' => 'home', 'title' => 'Clinic Flow', 'body' => '<h1>Care, connected</h1><script>alert(1)</script><p onclick="x()">Hi</p>', 'published' => true,
     ])->assertSessionHasNoErrors();

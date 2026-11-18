@@ -31,6 +31,7 @@ use App\Domains\Telemedicine\Support\LiveKit;
 use App\Domains\Visits\Enums\PayerType;
 use App\Domains\Wallet\Models\Wallet;
 use App\Domains\Wallet\Models\WalletReservation;
+use App\Http\Middleware\RequireRecentConfirmation;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Seeders\ClinicalReferenceSeeder;
@@ -125,6 +126,7 @@ it('keeps one active video option and tests the connection', function (): void {
     $admin = User::factory()->create();
     $admin->forceFill(['is_platform_admin' => true])->save();
 
+    $this->withSession([RequireRecentConfirmation::SESSION_KEY => now()->getTimestamp()]);
     $this->actingAs($admin)->put('http://localhost/admin/telemedicine/self_hosted', ['mode' => 'live', 'enabled' => true, 'url' => 'wss://video.clinicflow.test'])
         ->assertSessionHasErrors('url');
     $this->actingAs($admin)->put('http://localhost/admin/telemedicine/self_hosted', ['mode' => 'live', 'enabled' => true, 'url' => 'wss://video.clinicflow.test', 'api_key' => 'K2', 'api_secret' => 'S2-long-secret'])

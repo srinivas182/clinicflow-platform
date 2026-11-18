@@ -40,7 +40,7 @@ class PaymentSettingsController extends Controller
     public function update(Request $request, string $gateway, SaveGatewayConfig $action): RedirectResponse
     {
         $this->authorize(Permission::PAYMENTS_CONFIGURE);
-        $g = Gateway::from($gateway);
+        $g = Gateway::tryFrom($gateway) ?? abort(404);
         abort_unless(in_array($g->value, PlatformGatewayConfig::offeredGateways(), true), 403, 'This gateway is not offered on Dr Business Flow.');
 
         $data = self::validated($request);
@@ -52,7 +52,7 @@ class PaymentSettingsController extends Controller
     public function test(string $gateway): RedirectResponse
     {
         $this->authorize(Permission::PAYMENTS_CONFIGURE);
-        $config = GatewayConfig::query()->where('gateway', Gateway::from($gateway)->value)->firstOrFail();
+        $config = GatewayConfig::query()->where('gateway', (Gateway::tryFrom($gateway) ?? abort(404))->value)->firstOrFail();
         $result = GatewayFactory::fromConfig($config)->testConnection();
         $config->forceFill(['last_tested_at' => now(), 'last_test_ok' => $result->ok])->save();
 
@@ -75,6 +75,7 @@ class PaymentSettingsController extends Controller
             'offered' => $c instanceof PlatformGatewayConfig ? $c->offered_to_providers : true,
             'apiRefunds' => $g->supportsApiRefund(),
             'lastTestOk' => $c?->last_test_ok,
+            'saved' => $c !== null && $c->exists,
             'webhookUrl' => $webhookUrl,
             'fields' => array_map(fn (array $f) => [
                 'key' => $f['key'], 'label' => $f['label'], 'secret' => $f['secret'],
