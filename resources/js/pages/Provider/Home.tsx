@@ -19,7 +19,7 @@ export default function ProviderHome() {
                 {provider?.typeLabel} workspace · your data lives in its own
                 database
             </p>
-            <div className="mt-6 flex gap-4">
+            <div className="mt-6 flex flex-wrap gap-4">
                 <Kpi
                     label="Patients today"
                     value="—"

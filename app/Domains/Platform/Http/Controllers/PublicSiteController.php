@@ -19,6 +19,15 @@ use Inertia\Response;
  */
 class PublicSiteController extends Controller
 {
+    /** Search engines may index the public website, never the signed-in or admin areas. */
+    public function robots(): \Illuminate\Http\Response
+    {
+        $private = ['/admin', '/login', '/workspaces', '/account', '/translate', '/reseller', '/groups', '/locum', '/auth', '/forgot-password', '/reset-password'];
+
+        return response('User-agent: *'."\n".implode("\n", array_map(fn (string $path) => "Disallow: {$path}", $private))."\n", 200,
+            ['Content-Type' => 'text/plain; charset=utf-8', 'Cache-Control' => 'public, max-age=3600']);
+    }
+
     public function home(): Response
     {
         $page = CmsPage::query()->where('slug', 'home')->where('published', true)->first();

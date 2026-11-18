@@ -67,7 +67,11 @@ export default function RegisterPatient() {
         const first = Object.keys(form.errors)[0];
         if (first) setStep(stepOf(first));
     }, [form.errors]);
-    useEffect(() => window.scrollTo({ top: 0, behavior: "smooth" }), [step]);
+    // Braces matter: newer browsers return a promise from smooth scrollTo, and React would call
+    // whatever an effect returns as its clean-up, crashing the page on the next step.
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }, [step]);
     const show = (n: number) => (step === n ? "sm:col-span-3" : "hidden");
     const select =
         "min-h-10 rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm";

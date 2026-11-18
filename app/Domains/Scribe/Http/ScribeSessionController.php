@@ -81,6 +81,9 @@ class ScribeSessionController extends Controller
     {
         $row = DB::table('scribe_sessions')->where('id', $session)->first();
         abort_if($row === null, 404);
+        // A draft clinical note: only the doctor who started the session may read it (POPIA).
+        $this->authorize(Permission::CONSULTS_WRITE);
+        $this->own($request, $session);
 
         return response()->json(['session' => $row->id, 'status' => $row->status, 'minutes' => (int) $row->minutes_billed, 'error' => $row->error,
             'draft' => in_array($row->status, ['drafted', 'accepted'], true) ? $scribe->draftFor($row->id) : null]);

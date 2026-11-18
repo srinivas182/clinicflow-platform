@@ -72,7 +72,7 @@ export default function WalletPage({
                     </label>
                 </Card>
             )}
-            <div className="mb-4 flex gap-4">
+            <div className="mb-4 flex flex-wrap gap-4">
                 <Kpi
                     label="Available"
                     value={rand(wallet.available, 2)}

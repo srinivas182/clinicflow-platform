@@ -106,7 +106,7 @@ export default function FrontDesk({
                 </Link>
             </div>
             <Flash />
-            <div className="mb-4 flex gap-4">
+            <div className="mb-4 flex flex-wrap gap-4">
                 <Kpi label="Checked in today" value={String(counts.today)} />
                 <Kpi label="Waiting now" value={String(counts.waiting)} />
                 <Kpi label="Takings today" value={rand(counts.takings)} />
