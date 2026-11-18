@@ -9,13 +9,16 @@ use App\Domains\Platform\Actions\IssueSubscriptionInvoices;
 use App\Domains\Platform\Enums\ProviderStatus;
 use App\Domains\Platform\Enums\ProviderType;
 use App\Domains\Platform\Enums\SubscriptionStatus;
+use App\Domains\Platform\Enums\VerificationStatus;
 use App\Domains\Platform\Models\Package;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\Subscription;
 use App\Domains\Platform\Models\VerificationCheck;
+use App\Domains\Platform\Notifications\PracticeNotice;
 use App\Models\User;
 use Database\Seeders\PackageSeeder;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Support\Facades\Notification;
 
 uses(DatabaseMigrations::class);
 
@@ -154,4 +157,55 @@ it('keeps free packages active: no trial, no invoice, never read-only (beta #28)
     Provider::query()->whereKey($provider->id)->update(['status' => ProviderStatus::ReadOnly->value]);
     app(EnforceSubscriptionStatus::class)->handle();
     expect($provider->fresh()?->status)->toBe(ProviderStatus::Active);
+});
+
+it('approves only practices awaiting verification and emails the owner (beta #14, #16)', function (): void {
+    Notification::fake();
+    $this->post('http://localhost/start', signupPayload());
+    $provider = Provider::query()->sole();
+    $admin = User::factory()->create();
+    $admin->forceFill(['is_platform_admin' => true])->save();
+    $provider->verificationChecks->each(fn (VerificationCheck $c) => $this->actingAs($admin)->post("http://localhost/admin/verification-checks/{$c->id}", ['status' => 'verified']));
+
+    $this->actingAs($admin)->get('http://localhost/admin/providers?filter=verification')->assertInertia(fn ($p) => $p->where('filter', 'verification')->count('providers', 1));
+    $this->actingAs($admin)->post("http://localhost/admin/providers/{$provider->id}/approve")->assertSessionHasNoErrors();
+    $owner = User::query()->where('email', 'sizwe@sunrise.test')->sole();
+    Notification::assertSentTo($owner, PracticeNotice::class, fn (PracticeNotice $n) => $n->kind === 'approved');
+    $this->actingAs($admin)->get('http://localhost/admin/providers?filter=verification')->assertInertia(fn ($p) => $p->count('providers', 0));
+
+    // A live (or paying) practice is never reset to a trial by approving again.
+    Provider::query()->whereKey($provider->id)->update(['status' => ProviderStatus::Active->value]);
+    $this->actingAs($admin)->post("http://localhost/admin/providers/{$provider->id}/approve")->assertSessionHasErrors('verification');
+    expect($provider->fresh()?->status)->toBe(ProviderStatus::Active);
+});
+
+it('needs a reason to reject, can suspend a live practice, and restores it once the corrected check is verified (beta #5, #13, #15)', function (): void {
+    Notification::fake();
+    $this->post('http://localhost/start', signupPayload());
+    $provider = Provider::query()->sole();
+    Provider::query()->whereKey($provider->id)->update(['status' => ProviderStatus::Trial->value]);
+    $admin = User::factory()->create();
+    $admin->forceFill(['is_platform_admin' => true])->save();
+    $owner = User::query()->where('email', 'sizwe@sunrise.test')->sole();
+    $check = $provider->verificationChecks()->orderBy('id')->firstOrFail();
+
+    $this->actingAs($admin)->post("http://localhost/admin/verification-checks/{$check->id}", ['status' => 'rejected'])->assertSessionHasErrors('notes');
+    $this->actingAs($admin)->post("http://localhost/admin/verification-checks/{$check->id}", ['status' => 'rejected', 'notes' => 'Number not found on the BHF register.', 'suspend' => true])
+        ->assertSessionHasNoErrors();
+    expect($provider->fresh()?->status)->toBe(ProviderStatus::Suspended);
+    Notification::assertSentTo($owner, PracticeNotice::class, fn (PracticeNotice $n) => $n->kind === 'check_rejected' && in_array('Reason: Number not found on the BHF register.', $n->lines, true));
+
+    // The practice sees the reason and resubmits, even while suspended (read-only).
+    $this->flushSession();
+    $this->actingAs($owner)->get('http://sunrise.clinicflow.test/settings/verification')
+        ->assertInertia(fn ($p) => $p->component('Settings/Verification')->where('checks.0.status', 'rejected')->where('checks.0.reason', 'Number not found on the BHF register.'));
+    $this->actingAs($owner)->post("http://sunrise.clinicflow.test/settings/verification/{$check->id}", ['reference' => '0123499'])->assertSessionHasNoErrors();
+    expect($check->fresh()?->status)->toBe(VerificationStatus::Pending)->and($check->fresh()?->reference)->toBe('0123499');
+    Notification::assertSentTo($admin, PracticeNotice::class, fn (PracticeNotice $n) => $n->kind === 'check_resubmitted');
+    $this->flushSession();
+    $this->actingAs($admin)->get('http://localhost/admin/providers?filter=verification')->assertInertia(fn ($p) => $p->count('providers', 1));
+
+    $provider->verificationChecks->each(fn (VerificationCheck $c) => $this->actingAs($admin)->post("http://localhost/admin/verification-checks/{$c->id}", ['status' => 'verified']));
+    expect($provider->fresh()?->status)->toBe(ProviderStatus::Trial);
+    Notification::assertSentTo($owner, PracticeNotice::class, fn (PracticeNotice $n) => $n->kind === 'restored');
 });

@@ -10,12 +10,18 @@ use App\Domains\Messaging\Gateways\SmsGateway;
 use App\Domains\Messaging\Models\MessageTemplate;
 use App\Domains\Messaging\Models\MessagingProvider;
 use App\Domains\Messaging\Support\MessageCatalogue;
+use App\Domains\Platform\Enums\SubscriptionStatus;
 use App\Domains\Platform\Models\Package;
+use App\Domains\Platform\Models\Provider;
+use App\Domains\Platform\Models\Subscription;
+use App\Domains\Platform\Notifications\PracticeNotice;
+use App\Domains\Platform\Support\PracticeContacts;
 use App\Domains\Translation\Actions\Translations;
 use App\Domains\Translation\Models\Language;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -174,9 +180,56 @@ class MessagingAdminController extends Controller
         $limits['email_overage_cents'] = (int) round(((float) $data['email_overage']) * 100);
         $features = array_values(array_merge(array_filter($package->features, fn (string $f) => ! str_starts_with($f, 'msg_')), $data['message_types'] ?? []));
 
+        $before = ['limits' => $package->limits, 'types' => array_values(array_filter($package->features, fn (string $f) => str_starts_with($f, 'msg_')))];
         $package->forceFill(['limits' => $limits, 'features' => $features])->save();
-        activity('platform')->causedBy($request->user())->performedOn($package)->log('Package messaging updated');
+        activity('platform')->causedBy($request->user())->performedOn($package)->withProperties(['before' => $before])->log('Package messaging updated');
+        $told = $this->tellPractices($package, $before['limits'], $limits, $before['types'], array_values(array_map('strval', (array) ($data['message_types'] ?? []))));
 
-        return back()->with('success', "{$package->name} messaging saved.");
+        return back()->with('success', "{$package->name} messaging saved.".($told > 0 ? " {$told} practice(s) on this package were emailed the change." : ''));
+    }
+
+    /**
+     * Practices on the package are told what changed in their messaging (beta #286); the change is
+     * also logged in each practice's activity log.
+     *
+     * @param  array<string, int>  $old
+     * @param  array<string, int>  $new
+     * @param  list<string>  $oldTypes
+     * @param  list<string>  $newTypes
+     */
+    private function tellPractices(Package $package, array $old, array $new, array $oldTypes, array $newTypes): int
+    {
+        $names = ['msg_booking' => 'booking confirmations', 'msg_reminders' => 'booking reminders', 'msg_queue_alerts' => 'queue alerts', 'msg_billing' => 'payment links', 'msg_pharmacy' => 'medicine-ready messages', 'msg_recalls' => 'recalls'];
+        $lines = [];
+        foreach (['sms' => 'SMS', 'email' => 'emails'] as $key => $label) {
+            if (($old[$key] ?? null) !== ($new[$key] ?? null)) {
+                $lines[] = "Included {$label} per month: ".($old[$key] ?? 0).' → '.($new[$key] ?? 0).'.';
+            }
+            $o = $old["{$key}_overage_cents"] ?? null;
+            $n = $new["{$key}_overage_cents"] ?? null;
+            if ($o !== $n) {
+                $lines[] = "Price per extra {$key}: R".number_format(((int) $o) / 100, 2).' → R'.number_format(((int) $n) / 100, 2).'.';
+            }
+        }
+        foreach (array_diff($newTypes, $oldTypes) as $t) {
+            $lines[] = 'Now included: '.($names[$t] ?? $t).'.';
+        }
+        foreach (array_diff($oldTypes, $newTypes) as $t) {
+            $lines[] = 'No longer included: '.($names[$t] ?? $t).'.';
+        }
+        if ($lines === []) {
+            return 0;
+        }
+        $tenants = Subscription::query()->where('package_id', $package->id)->whereIn('status', [SubscriptionStatus::Trialing->value, SubscriptionStatus::Active->value, SubscriptionStatus::PastDue->value, SubscriptionStatus::ReadOnly->value])->pluck('tenant_id');
+        foreach (Provider::query()->whereIn('id', $tenants)->get() as $provider) {
+            if (! $provider instanceof Provider) {
+                continue;
+            }
+            Notification::send(PracticeContacts::owners($provider->id), new PracticeNotice("Messaging on your {$package->name} plan has changed", ["The messaging included in {$package->name} has changed for {$provider->name}:", ...$lines],
+                'Messaging settings', PracticeContacts::url($provider, '/settings/messaging'), 'package_changed'));
+            $provider->run(fn () => activity('settings')->withProperties(['package' => $package->code])->log('Package messaging changed by Dr Business Flow: '.implode(' ', $lines)));
+        }
+
+        return $tenants->count();
     }
 }

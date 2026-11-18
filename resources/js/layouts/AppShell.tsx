@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Link, router, usePage } from "@inertiajs/react";
 import {
     Activity,
+    BadgeCheck,
     BarChart3,
     Bell,
     BookOpen,
@@ -16,6 +17,7 @@ import {
     CircleHelp,
     ClipboardList,
     Clock,
+    CreditCard,
     FileCheck,
     FileQuestion,
     FileSignature,
@@ -320,6 +322,18 @@ const nav: {
         needs: ["settings.manage"],
     },
     {
+        label: "Subscription",
+        icon: CreditCard,
+        href: "/settings/subscription",
+        needs: ["payments.configure"],
+    },
+    {
+        label: "Verification",
+        icon: BadgeCheck,
+        href: "/settings/verification",
+        needs: ["settings.manage"],
+    },
+    {
         label: "Settings",
         icon: Settings,
         href: "/settings/billing",
@@ -342,8 +356,15 @@ export function AppShell({
         provider,
         branchSwitcher: branches,
         auth,
+        workspaceNotice: notice,
     } = usePage<
         SharedProps & {
+            workspaceNotice?: {
+                kind: "warning" | "danger";
+                text: string;
+                action: string;
+                href: string;
+            } | null;
             branchSwitcher: {
                 options: { id: number; name: string }[];
                 current: number | null;
@@ -492,6 +513,22 @@ export function AppShell({
                     tabIndex={-1}
                     className="min-w-0 flex-1 px-4 py-5 md:px-6 md:py-6"
                 >
+                    {notice && (
+                        <div
+                            role="status"
+                            className={`mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border px-3 py-2 text-sm ${notice.kind === "danger" ? "border-status-danger bg-status-danger-wash text-status-danger" : "border-status-warning bg-status-warning-wash text-status-warning"}`}
+                        >
+                            <span className="min-w-0 flex-1">
+                                {notice.text}
+                            </span>
+                            <a
+                                href={notice.href}
+                                className="font-semibold underline underline-offset-2"
+                            >
+                                {notice.action}
+                            </a>
+                        </div>
+                    )}
                     {children}
                     <ResponsiveTables />
                     <DeveloperCredit className="mt-10 pb-2" />

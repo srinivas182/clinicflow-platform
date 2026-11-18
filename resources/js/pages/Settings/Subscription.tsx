@@ -1,4 +1,4 @@
-import { Head, router } from "@inertiajs/react";
+import { Head, router, usePage } from "@inertiajs/react";
 import { CreditCard } from "lucide-react";
 import { useState } from "react";
 import { Flash } from "@/components/Flash";
@@ -20,6 +20,106 @@ interface Inv {
     } | null;
 }
 
+interface Plan {
+    id: number;
+    name: string;
+    summary: string | null;
+    monthly: number;
+    annual: number;
+    free: boolean;
+}
+
+/** Change plan: pick a plan and billing period; the change applies at once. */
+function ChangePlan({
+    plans,
+    currentId,
+    currentPeriod,
+}: {
+    plans: Plan[];
+    currentId: number;
+    currentPeriod: string;
+}) {
+    const [period, setPeriod] = useState(
+        currentPeriod === "annual" ? "annual" : "monthly",
+    );
+    const errors = usePage<{ errors: Record<string, string> }>().props.errors;
+    const choose = (p: Plan) =>
+        window.confirm(
+            p.free
+                ? `Move to ${p.name}? It is free; unpaid invoices for your current plan are cancelled.`
+                : `Move to ${p.name} (${period})? The new price applies from your next invoice, or now if you are on a free plan.`,
+        ) &&
+        router.post(
+            "/settings/subscription/plan",
+            { package_id: p.id, billing_period: period },
+            { preserveScroll: true },
+        );
+    return (
+        <Card title="Change plan" className="mb-4">
+            <div
+                className="mb-3 inline-flex rounded-lg border border-line p-0.5 text-sm"
+                role="group"
+                aria-label="Billing period"
+            >
+                {(["monthly", "annual"] as const).map((k) => (
+                    <button
+                        key={k}
+                        type="button"
+                        aria-pressed={period === k}
+                        className={`rounded-md px-3 py-1 ${period === k ? "bg-teal text-white" : ""}`}
+                        onClick={() => setPeriod(k)}
+                    >
+                        {k === "monthly" ? "Monthly" : "Annual"}
+                    </button>
+                ))}
+            </div>
+            <ul className="grid gap-3 sm:grid-cols-3 *:min-w-0">
+                {plans.map((p) => {
+                    const current =
+                        p.id === currentId && period === currentPeriod;
+                    return (
+                        <li
+                            key={p.id}
+                            className="flex flex-col rounded-lg border border-line p-3 text-sm"
+                        >
+                            <span className="font-semibold">{p.name}</span>
+                            <span className="text-lg">
+                                {p.free
+                                    ? "Free"
+                                    : period === "annual"
+                                      ? `${rand(p.annual, 0)} / year`
+                                      : `${rand(p.monthly, 0)} / month`}
+                            </span>
+                            {p.summary && (
+                                <span className="mt-1 flex-1 text-xs text-muted">
+                                    {p.summary}
+                                </span>
+                            )}
+                            <Button
+                                size="sm"
+                                className="mt-3"
+                                variant={current ? "secondary" : "primary"}
+                                disabled={current}
+                                onClick={() => choose(p)}
+                            >
+                                {current ? "Current plan" : `Choose ${p.name}`}
+                            </Button>
+                        </li>
+                    );
+                })}
+            </ul>
+            {errors.package && (
+                <p role="alert" className="mt-2 text-sm text-status-danger">
+                    {errors.package}
+                </p>
+            )}
+            <p className="mt-2 text-xs text-muted">
+                Prices exclude 15% VAT. Changes apply straight away.
+            </p>
+        </Card>
+    );
+}
+
 interface AutoDebit {
     card: string;
     expiry: string | null;
@@ -30,17 +130,21 @@ interface AutoDebit {
 
 export default function Subscription({
     plan,
+    plans = [],
     invoices,
     autoDebit,
     autoDebitAvailable,
     platformGateway,
 }: {
     plan: {
+        packageId: number;
+        billingPeriod: string;
         package: string;
         status: string;
         trialEndsAt: string | null;
         periodEndsAt: string | null;
     } | null;
+    plans?: Plan[];
     invoices: Inv[];
     autoDebit: AutoDebit | null;
     autoDebitAvailable: boolean;
@@ -50,7 +154,7 @@ export default function Subscription({
     const open = invoices.find((i) => i.status === "open");
 
     return (
-        <AppShell active="Settings">
+        <AppShell active="Subscription">
             <Head title="Subscription" />
             <h1 className="mb-5 text-2xl font-semibold">Subscription</h1>
             <Flash />
@@ -78,6 +182,13 @@ export default function Subscription({
                         exclude 15% VAT.
                     </p>
                 </Card>
+            )}
+            {plan && plans.length > 1 && (
+                <ChangePlan
+                    plans={plans}
+                    currentId={plan.packageId}
+                    currentPeriod={plan.billingPeriod}
+                />
             )}
             <Card title="Automatic payment" className="mb-4">
                 {autoDebit ? (

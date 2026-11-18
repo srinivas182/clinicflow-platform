@@ -194,8 +194,13 @@ it('makes WhatsApp the patient\'s channel when staff record opt-in, and lets pat
     app(AddStaffMember::class)->handle($this->clinic, $receptionist, StaffRole::Receptionist);
     tenancy()->end();
 
-    $this->actingAs($receptionist)->post("http://sunrise.clinicflow.test/patients/{$patient->id}/whatsapp", ['opt_in' => true])->assertSessionHasNoErrors();
-    $this->clinic->run(fn () => expect($patient->fresh()?->preferred_channel)->toBe(Channel::WhatsApp)->and($patient->fresh()?->getAttribute('whatsapp_opt_in_at'))->not->toBeNull());
+    // POPIA (beta #252): staff must say how the patient agreed; it is recorded with who recorded it.
+    $this->actingAs($receptionist)->post("http://sunrise.clinicflow.test/patients/{$patient->id}/whatsapp", ['opt_in' => true])->assertSessionHasErrors('method');
+    $this->actingAs($receptionist)->post("http://sunrise.clinicflow.test/patients/{$patient->id}/whatsapp", ['opt_in' => true, 'method' => 'signed_form'])->assertSessionHasNoErrors();
+    $this->clinic->run(fn () => expect($patient->fresh()?->preferred_channel)->toBe(Channel::WhatsApp)->and($patient->fresh()?->getAttribute('whatsapp_opt_in_at'))->not->toBeNull()
+        ->and($patient->fresh()?->getAttribute('whatsapp_opt_in_method'))->toBe('signed_form')->and((int) $patient->fresh()?->getAttribute('whatsapp_opt_in_by'))->toBe($receptionist->id));
+    $this->withSession(['portal_cell' => '0825550147'])->get('http://sunrise.clinicflow.test/my/care')
+        ->assertInertia(fn ($p) => $p->where('whatsapp.consent', fn (string $c) => str_starts_with($c, 'Signed form on ') && str_contains($c, "recorded by {$receptionist->name}")));
 
     $this->withSession(['portal_cell' => '0825550147'])->post('http://sunrise.clinicflow.test/my/whatsapp', ['opt_in' => false])->assertSessionHasNoErrors();
     $this->clinic->run(fn () => expect($patient->fresh()?->preferred_channel)->toBe(Channel::Sms)->and($patient->fresh()?->getAttribute('whatsapp_opt_in_at'))->toBeNull());

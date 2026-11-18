@@ -9,6 +9,7 @@ use App\Domains\Identity\Enums\Permission;
 use App\Domains\Platform\Branding\Brands;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Security\BotProtection;
+use App\Domains\Platform\Support\WorkspaceNotice;
 use App\Domains\Translation\Support\Languages;
 use App\Domains\Translation\Support\PortalText;
 use App\Domains\Wallet\Support\WalletSettings;
@@ -82,6 +83,8 @@ class HandleInertiaRequests extends Middleware
             ] : null,
             // Branch switcher: only shown once a practice has more than one branch. Named apart from the
             // 'branches' lists that pages send (Staff, Reports), which would otherwise replace it.
+            // Trial ending, read-only or suspended: shown to everyone in the workspace (beta #10).
+            'workspaceNotice' => fn () => $provider instanceof Provider && $user instanceof User ? WorkspaceNotice::for($provider) : null,
             'branchSwitcher' => $provider instanceof Provider && $user instanceof User && BranchContext::filterId() !== null
                 ? ['options' => BranchContext::options(), 'current' => BranchContext::current()]
                 : null,

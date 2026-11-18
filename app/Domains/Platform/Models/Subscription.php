@@ -18,6 +18,7 @@ use Stancl\Tenancy\Database\Concerns\CentralConnection;
  * @property SubscriptionStatus $status
  * @property string $billing_period
  * @property Carbon|null $trial_ends_at
+ * @property int|null $trial_reminded_days
  * @property Carbon|null $current_period_ends_at
  * @property-read Package $package
  * @property-read Provider $provider
@@ -36,6 +37,7 @@ class Subscription extends Model
         return ['addons' => 'array',
             'status' => SubscriptionStatus::class,
             'trial_ends_at' => 'datetime',
+            'trial_reminded_days' => 'integer',
             'current_period_ends_at' => 'datetime',
         ];
     }

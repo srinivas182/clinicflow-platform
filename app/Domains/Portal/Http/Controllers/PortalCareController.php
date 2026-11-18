@@ -12,6 +12,7 @@ use App\Domains\Clinical\Models\Referral;
 use App\Domains\Clinical\Models\ThreadMessage;
 use App\Domains\Hub\Actions\ShareConsent;
 use App\Domains\Hub\Models\HubIdentity;
+use App\Domains\Messaging\Http\Controllers\WhatsAppController;
 use App\Domains\Messaging\WhatsApp\WhatsAppRouter;
 use App\Domains\Patients\Models\Patient;
 use App\Domains\Platform\Models\Provider;
@@ -60,7 +61,8 @@ class PortalCareController extends Controller
                 ->orderByDesc('wellness_events.starts_at')->get(['wellness_events.title', 'wellness_events.starts_at', 'wellness_screenings.*'])
                 ->map(fn ($w) => ['title' => $w->title, 'date' => substr((string) $w->starts_at, 0, 10), 'bp' => $w->bp_systolic ? "{$w->bp_systolic}/{$w->bp_diastolic}" : null,
                     'glucose' => $w->glucose, 'cholesterol' => $w->cholesterol, 'bmi' => $w->bmi, 'flu' => (bool) $w->flu_vaccinated, 'flags' => json_decode((string) $w->flags, true)])->values(),
-            'whatsapp' => ['available' => WhatsAppRouter::enabledFor($provider->id), 'optedIn' => $patient->getAttribute('whatsapp_opt_in_at') !== null],
+            'whatsapp' => ['available' => WhatsAppRouter::enabledFor($provider->id), 'optedIn' => $patient->getAttribute('whatsapp_opt_in_at') !== null,
+                'consent' => WhatsAppController::consentRecord($patient)],
         ]);
     }
 

@@ -37,7 +37,11 @@ import { Logo } from "@/components/Logo";
 
 const nav = [
     { label: "Providers", icon: Building2, href: "/admin/providers" },
-    { label: "Verification", icon: BadgeCheck, href: "/admin/providers" },
+    {
+        label: "Verification",
+        icon: BadgeCheck,
+        href: "/admin/providers?filter=verification",
+    },
     { label: "Packages", icon: Layers, href: "/admin/packages" },
     { label: "Auto-debit", icon: RefreshCw, href: "/admin/auto-debits" },
     { label: "Payments", icon: CreditCard, href: "/admin/payments" },

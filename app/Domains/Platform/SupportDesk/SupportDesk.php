@@ -6,9 +6,12 @@ namespace App\Domains\Platform\SupportDesk;
 
 use App\Domains\Identity\Models\WorkspaceHandoff;
 use App\Domains\Platform\Models\Provider;
+use App\Domains\Platform\Notifications\PracticeNotice;
+use App\Domains\Platform\Support\PracticeContacts;
 use App\Models\User;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -44,6 +47,29 @@ class SupportDesk
         }
         $this->db()->table('support_messages')->insert(['support_ticket_id' => $ticketId, 'author' => $author, 'user_id' => $by->id, 'body' => mb_substr(trim($body), 0, 5000), 'created_at' => now()]);
         $this->db()->table('support_tickets')->where('id', $ticketId)->update(['status' => $author === 'support' ? 'answered' : 'open', 'updated_at' => now()]);
+        $this->tell($ticketId, $author, trim($body));
+    }
+
+    /** Emails the other side (beta #220): the practice when Support replies, the support team when a practice writes. */
+    private function tell(int $ticketId, string $author, string $body): void
+    {
+        $ticket = $this->db()->table('support_tickets')->where('id', $ticketId)->first();
+        $provider = $ticket === null ? null : Provider::query()->find($ticket->tenant_id);
+        if ($ticket === null || ! $provider instanceof Provider) {
+            return;
+        }
+        $excerpt = mb_strimwidth($body, 0, 300, '…');
+        if ($author === 'support') {
+            $to = User::query()->whereKey($ticket->user_id)->get()->merge(PracticeContacts::owners($provider->id))->unique('id');
+            Notification::send($to, new PracticeNotice("Support replied: {$ticket->subject}", ['Dr Business Flow Support replied to your ticket:', $excerpt],
+                'Open the ticket', PracticeContacts::url($provider, '/support'), 'support_reply'));
+
+            return;
+        }
+        $first = $this->db()->table('support_messages')->where('support_ticket_id', $ticketId)->count() === 1;
+        Notification::send(PracticeContacts::platformAdmins(), new PracticeNotice(
+            ($first ? 'New support ticket' : 'Practice replied').": {$ticket->subject} ({$provider->name})", [$excerpt],
+            'Open support', rtrim((string) config('app.url'), '/').'/admin/support', $first ? 'support_opened' : 'support_practice_reply'));
     }
 
     public function close(int $ticketId): void

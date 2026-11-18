@@ -20,6 +20,7 @@ use App\Domains\Hub\Actions\ShareConsent;
 use App\Domains\Hub\Models\HubIdentity;
 use App\Domains\Identity\Enums\Permission;
 use App\Domains\Identity\Models\Staff;
+use App\Domains\Messaging\Http\Controllers\WhatsAppController;
 use App\Domains\Patients\Models\Patient;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Storage\FileStore;
@@ -48,7 +49,8 @@ class CareController extends Controller
         $this->authorize(Permission::CONSULTS_WRITE);
 
         return Inertia::render('Patients/Care', [
-            'patient' => ['id' => $patient->id, 'name' => $patient->fullName(), 'age' => $patient->ageInYears(), 'sex' => $patient->sex?->value, 'medicalAid' => $patient->medical_aid_scheme, 'whatsappOptIn' => $patient->getAttribute('whatsapp_opt_in_at') !== null],
+            'patient' => ['id' => $patient->id, 'name' => $patient->fullName(), 'age' => $patient->ageInYears(), 'sex' => $patient->sex?->value, 'medicalAid' => $patient->medical_aid_scheme, 'whatsappOptIn' => $patient->getAttribute('whatsapp_opt_in_at') !== null,
+                'whatsappConsent' => WhatsAppController::consentRecord($patient)],
             'problems' => Problem::query()->where('patient_id', $patient->id)->orderBy('status')->get(['id', 'icd10_code', 'description', 'status', 'chronic', 'onset_date']),
             'monitoring' => $chronic->monitoringDue($patient),
             'chronicScripts' => Prescription::query()->where('patient_id', $patient->id)->where('chronic', true)->where('status', Prescription::SIGNED)->latest('signed_at')->get(['id', 'signed_at']),

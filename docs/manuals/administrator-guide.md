@@ -19,7 +19,8 @@ The super admin runs the platform: practices and packages, providers for messagi
 
 ## 2. Practices
 
-- **Providers** (/admin/providers): new sign-ups, verification (HPCSA/BHF references), status (active, read-only, suspended).
+- **Providers** (/admin/providers): every practice and its status (trial, active, read-only, suspended).
+- **Verification** (/admin/providers?filter=verification): practices awaiting approval or with corrected details. **Verify** or **Reject** each registration check (a reason is required; the practice is emailed it and fixes it under Settings → Verification). On a live practice, a rejection can also suspend it (read-only, unlisted) until the corrected check is verified. **Approve** appears only for practices awaiting verification; the owner is emailed when approved.
 - **Groups** (/admin/groups): practices that report together (totals only, never patient records).
 - **Resellers** (/admin/resellers) and **Brands** (/admin/brands): white-label partners. A brand has its own name, logo, colours, practice domain, verified email sender and approved SMS sender; practices that sign up through the brand link join it.
 - **Support** (/admin/support): practices grant time-limited, logged access; you cannot open a practice without it.
@@ -68,7 +69,7 @@ Local disk works for a single server only. Local folders must be outside the app
 
 | Command | What it does |
 |---|---|
-| `subscriptions:invoice`, `subscriptions:collect`, `subscriptions:enforce` | Platform billing |
+| `subscriptions:invoice`, `subscriptions:collect`, `subscriptions:enforce`, `subscriptions:remind` | Platform billing (invoices are emailed; trial and due-date reminders) |
 | `wallet:auto-topup` | Wallet top-ups |
 | `reports:send` | Scheduled report emails |
 | `scribe:purge` | Delete AI drafts after 30 days and leftover audio |

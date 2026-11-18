@@ -29,7 +29,7 @@ interface Props {
     } | null;
     sharing: string[];
     categories: string[];
-    whatsapp: { available: boolean; optedIn: boolean };
+    whatsapp: { available: boolean; optedIn: boolean; consent?: string | null };
     wellness?: {
         title: string;
         date: string;
@@ -82,6 +82,11 @@ export default function PortalCare({
                             ? "You get reminders and notices on WhatsApp."
                             : "Get reminders and notices on WhatsApp instead of SMS."}
                     </p>
+                    {whatsapp.optedIn && whatsapp.consent && (
+                        <p className="mb-2 text-xs text-muted">
+                            You agreed: {whatsapp.consent}.
+                        </p>
+                    )}
                     <Button
                         size="sm"
                         variant={whatsapp.optedIn ? "secondary" : "primary"}

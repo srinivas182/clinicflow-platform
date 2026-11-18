@@ -33,6 +33,7 @@ use Stancl\Tenancy\Database\Concerns\CentralConnection;
  * @property string|null $gateway
  * @property string|null $gateway_reference
  * @property Carbon $due_at
+ * @property Carbon|null $reminded_at
  * @property Carbon|null $paid_at
  * @property-read Subscription $subscription
  * @property-read Provider $provider
@@ -48,7 +49,7 @@ class SubscriptionInvoice extends Model
      */
     protected function casts(): array
     {
-        return ['period_start' => 'date', 'period_end' => 'date', 'due_at' => 'datetime', 'paid_at' => 'datetime', 'save_card' => 'boolean'];
+        return ['period_start' => 'date', 'period_end' => 'date', 'due_at' => 'datetime', 'paid_at' => 'datetime', 'reminded_at' => 'datetime', 'save_card' => 'boolean'];
     }
 
     /**

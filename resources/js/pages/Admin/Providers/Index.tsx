@@ -21,13 +21,26 @@ export const statusTone: Record<string, BadgeTone> = {
     suspended: "danger",
 };
 
-export default function ProvidersIndex({ providers }: { providers: Row[] }) {
+export default function ProvidersIndex({
+    providers,
+    filter,
+}: {
+    providers: Row[];
+    filter?: "verification" | null;
+}) {
+    const verification = filter === "verification";
     return (
-        <AdminShell active="Providers">
-            <Head title="Providers" />
-            <h1 className="mb-1 text-2xl font-semibold">Providers</h1>
+        <AdminShell active={verification ? "Verification" : "Providers"}>
+            <Head title={verification ? "Verification" : "Providers"} />
+            <h1 className="mb-1 text-2xl font-semibold">
+                {verification
+                    ? `Verification (${providers.length} waiting)`
+                    : "Providers"}
+            </h1>
             <p className="mb-5 text-sm text-muted">
-                Every clinic, doctor, pharmacy and lab on the platform.
+                {verification
+                    ? "Practices waiting for approval, or with corrected details to review."
+                    : "Every clinic, doctor, pharmacy and lab on the platform."}
             </p>
             <Flash />
             <div className="overflow-hidden rounded-xl border border-line bg-surface">

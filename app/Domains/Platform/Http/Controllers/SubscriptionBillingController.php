@@ -12,6 +12,8 @@ use App\Domains\Billing\Models\DebitAttempt;
 use App\Domains\Billing\Models\SubscriptionInvoice;
 use App\Domains\Identity\Enums\Permission;
 use App\Domains\Identity\Models\Membership;
+use App\Domains\Platform\Actions\ChangePlan;
+use App\Domains\Platform\Models\Package;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\Subscription;
 use App\Http\Controllers\Controller;
@@ -41,11 +43,17 @@ class SubscriptionBillingController extends Controller
 
         return Inertia::render('Settings/Subscription', [
             'plan' => $subscription === null ? null : [
+                'packageId' => $subscription->package_id,
+                'billingPeriod' => $subscription->billing_period,
                 'package' => $subscription->package->name,
                 'status' => $subscription->status->value,
                 'trialEndsAt' => $subscription->trial_ends_at?->toDateString(),
                 'periodEndsAt' => $subscription->current_period_ends_at?->toDateString(),
             ],
+            // Plans this kind of practice can move to (beta #9: upgrade from the free plan).
+            'plans' => Package::query()->where('provider_type', $provider->type->value)->where('is_active', true)->orderBy('sort_order')->get()
+                ->map(fn (Package $p): array => ['id' => $p->id, 'name' => $p->name, 'summary' => $p->summary, 'monthly' => $p->price_monthly_cents / 100,
+                    'annual' => $p->price_annual_cents / 100, 'free' => $p->isFree()])->values(),
             'invoices' => SubscriptionInvoice::query()->where('tenant_id', $provider->id)->latest()->get()->map(fn (SubscriptionInvoice $i) => [
                 'number' => $i->number, 'period' => $i->period_start->toDateString().' – '.$i->period_end->toDateString(),
                 'total' => $i->total_cents / 100, 'status' => $i->status, 'due' => $i->due_at->toDateString(),
@@ -84,6 +92,19 @@ class SubscriptionBillingController extends Controller
         $invoice->forceFill(['save_card' => true, 'save_card_consented_by' => $request->user()?->getAuthIdentifier(), 'save_card_consent_ip' => $request->ip()])->save();
 
         return Inertia::location(rtrim((string) config('app.url'), '/')."/billing/pay/{$invoice->checkout_token}");
+    }
+
+    public function changePlan(Request $request, ChangePlan $action): RedirectResponse
+    {
+        $this->authorize(Permission::PAYMENTS_CONFIGURE);
+        $provider = tenant();
+        abort_unless($provider instanceof Provider, 404);
+        $data = $request->validate(['package_id' => ['required', 'integer'], 'billing_period' => ['required', 'in:monthly,annual']]);
+        $user = $request->user();
+        abort_unless($user instanceof User, 403);
+        $invoice = $action->handle($provider, (int) $data['package_id'], (string) $data['billing_period'], $user);
+
+        return back()->with('success', $invoice === null ? 'Plan changed.' : "Plan changed. Invoice {$invoice->number} is ready to pay below.");
     }
 
     public function stopAutoDebit(Request $request, RevokeBillingMandate $action): RedirectResponse

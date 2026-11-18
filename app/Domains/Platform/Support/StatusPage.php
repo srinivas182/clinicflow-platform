@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace App\Domains\Platform\Support;
 
+use App\Domains\Identity\Models\Membership;
 use App\Domains\Messaging\Models\MessagingProvider;
+use App\Domains\Platform\Enums\ProviderStatus;
+use App\Domains\Platform\Models\Provider;
+use App\Domains\Platform\Notifications\PracticeNotice;
 use App\Domains\Telemedicine\Models\VideoConfig;
+use App\Models\User;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Throwable;
 
 /**
@@ -69,11 +75,41 @@ class StatusPage
         return $id;
     }
 
+    /**
+     * Major and critical incidents: practice owners are emailed when one starts and when it is
+     * resolved (beta #236). Each email has a one-click opt-out.
+     */
+    private function tellOwners(object $incident, string $status, string $body): void
+    {
+        $incident = (array) $incident;
+        if (($incident['kind'] ?? null) !== 'incident' || ! in_array($incident['impact'] ?? null, ['major', 'critical'], true)) {
+            return;
+        }
+        $resolved = $status === 'resolved';
+        $owners = User::query()->where('status_emails', true)->whereIn('id', Membership::query()->where('role', 'owner')
+            ->whereIn('tenant_id', Provider::query()->whereIn('status', [ProviderStatus::Trial->value, ProviderStatus::Active->value, ProviderStatus::ReadOnly->value])->pluck('id'))
+            ->pluck('user_id'))->get();
+        $page = rtrim((string) config('app.url'), '/').'/status';
+        foreach ($owners as $owner) {
+            $owner->notify(new PracticeNotice(
+                ($resolved ? 'Resolved: ' : 'Service problem: ').(string) ($incident['title'] ?? ''),
+                array_values(array_filter([$resolved ? 'This problem has been fixed.' : 'We are working on a problem that may affect your practice.', $body,
+                    'Stop these emails: '.URL::signedRoute('status-emails.off', ['user' => $owner->id])])),
+                'Status page', $page, $resolved ? 'incident_resolved' : 'incident_started',
+            ));
+        }
+    }
+
     public function update(int $incidentId, string $status, string $body): void
     {
         $done = in_array($status, ['resolved', 'completed'], true);
         $this->db()->table('status_updates')->insert(['status_incident_id' => $incidentId, 'status' => $status, 'body' => $body, 'created_at' => now()]);
+        $before = $this->db()->table('status_incidents')->where('id', $incidentId)->first();
         $this->db()->table('status_incidents')->where('id', $incidentId)->update(['status' => $status, 'resolved_at' => $done ? now() : null, 'updated_at' => now()]);
+        $firstUpdate = $this->db()->table('status_updates')->where('status_incident_id', $incidentId)->count() === 1;
+        if ($before !== null && ($firstUpdate || ($status === 'resolved' && $before->status !== 'resolved'))) {
+            $this->tellOwners($before, $status, $body);
+        }
     }
 
     /**

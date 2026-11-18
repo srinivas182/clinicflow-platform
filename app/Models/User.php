@@ -20,6 +20,7 @@ use Stancl\Tenancy\Database\Concerns\CentralConnection;
  * @property string|null $phone
  * @property string $password
  * @property bool $is_platform_admin
+ * @property bool $status_emails
  * @property Carbon|null $last_login_at
  * @property string|null $totp_secret
  * @property Carbon|null $totp_confirmed_at
@@ -64,6 +65,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'is_platform_admin' => 'boolean',
+            'status_emails' => 'boolean',
             'password' => 'hashed',
             'totp_secret' => 'encrypted',
             'totp_confirmed_at' => 'datetime',
