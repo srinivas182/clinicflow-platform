@@ -4,6 +4,17 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.89.0] — Beta testing T4c: trust and verification
+
+### Added
+- Verification checklist: practices upload the document for each check (PDF, JPG or PNG, up to 10 MB, virus scanned, kept in the practice's own files). A rejected check goes back for review when a new document is uploaded and the platform team is emailed. The provider page opens the document (each view logged) and shows who reviewed each check and when (decision on #18).
+- White-label brands: a practice domain must be proved with a DNS TXT record (`_clinicflow.<domain>`) before practices signing up through the brand get addresses on it; changing the domain needs a new check (#159).
+- Storage: **Delete** an unused storage entry (not the one in use, nor one being copied into), and **Go back to this server's disk**, which goes through the same test, copy and activate steps (#182).
+
+### Changed
+- Translations need four eyes: a reviewer cannot approve wording they wrote; another reviewer for the language approves it (decision on #204). Removing a reviewer puts the texts they approved on a **Re-check** list; they stay live until another reviewer approves them again (#205).
+- Locum sign-up asks the doctor to confirm they are a medical practitioner registered with the HPCSA; the MP number format was already required (#129).
+
 ## [0.88.0] — Beta testing T4b: content, status page and messaging
 
 ### Added

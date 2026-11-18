@@ -206,3 +206,12 @@ it('links shift alerts to the locum portal on the platform domain, even when sen
         expect($body)->toContain(rtrim((string) config('app.url'), '/').'/locum')->not->toContain('sunrise.clinicflow.test/locum');
     });
 });
+
+it('asks a locum to declare that they are a registered medical practitioner (beta #129)', function (): void {
+    $user = User::factory()->create();
+    $profile = ['hpcsa_number' => 'MP0123456', 'qualifications' => 'MBChB (UCT)', 'languages' => ['English'], 'areas' => ['Soweto'], 'alerts_email' => true, 'alerts_sms' => false];
+    $this->actingAs($user)->post('http://localhost/locum/profile', $profile)->assertSessionHasErrors('doctor_declaration');
+    $this->actingAs($user)->post('http://localhost/locum/profile', [...$profile, 'hpcsa_number' => 'PS0123456', 'doctor_declaration' => true])->assertSessionHasErrors();
+    $this->actingAs($user)->post('http://localhost/locum/profile', [...$profile, 'doctor_declaration' => true])->assertSessionHasNoErrors();
+    expect(locumDb()->table('locum_profiles')->where('user_id', $user->id)->value('hpcsa_number'))->toBe('MP0123456');
+});

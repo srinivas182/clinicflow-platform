@@ -18,6 +18,7 @@ use App\Domains\Platform\Notifications\PracticeNotice;
 use App\Models\User;
 use Database\Seeders\PackageSeeder;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
 
 uses(DatabaseMigrations::class);
@@ -208,4 +209,32 @@ it('needs a reason to reject, can suspend a live practice, and restores it once 
     $provider->verificationChecks->each(fn (VerificationCheck $c) => $this->actingAs($admin)->post("http://localhost/admin/verification-checks/{$c->id}", ['status' => 'verified']));
     expect($provider->fresh()?->status)->toBe(ProviderStatus::Trial);
     Notification::assertSentTo($owner, PracticeNotice::class, fn (PracticeNotice $n) => $n->kind === 'restored');
+});
+
+it('takes a document for a check, sends a rejected check back for review, and lets the platform team open it (beta #18)', function (): void {
+    Notification::fake();
+    $this->post('http://localhost/start', signupPayload());
+    $provider = Provider::query()->sole();
+    $admin = User::factory()->create(['name' => 'Lerato Admin']);
+    $admin->forceFill(['is_platform_admin' => true])->save();
+    $owner = User::query()->where('email', 'sizwe@sunrise.test')->sole();
+    $check = $provider->verificationChecks()->orderBy('id')->firstOrFail();
+    $this->actingAs($admin)->post("http://localhost/admin/verification-checks/{$check->id}", ['status' => 'rejected', 'notes' => 'Certificate is unreadable.'])->assertSessionHasNoErrors();
+    $this->flushSession();
+
+    $url = "http://sunrise.clinicflow.test/settings/verification/{$check->id}/document";
+    $this->actingAs($owner)->post($url, ['file' => UploadedFile::fake()->create('notes.txt', 5, 'text/plain')])->assertSessionHasErrors('file');
+    $this->actingAs($owner)->post($url, ['file' => UploadedFile::fake()->create('bhf.pdf', 200, 'application/pdf')])->assertSessionHasNoErrors();
+    $check->refresh();
+    expect($check->status)->toBe(VerificationStatus::Pending)
+        ->and($check->document_name)->toBe('bhf.pdf')
+        ->and($check->document_path)->toStartWith("verification/{$check->id}/");
+    Notification::assertSentTo($admin, PracticeNotice::class, fn (PracticeNotice $n) => $n->kind === 'check_document');
+    tenancy()->end();
+    $this->flushSession();
+
+    $this->actingAs($admin)->get("http://localhost/admin/providers/{$provider->id}")->assertInertia(fn ($p) => $p->where('checks.0.document', 'bhf.pdf'));
+    $this->actingAs($admin)->get("http://localhost/admin/verification-checks/{$check->id}/document")->assertOk()
+        ->assertHeader('Content-Type', 'application/pdf')->assertHeader('X-Content-Type-Options', 'nosniff');
+    $this->actingAs($owner)->get("http://localhost/admin/verification-checks/{$check->id}/document")->assertRedirect();
 });

@@ -82,3 +82,23 @@ it('is for the super admin only', function (): void {
     $admin->forceFill(['is_platform_admin' => true])->save();
     $this->actingAs($admin)->get('http://localhost/admin/storage')->assertOk()->assertInertia(fn ($p) => $p->component('Admin/Storage')->where('current', 'local'));
 });
+
+it('deletes an unused storage entry but never the one in use or one being copied into, and offers the way back to this server\'s disk (beta #182)', function (): void {
+    $id = $this->targets->save(null, ($this->s3)());
+    DB::table('storage_targets')->where('id', $id)->update(['active' => true]);
+    expect(fn () => $this->targets->delete($id))->toThrow(ValidationException::class, 'in use');
+    DB::table('storage_targets')->where('id', $id)->update(['active' => false, 'copy_status' => 'running']);
+    expect(fn () => $this->targets->delete($id))->toThrow(ValidationException::class, 'being copied');
+
+    $disk = $this->targets->serverDisk();
+    expect($this->targets->serverDisk())->toBe($disk)
+        ->and(DB::table('storage_targets')->where('id', $disk)->value('name'))->toBe("This server's disk");
+
+    DB::table('storage_targets')->where('id', $id)->update(['copy_status' => 'done']);
+    $admin = User::factory()->create();
+    $admin->forceFill(['is_platform_admin' => true])->save();
+    $this->actingAs($admin)->post("http://localhost/admin/storage/{$id}/delete")->assertSessionHasNoErrors();
+    expect(DB::table('storage_targets')->where('id', $id)->exists())->toBeFalse();
+    $this->actingAs($admin)->post('http://localhost/admin/storage/server-disk')->assertSessionHasNoErrors();
+    expect(DB::table('storage_targets')->count())->toBe(1);
+});

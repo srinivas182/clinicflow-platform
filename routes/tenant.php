@@ -204,6 +204,7 @@ Route::middleware([
     Route::middleware(['auth', 'workspace'])->group(function (): void {
         Route::get('/settings/verification', [VerificationSettingsController::class, 'index'])->name('settings.verification');
         Route::post('/settings/verification/{check}', [VerificationSettingsController::class, 'resubmit'])->whereNumber('check')->name('settings.verification.resubmit');
+        Route::post('/settings/verification/{check}/document', [VerificationSettingsController::class, 'upload'])->whereNumber('check')->middleware('throttle:20,1')->name('settings.verification.document');
         Route::post('/settings/subscription/invoices/{number}/auto-pay', [SubscriptionBillingController::class, 'payWithAutoDebit'])->name('settings.subscription.autopay');
         Route::post('/settings/subscription/plan', [SubscriptionBillingController::class, 'changePlan'])->name('settings.subscription.plan');
         Route::post('/settings/subscription/save-card', [SubscriptionBillingController::class, 'saveCard'])->name('settings.subscription.savecard');

@@ -124,6 +124,7 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/providers/{provider}', [ProviderAdminController::class, 'show'])->name('providers.show');
             Route::post('/providers/{provider}/approve', [ProviderAdminController::class, 'approve'])->name('providers.approve');
             Route::post('/verification-checks/{check}', [ProviderAdminController::class, 'review'])->name('checks.review');
+            Route::get('/verification-checks/{check}/document', [ProviderAdminController::class, 'document'])->name('verification.document');
             Route::get('/packages', [PackageAdminController::class, 'index'])->name('packages.index');
             Route::get('/auto-debits', [AutoDebitAdminController::class, 'index'])->name('autodebits.index');
             Route::post('/auto-debits/{mandate}/retry', [AutoDebitAdminController::class, 'retry'])->middleware('step-up')->name('autodebits.retry');
@@ -144,10 +145,11 @@ foreach ($centralDomains as $index => $domain) {
             Route::post('/security', [SecuritySettingsController::class, 'update'])->middleware('step-up')->name('security.update');
             Route::get('/storage', [StorageController::class, 'index'])->name('storage.index');
             Route::post('/storage', [StorageController::class, 'save'])->name('storage.save');
-            Route::post('/storage/{target}/{action}', [StorageController::class, 'act'])->whereIn('action', ['test', 'copy', 'activate'])->name('storage.act');
+            Route::post('/storage/{target}/{action}', [StorageController::class, 'act'])->whereIn('action', ['test', 'copy', 'activate', 'delete'])->name('storage.act');
+            Route::post('/storage/server-disk', [StorageController::class, 'serverDisk'])->name('storage.serverdisk');
             Route::post('/brands', [BrandController::class, 'save'])->name('brands.save');
             Route::post('/brands/assign', [BrandController::class, 'assign'])->name('brands.assign');
-            Route::post('/brands/{brand}/senders/{action}', [BrandController::class, 'senders'])->whereIn('action', ['email', 'verify', 'sms'])->name('brands.senders');
+            Route::post('/brands/{brand}/senders/{action}', [BrandController::class, 'senders'])->whereIn('action', ['email', 'verify', 'sms', 'domain'])->name('brands.senders');
             Route::post('/ai-scribe/providers/{driver}', [ScribeController::class, 'saveProvider'])->whereIn('driver', ['deepgram', 'azure', 'anthropic'])->name('ai-scribe.provider');
             Route::post('/ai-scribe/prices', [ScribeController::class, 'savePrices'])->name('ai-scribe.prices');
             Route::post('/locums/{profile}/review', [LocumController::class, 'review'])->name('locums.review');

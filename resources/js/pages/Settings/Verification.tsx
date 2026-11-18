@@ -11,6 +11,54 @@ interface Check {
     status: "pending" | "verified" | "rejected";
     reason: string | null;
     resubmitted: string | null;
+    document?: string | null;
+    documentAt?: string | null;
+}
+
+/** Upload the document behind a check (PDF, JPG or PNG up to 10 MB; virus-scanned). */
+function Upload({ check }: { check: Check }) {
+    const form = useForm<{ file: File | null }>({ file: null });
+    return (
+        <form
+            className="mt-2 flex flex-wrap items-center gap-2 text-xs"
+            onSubmit={(e) => {
+                e.preventDefault();
+                form.post(`/settings/verification/${check.id}/document`, {
+                    preserveScroll: true,
+                    forceFormData: true,
+                    onSuccess: () => form.reset(),
+                });
+            }}
+        >
+            <span className="text-muted">
+                {check.document
+                    ? `Document: ${check.document} (${check.documentAt})`
+                    : "No document uploaded yet."}
+            </span>
+            <input
+                type="file"
+                aria-label={`Document for ${check.label}`}
+                accept="application/pdf,image/jpeg,image/png"
+                className="min-w-0 text-xs"
+                onChange={(e) =>
+                    form.setData("file", e.target.files?.[0] ?? null)
+                }
+            />
+            <Button
+                size="sm"
+                variant="secondary"
+                type="submit"
+                disabled={!form.data.file || form.processing}
+            >
+                {check.document ? "Replace" : "Upload"}
+            </Button>
+            {form.errors.file && (
+                <span role="alert" className="w-full text-status-danger">
+                    {form.errors.file}
+                </span>
+            )}
+        </form>
+    );
 }
 
 const tone = {
@@ -93,6 +141,7 @@ export default function Verification({
                                         : c.status}
                                 </Badge>
                             </div>
+                            {c.status !== "verified" && <Upload check={c} />}
                             {c.status === "rejected" && (
                                 <div className="mt-2 rounded-md bg-paper p-3">
                                     <p className="text-sm">

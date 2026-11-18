@@ -12,6 +12,10 @@ interface Check {
     status: string;
     notes: string | null;
     resubmitted: string | null;
+    document?: string | null;
+    documentAt?: string | null;
+    reviewedBy?: string | null;
+    reviewedAt?: string | null;
 }
 
 /**
@@ -110,6 +114,27 @@ export default function ProviderShow({
                                     {c.notes && (
                                         <span className="block text-xs font-normal text-muted">
                                             Reason given: {c.notes}
+                                        </span>
+                                    )}
+                                    {c.document ? (
+                                        <a
+                                            href={`/admin/verification-checks/${c.id}/document`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="block text-xs font-medium text-teal-deep"
+                                        >
+                                            Open document: {c.document} (
+                                            {c.documentAt})
+                                        </a>
+                                    ) : (
+                                        <span className="block text-xs font-normal text-muted">
+                                            No document uploaded yet
+                                        </span>
+                                    )}
+                                    {c.reviewedBy && (
+                                        <span className="block text-xs font-normal text-muted">
+                                            Reviewed by {c.reviewedBy} on{" "}
+                                            {c.reviewedAt}
                                         </span>
                                     )}
                                 </span>

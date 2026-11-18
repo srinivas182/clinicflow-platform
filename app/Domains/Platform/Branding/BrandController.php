@@ -28,6 +28,7 @@ class BrandController extends Controller
                 'id' => $b->id, 'name' => $b->name, 'slug' => $b->slug, 'logo' => $b->logo, 'primary' => $b->primary_color, 'accent' => $b->accent_color,
                 'supportEmail' => $b->support_email, 'supportPhone' => $b->support_phone, 'footer' => $b->footer_text, 'poweredBy' => (bool) $b->powered_by,
                 'practiceDomain' => $b->practice_domain, 'resellerId' => $b->reseller_id, 'active' => (bool) $b->active,
+                'domainVerified' => $b->domain_verified_at !== null, 'domainRecord' => app(Brands::class)->domainRecord((int) $b->id),
                 'signupLink' => rtrim((string) config('app.url'), '/').'/?brand='.$b->slug,
                 'practices' => Provider::query()->where('brand_id', $b->id)->count(),
                 'emailFrom' => $b->email_from, 'emailVerified' => $b->email_verified_at !== null,
@@ -65,6 +66,11 @@ class BrandController extends Controller
             $brands->setEmailFrom($brand, $request->string('email_from')->toString());
 
             return back()->with('success', 'Add the two DNS records shown, then press Verify.');
+        }
+        if ($action === 'domain') {
+            return $brands->verifyDomain($brand, $dns)
+                ? back()->with('success', 'Domain verified. New practices of this brand get addresses on it.')
+                : back()->with('error', 'The DNS record was not found yet. DNS changes can take a few hours.');
         }
         if ($action === 'verify') {
             return $brands->verifyEmail($brand, $dns)

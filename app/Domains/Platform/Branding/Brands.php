@@ -10,6 +10,7 @@ use App\Domains\Platform\Support\TenantLookupCache;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -67,6 +68,11 @@ class Brands
         $row = ['name' => trim($data['name']), 'slug' => $slug, 'primary_color' => strtolower($data['primary_color']), 'accent_color' => strtolower($data['accent_color']),
             'support_email' => $data['support_email'], 'support_phone' => $data['support_phone'], 'footer_text' => $data['footer_text'], 'powered_by' => $data['powered_by'],
             'practice_domain' => $domain, 'reseller_id' => $data['reseller_id'], 'active' => $data['active'], 'updated_at' => now()];
+        // A new or changed practice domain must be proved again by DNS before it is used (beta #159).
+        $current = $id === null ? null : $this->db()->table('brands')->where('id', $id)->value('practice_domain');
+        if ($domain !== $current) {
+            $row += ['domain_token' => $domain === null ? null : 'cf-'.Str::lower(Str::random(32)), 'domain_verified_at' => null];
+        }
         if ($logo !== null) {
             $row['logo'] = 'data:'.$logo->getMimeType().';base64,'.base64_encode((string) file_get_contents($logo->getRealPath()));
         }
@@ -109,6 +115,32 @@ class Brands
         $domain = $brand?->email_from === null ? '' : substr((string) $brand->email_from, (int) strrpos((string) $brand->email_from, '@') + 1);
 
         return ['ownership' => ['host' => '_clinicflow.'.$domain, 'value' => $brand === null ? '' : (string) $brand->email_token], 'spf' => (string) config('clinicflow.email.spf_include', 'include:spf.clinicflow.co.za')];
+    }
+
+    /**
+     * The TXT record that proves the partner owns the brand's practice domain.
+     *
+     * @return array{host: string, value: string}|null
+     */
+    public function domainRecord(int $brandId): ?array
+    {
+        $brand = $this->db()->table('brands')->where('id', $brandId)->first();
+
+        return $brand === null || $brand->practice_domain === null ? null : ['host' => '_clinicflow.'.$brand->practice_domain, 'value' => (string) $brand->domain_token];
+    }
+
+    /** Checks the TXT record; practices are given addresses on the domain only once this passes (beta #159). */
+    public function verifyDomain(int $brandId, DnsResolver $dns): bool
+    {
+        $record = $this->domainRecord($brandId);
+        if ($record === null || $record['value'] === '') {
+            throw ValidationException::withMessages(['practice_domain' => 'Set the practice domain first.']);
+        }
+        $ok = in_array($record['value'], array_map('trim', $dns->txt($record['host'])), true);
+        $this->db()->table('brands')->where('id', $brandId)->update(['domain_verified_at' => $ok ? now() : null, 'updated_at' => now()]);
+        activity('platform')->withProperties(['brand' => $brandId, 'verified' => $ok])->log('Brand practice domain checked');
+
+        return $ok;
     }
 
     /** Checks the ownership TXT record and that the domain's SPF record includes the email supplier. */

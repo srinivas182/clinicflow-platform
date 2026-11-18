@@ -59,6 +59,7 @@ export default function LocumPortal({
         vat_number: profile?.vat_number ?? "",
         alerts_email: profile?.alerts_email ?? true,
         alerts_sms: profile?.alerts_sms ?? false,
+        doctor_declaration: profile !== null && profile !== undefined,
     });
     const doc = useForm<{
         kind: string;
@@ -173,6 +174,22 @@ export default function LocumPortal({
                             }
                         />{" "}
                         Also SMS me
+                    </label>
+                    <label className="mb-2 flex items-start gap-2 text-sm">
+                        <input
+                            type="checkbox"
+                            className="mt-0.5 accent-teal"
+                            checked={form.data.doctor_declaration}
+                            onChange={(e) =>
+                                form.setData(
+                                    "doctor_declaration",
+                                    e.target.checked,
+                                )
+                            }
+                        />{" "}
+                        I am a medical practitioner registered with the HPCSA
+                        under the MP number above. Locum shifts are for doctors
+                        only; Dr Business Flow checks the registration.
                     </label>
                     {Object.values(form.errors)[0] && (
                         <p

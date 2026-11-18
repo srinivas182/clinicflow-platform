@@ -54,7 +54,11 @@ class Translations
     {
         $this->mustReview($user, $language);
         $t = $this->current($language, $unit);
-        $t->forceFill(['status' => 'approved', 'approved_by' => $user->id, 'approved_at' => now()])->save();
+        // Four eyes (decision on beta #204): the person who wrote the words cannot approve them.
+        if ($t->updated_by !== null && (int) $t->updated_by === $user->id) {
+            throw ValidationException::withMessages(['text' => 'Another reviewer must approve wording you wrote yourself.']);
+        }
+        $t->forceFill(['status' => 'approved', 'approved_by' => $user->id, 'approved_at' => now(), 'recheck_reason' => null])->save();
         activity('translation')->causedBy($user)->withProperties(['language' => $language, 'unit' => $unit])->log('Translation approved');
         $this->publishUnit($language, $unit);
 
@@ -70,7 +74,10 @@ class Translations
         if (! $t->medical) {
             throw ValidationException::withMessages(['text' => 'This text does not need a clinical approval.']);
         }
-        $t->forceFill(['clinical_approved_by' => $user->id, 'clinical_approved_at' => now()])->save();
+        if ($t->updated_by !== null && (int) $t->updated_by === $user->id) {
+            throw ValidationException::withMessages(['text' => 'Another clinical reviewer must approve medical wording you wrote yourself.']);
+        }
+        $t->forceFill(['clinical_approved_by' => $user->id, 'clinical_approved_at' => now(), 'recheck_reason' => null])->save();
         activity('translation')->causedBy($user)->withProperties(['language' => $language, 'unit' => $unit])->log('Medical wording approved');
         $this->publishUnit($language, $unit);
 

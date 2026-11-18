@@ -49,7 +49,9 @@ it('validates brands and stores a small logo', function (): void {
 
 it('puts practices that sign up through a brand link under that brand, its domain and its commission partner', function (): void {
     $reseller = app(ResellerProgramme::class)->create('Partner Health Sales', 'sales@partnerhealth.test', null, 15, 12);
-    $this->brands->save(null, brandData(['reseller_id' => $reseller]));
+    $brand = $this->brands->save(null, brandData(['reseller_id' => $reseller]));
+    // The brand's domain is used only once proved by DNS (beta #159).
+    DB::table('brands')->where('id', $brand)->update(['domain_verified_at' => now()]);
 
     $this->get('http://localhost/?brand=partnerhealth')->assertCookie(Brands::COOKIE);
     $this->withCookie(Brands::COOKIE, 'partnerhealth')->post('http://localhost/start', [
@@ -127,4 +129,32 @@ it('shows the partner its brand, practices and sign-ups in the partner portal', 
 
     $this->actingAs($user)->get('http://localhost/reseller')->assertOk()->assertInertia(fn ($p) => $p->component('Reseller/Portal')
         ->where('brands.0.name', 'Partner Health')->where('brands.0.practices.0.name', 'Sunrise Medical Centre')->where('brands.0.signupsThisMonth', 1));
+});
+
+it('gives practices an address on a brand\'s own domain only after the domain is proved by DNS (beta #159)', function (): void {
+    $brand = $this->brands->save(null, brandData());
+    $record = $this->brands->domainRecord($brand);
+    expect($record['host'] ?? null)->toBe('_clinicflow.partnerhealth.test')->and($record['value'] ?? '')->toStartWith('cf-');
+
+    $dns = new class extends DnsResolver
+    {
+        /** @var array<string, list<string>> */
+        public array $records = [];
+
+        public function txt(string $host): array
+        {
+            return $this->records[$host] ?? [];
+        }
+    };
+    expect($this->brands->verifyDomain($brand, $dns))->toBeFalse();
+    $dns->records = ['_clinicflow.partnerhealth.test' => [$record['value']]];
+    expect($this->brands->verifyDomain($brand, $dns))->toBeTrue()
+        ->and(DB::table('brands')->where('id', $brand)->value('domain_verified_at'))->not->toBeNull();
+
+    // Saving the same domain keeps the proof; a new domain must be proved again.
+    $this->brands->save($brand, brandData());
+    expect(DB::table('brands')->where('id', $brand)->value('domain_verified_at'))->not->toBeNull();
+    $this->brands->save($brand, brandData(['practice_domain' => 'partnercare.test']));
+    expect(DB::table('brands')->where('id', $brand)->value('domain_verified_at'))->toBeNull()
+        ->and($this->brands->domainRecord($brand)['value'] ?? '')->not->toBe($record['value']);
 });

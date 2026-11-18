@@ -18,6 +18,10 @@ interface Item {
     approved: boolean;
     clinicalApproved: boolean;
     live: boolean;
+    /** Approved by a reviewer who was later removed: another reviewer should check it. */
+    recheck?: string | null;
+    /** Written by this reviewer: someone else must approve it. */
+    mine?: boolean;
 }
 interface Props {
     language: string;
@@ -25,7 +29,7 @@ interface Props {
     clinicalReviewer: boolean;
     items: Item[];
 }
-type Filter = "review" | "live" | "changed" | "all";
+type Filter = "review" | "live" | "changed" | "recheck" | "all";
 
 /** Highlights {{ placeholders }} so reviewers keep them exactly as they are. */
 function Marked({ text }: { text: string }) {
@@ -53,6 +57,7 @@ function status(i: Item): {
 } {
     if (i.englishChanged)
         return { label: "English changed — please re-check", tone: "danger" };
+    if (i.recheck) return { label: `Re-check: ${i.recheck}`, tone: "warning" };
     if (i.live) return { label: "Live", tone: "success" };
     if (i.status === "approved" && i.medical && !i.clinicalApproved)
         return { label: "Needs clinical approval", tone: "warning" };
@@ -142,7 +147,15 @@ function Row({
                         !saved ||
                         text.trim() === "" ||
                         item.englishChanged ||
-                        (item.approved && item.status === "approved")
+                        item.mine === true ||
+                        (item.approved &&
+                            item.status === "approved" &&
+                            !item.recheck)
+                    }
+                    title={
+                        item.mine
+                            ? "Another reviewer must approve wording you wrote"
+                            : undefined
                     }
                     onClick={() =>
                         post(`/translate/${language}/approve`, {
@@ -159,7 +172,8 @@ function Row({
                             !saved ||
                             text.trim() === "" ||
                             item.englishChanged ||
-                            item.clinicalApproved
+                            item.mine === true ||
+                            (item.clinicalApproved && !item.recheck)
                         }
                         onClick={() =>
                             post(`/translate/${language}/approve`, {
@@ -192,7 +206,9 @@ export default function Translate({
               ? i.live
               : filter === "changed"
                 ? i.englishChanged
-                : !i.live,
+                : filter === "recheck"
+                  ? !!i.recheck
+                  : !i.live,
     );
     const name = languages.find((l) => l.code === language)?.name ?? language;
 
@@ -251,6 +267,7 @@ export default function Translate({
                         [
                             ["review", "To review"],
                             ["changed", "English changed"],
+                            ["recheck", "Re-check"],
                             ["live", "Live"],
                             ["all", "All"],
                         ] as const

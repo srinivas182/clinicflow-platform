@@ -185,6 +185,36 @@ class StorageTargets
         CopyFilesToStorage::dispatch($id, app(CopyFiles::class)->currentSource());
     }
 
+    /** Delete an unused entry (beta #182). The storage in use cannot be deleted; files at the target are left alone. */
+    public function delete(int $id): void
+    {
+        $target = $this->db()->table('storage_targets')->where('id', $id)->first();
+        abort_if($target === null, 404);
+        if ((bool) $target->active) {
+            throw ValidationException::withMessages(['target' => 'This storage is in use. Activate another one (or this server\'s disk) first.']);
+        }
+        if (in_array($target->copy_status, ['queued', 'running'], true)) {
+            throw ValidationException::withMessages(['target' => 'Files are being copied into this storage. Wait for the copy to finish.']);
+        }
+        $this->db()->table('storage_targets')->where('id', $id)->delete();
+        activity('platform')->withProperties(['storage_target' => $id, 'name' => $target->name])->log('Storage entry deleted');
+    }
+
+    /**
+     * Back to this server's disk (beta #182): an entry for the server's own disk, which then goes
+     * through the usual test, copy and activate steps so no file is left behind.
+     */
+    public function serverDisk(): int
+    {
+        $existing = $this->db()->table('storage_targets')->where('driver', 'local')->whereNull('root')->value('id');
+        if ($existing !== null) {
+            return (int) $existing;
+        }
+
+        return $this->save(null, ['name' => "This server's disk", 'driver' => 'local', 'provider' => null, 'bucket' => null, 'region' => null, 'endpoint' => null,
+            'path_style' => false, 'encrypt' => false, 'root' => null, 'key' => null, 'secret' => null]);
+    }
+
     public function activate(int $id): void
     {
         $target = $this->db()->table('storage_targets')->where('id', $id)->first();
