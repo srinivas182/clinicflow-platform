@@ -87,13 +87,37 @@ it('lets a super admin set it up after confirming identity, storing the secret e
 
     $confirmed = [RequireRecentConfirmation::SESSION_KEY => now()->getTimestamp()];
     $this->actingAs($admin)->withSession($confirmed)->post('http://localhost/admin/security/bot', ['enabled' => true])->assertSessionHasErrors('bot');
-    $this->actingAs($admin)->withSession($confirmed)->post('http://localhost/admin/security/bot', ['enabled' => true, 'site_key' => 'site-123', 'secret' => 'secret-456'])->assertSessionHasNoErrors();
+    // Keys are checked with Cloudflare before the switch goes on (beta #191): a valid secret gets "invalid-input-response".
+    Http::fake(['challenges.cloudflare.com/*' => Http::response(['success' => false, 'error-codes' => ['invalid-input-response']])]);
+    $this->actingAs($admin)->withSession($confirmed)->post('http://localhost/admin/security/bot', ['enabled' => true, 'site_key' => 'site-123', 'secret' => 'secret-456'])->assertSessionHasErrors('bot');
+    $this->actingAs($admin)->withSession($confirmed)->post('http://localhost/admin/security/bot', ['enabled' => true, 'site_key' => '0x4AAAAAAAexampleSiteKey', 'secret' => 'secret-456'])->assertSessionHasNoErrors();
+    Http::assertSent(fn (Request $r) => $r['secret'] === 'secret-456' && $r['response'] === 'key-check');
 
     $raw = (string) DB::table('platform_settings')->where('key', 'security.turnstile_secret')->value('value');
     expect($raw)->not->toContain('secret-456')->and(BotProtection::secret())->toBe('secret-456')
         ->and(BotProtection::enabled())->toBeTrue()
         ->and(DB::table('activity_log')->where('description', 'Bot protection switched on')->exists())->toBeTrue();
     // Saving again without a secret keeps the stored one.
-    $this->actingAs($admin)->withSession($confirmed)->post('http://localhost/admin/security/bot', ['enabled' => false, 'site_key' => 'site-123'])->assertSessionHasNoErrors();
+    $this->actingAs($admin)->withSession($confirmed)->post('http://localhost/admin/security/bot', ['enabled' => false, 'site_key' => '0x4AAAAAAAexampleSiteKey'])->assertSessionHasNoErrors();
     expect(BotProtection::secret())->toBe('secret-456');
+});
+
+it('refuses keys Cloudflare rejects, so a wrong secret cannot lock everyone out', function (): void {
+    $admin = User::factory()->create();
+    $admin->forceFill(['is_platform_admin' => true])->save();
+    $confirmed = [RequireRecentConfirmation::SESSION_KEY => now()->getTimestamp()];
+    Http::fake(['challenges.cloudflare.com/*' => Http::response(['success' => false, 'error-codes' => ['invalid-input-secret']])]);
+    $this->actingAs($admin)->withSession($confirmed)->post('http://localhost/admin/security/bot', ['enabled' => true, 'site_key' => '0x4AAAAAAAexampleSiteKey', 'secret' => 'wrong'])
+        ->assertSessionHasErrors(['bot' => 'Cloudflare rejected the secret key. Copy it again from Cloudflare → Turnstile → your site → Settings.']);
+    expect(BotProtection::enabled())->toBeFalse();
+});
+
+it('lets sign-in through and alerts the admin if Cloudflare later rejects the saved secret', function (): void {
+    switchBotProtectionOn();
+    Http::fake(['challenges.cloudflare.com/*' => Http::response(['success' => false, 'error-codes' => ['invalid-input-secret']])]);
+    signIn($this, ['cf-turnstile-response' => 'any-token'])->assertRedirect('/workspaces');
+    expect(WalletSettings::get(BotProtection::REJECTED_KEY))->not->toBeNull();
+
+    $this->artisan('security:bot-protection-off')->assertSuccessful();
+    expect(BotProtection::enabled())->toBeFalse();
 });

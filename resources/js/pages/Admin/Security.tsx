@@ -18,7 +18,12 @@ interface Props {
     methods: Method[];
     suppliers: { email: boolean; sms: boolean };
     me: { authenticator: boolean; email: boolean; sms: boolean };
-    bot: { enabled: boolean; siteKey: string; secretSet: boolean };
+    bot: {
+        enabled: boolean;
+        siteKey: string;
+        secretSet: boolean;
+        rejectedAt?: string | null;
+    };
 }
 
 /** Admin → Security: two-step sign-in on or off, and the order of methods. */
@@ -184,8 +189,20 @@ export default function SecuritySettings({
                     Cloudflare Turnstile on sign-in, sign-up, forgot password
                     and patient portal sign-in — for the main website and every
                     practice website. Usually invisible to real people. If
-                    Cloudflare cannot be reached, forms keep working.
+                    Cloudflare cannot be reached, forms keep working. The keys
+                    are checked with Cloudflare before the check is switched on.
                 </p>
+                {bot.rejectedAt && (
+                    <p
+                        role="alert"
+                        className="mb-3 rounded-md border border-status-danger p-2 text-sm text-status-danger"
+                    >
+                        Cloudflare rejected the saved secret key on{" "}
+                        {new Date(bot.rejectedAt).toLocaleString()}. Forms are
+                        let through without the check until you save a working
+                        secret key.
+                    </p>
+                )}
                 <label className="mb-3 flex items-center gap-2 text-sm">
                     <input
                         type="checkbox"

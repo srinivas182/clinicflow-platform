@@ -85,8 +85,9 @@ class StartProviderSignup
         Subscription::create([
             'tenant_id' => $provider->id,
             'package_id' => $package->id,
-            'status' => SubscriptionStatus::Trialing,
-            'trial_ends_at' => now()->addDays($package->trial_days),
+            // A free package has nothing to try out first: it is simply active.
+            'status' => $package->isFree() ? SubscriptionStatus::Active : SubscriptionStatus::Trialing,
+            'trial_ends_at' => $package->isFree() ? null : now()->addDays($package->trial_days),
         ]);
 
         foreach (VerificationType::requiredFor($type) as $check) {

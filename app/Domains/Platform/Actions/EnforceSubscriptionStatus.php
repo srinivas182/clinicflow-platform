@@ -11,6 +11,7 @@ use App\Domains\Platform\Models\Subscription;
 /**
  * Daily: trials that ended without payment, and unpaid periods past the grace
  * period, become read-only. Data is never deleted for non-payment.
+ * Free packages are never made read-only: an ended "trial" on a free package simply becomes active.
  */
 class EnforceSubscriptionStatus
 {
@@ -21,13 +22,23 @@ class EnforceSubscriptionStatus
         $cutoff = now()->subDays(self::GRACE_DAYS);
         $count = 0;
 
+        // Repairs free-package workspaces made read-only before free packages were exempt.
+        Subscription::query()->with(['provider', 'package'])->where('status', SubscriptionStatus::ReadOnly->value)
+            ->whereHas('package', fn ($q) => $q->where('price_monthly_cents', 0)->where('price_annual_cents', 0))
+            ->each(fn (Subscription $s) => $this->activateFree($s));
+
         Subscription::query()
-            ->with('provider')
+            ->with(['provider', 'package'])
             ->where(function ($q) use ($cutoff): void {
                 $q->where(fn ($t) => $t->where('status', SubscriptionStatus::Trialing->value)->where('trial_ends_at', '<', $cutoff))
                     ->orWhere(fn ($p) => $p->where('status', SubscriptionStatus::PastDue->value)->where('current_period_ends_at', '<', $cutoff));
             })
             ->each(function (Subscription $subscription) use (&$count): void {
+                if ($subscription->package->isFree()) {
+                    $this->activateFree($subscription);
+
+                    return;
+                }
                 $subscription->forceFill(['status' => SubscriptionStatus::ReadOnly])->save();
                 $provider = $subscription->provider;
                 $provider->status = ProviderStatus::ReadOnly;
@@ -37,5 +48,18 @@ class EnforceSubscriptionStatus
             });
 
         return $count;
+    }
+
+    private function activateFree(Subscription $subscription): void
+    {
+        if (in_array($subscription->status, [SubscriptionStatus::Trialing, SubscriptionStatus::ReadOnly], true)) {
+            $subscription->forceFill(['status' => SubscriptionStatus::Active])->save();
+        }
+        $provider = $subscription->provider;
+        if (in_array($provider->status, [ProviderStatus::Trial, ProviderStatus::ReadOnly], true)) {
+            $provider->status = ProviderStatus::Active;
+            $provider->save();
+            activity('platform')->performedOn($provider)->log('Free package: workspace active (no payment needed)');
+        }
     }
 }

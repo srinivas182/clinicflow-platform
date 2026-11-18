@@ -94,10 +94,14 @@ class ProviderGroups
     /**
      * Paying the combined invoice settles every practice invoice in it.
      */
-    public function settleCombined(int $groupInvoiceId, string $method, string $reference): void
+    /** Records a payment against one of this group's combined invoices (never another group's). */
+    public function settleCombined(ProviderGroup $group, int $groupInvoiceId, string $method, string $reference): void
     {
         $gi = DB::connection((string) config('tenancy.database.central_connection'))->table('group_invoices')->where('id', $groupInvoiceId)->first();
-        if ($gi === null || $gi->status === 'paid') {
+        if ($gi === null || (int) $gi->provider_group_id !== (int) $group->id) {
+            throw ValidationException::withMessages(['invoice' => 'This invoice does not belong to the chosen group.']);
+        }
+        if ($gi->status === 'paid') {
             throw ValidationException::withMessages(['invoice' => 'This group invoice is already settled.']);
         }
         DB::transaction(function () use ($groupInvoiceId, $method, $reference): void {

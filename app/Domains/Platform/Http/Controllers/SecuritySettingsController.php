@@ -31,7 +31,7 @@ class SecuritySettingsController extends Controller
             'methods' => TwoFactorPolicy::methods(),
             'suppliers' => ['email' => MessagingProvider::activeFor('email') !== null, 'sms' => MessagingProvider::activeFor('sms') !== null],
             'bot' => ['enabled' => (bool) WalletSettings::get('security.bot_protection_enabled'), 'siteKey' => BotProtection::siteKey(),
-                'secretSet' => BotProtection::secret() !== ''],
+                'secretSet' => BotProtection::secret() !== '', 'rejectedAt' => WalletSettings::get(BotProtection::REJECTED_KEY)],
             'me' => ['authenticator' => $user->totp_confirmed_at !== null, 'email' => $user->email !== '', 'sms' => is_string($user->phone) && $user->phone !== ''],
         ]);
     }
@@ -61,15 +61,26 @@ class SecuritySettingsController extends Controller
         $user = $request->user();
         abort_unless($user instanceof User, 403);
         $data = $request->validate(['enabled' => ['required', 'boolean'], 'site_key' => ['nullable', 'string', 'max:100'], 'secret' => ['nullable', 'string', 'max:200']]);
-        if (is_string($data['site_key'] ?? null)) {
-            WalletSettings::put('security.turnstile_site_key', trim($data['site_key']));
-        }
-        if (is_string($data['secret'] ?? null) && trim($data['secret']) !== '') {
-            BotProtection::saveSecret(trim($data['secret']));
-        }
         $enabled = (bool) $data['enabled'];
-        if ($enabled && (BotProtection::siteKey() === '' || BotProtection::secret() === '')) {
-            throw ValidationException::withMessages(['bot' => 'Add the Turnstile site key and secret key before switching bot protection on.']);
+        $siteKey = is_string($data['site_key'] ?? null) ? trim($data['site_key']) : BotProtection::siteKey();
+        $secret = is_string($data['secret'] ?? null) && trim($data['secret']) !== '' ? trim($data['secret']) : BotProtection::secret();
+        if ($enabled) {
+            // Wrong keys would lock everyone out, so they are checked before the switch goes on.
+            if ($siteKey === '' || $secret === '') {
+                throw ValidationException::withMessages(['bot' => 'Add the Turnstile site key and secret key before switching bot protection on.']);
+            }
+            if (! BotProtection::siteKeyLooksValid($siteKey)) {
+                throw ValidationException::withMessages(['bot' => 'That does not look like a Turnstile site key (it starts with 0x). Copy it again from Cloudflare.']);
+            }
+            $problem = BotProtection::checkSecret($secret);
+            if ($problem !== null) {
+                throw ValidationException::withMessages(['bot' => $problem]);
+            }
+            WalletSettings::put(BotProtection::REJECTED_KEY, null);
+        }
+        WalletSettings::put('security.turnstile_site_key', $siteKey);
+        if ($secret !== '' && $secret !== BotProtection::secret()) {
+            BotProtection::saveSecret($secret);
         }
         WalletSettings::put('security.bot_protection_enabled', $enabled);
         activity('security')->causedBy($user)->withProperties(['enabled' => $enabled])->log($enabled ? 'Bot protection switched on' : 'Bot protection settings saved');
