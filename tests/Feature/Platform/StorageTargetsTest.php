@@ -5,6 +5,7 @@ use App\Domains\Platform\Storage\StorageTargets;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -60,11 +61,13 @@ it('only activates a target whose connection test passed, then points the files 
     $local = $this->targets->save(null, ['name' => 'Server disk', 'driver' => 'local', 'provider' => null, 'bucket' => null, 'region' => null, 'endpoint' => null,
         'path_style' => false, 'encrypt' => false, 'root' => null, 'key' => null, 'secret' => null]);
     expect($this->targets->test($local))->toBeTrue();
+    $this->targets->startCopy($local);
     $this->targets->activate($local);
     expect(Storage::disk('local')->allFiles('_clinicflow-probe'))->toBe([]);
 
-    // Simulate a verified S3 target and check the files disk switches to it (no network needed).
-    DB::table('storage_targets')->where('id', $id)->update(['verified_at' => now()]);
+    // Simulate a verified, copied S3 target and check the files disk switches to it (no network needed).
+    Queue::fake();
+    DB::table('storage_targets')->where('id', $id)->update(['verified_at' => now(), 'copy_status' => 'done', 'copy_source' => (string) $local]);
     $this->targets->activate($id);
     FileStore::configure();
     expect(config('filesystems.disks.files.driver'))->toBe('s3')

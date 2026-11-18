@@ -138,7 +138,7 @@ foreach ($centralDomains as $index => $domain) {
             Route::post('/security', [SecuritySettingsController::class, 'update'])->middleware('step-up')->name('security.update');
             Route::get('/storage', [StorageController::class, 'index'])->name('storage.index');
             Route::post('/storage', [StorageController::class, 'save'])->name('storage.save');
-            Route::post('/storage/{target}/{action}', [StorageController::class, 'act'])->whereIn('action', ['test', 'activate'])->name('storage.act');
+            Route::post('/storage/{target}/{action}', [StorageController::class, 'act'])->whereIn('action', ['test', 'copy', 'activate'])->name('storage.act');
             Route::post('/brands', [BrandController::class, 'save'])->name('brands.save');
             Route::post('/brands/assign', [BrandController::class, 'assign'])->name('brands.assign');
             Route::post('/brands/{brand}/senders/{action}', [BrandController::class, 'senders'])->whereIn('action', ['email', 'verify', 'sms'])->name('brands.senders');

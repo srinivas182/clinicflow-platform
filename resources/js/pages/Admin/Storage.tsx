@@ -1,4 +1,5 @@
-import { Head, router, useForm } from "@inertiajs/react";
+import { Head, router, useForm, usePage } from "@inertiajs/react";
+import { useEffect } from "react";
 import { Flash } from "@/components/Flash";
 import { Badge, Button, Card } from "@/components/ui";
 import { AdminShell } from "@/layouts/AdminShell";
@@ -18,6 +19,33 @@ interface Target {
     verified: boolean;
     lastError: string | null;
     hasKeys: boolean;
+    copy: {
+        status: "queued" | "running" | "done" | "failed" | null;
+        /** Copied from where the files are now (an older copy does not count). */
+        current: boolean;
+        at: string | null;
+        counts: { copied: number; skipped: number; failed: number } | null;
+    };
+}
+
+/** What the copy of existing files into a target has done so far. */
+function copyText(t: Target): string {
+    const c = t.copy.counts;
+    const n = c ? `${c.copied} copied, ${c.skipped} already there` : "";
+    switch (t.copy.status) {
+        case "queued":
+            return "Copy of existing files is waiting to start…";
+        case "running":
+            return `Copying existing files… ${n}`;
+        case "done":
+            return t.copy.current
+                ? `Existing files copied and checked: ${n}.`
+                : "Files were copied from a different storage. Copy again before activating.";
+        case "failed":
+            return `Copy finished with ${c?.failed ?? 0} failed file(s): ${n}. Check the details, then copy again.`;
+        default:
+            return "Existing files not copied yet.";
+    }
 }
 interface Props {
     targets: Target[];
@@ -53,6 +81,23 @@ const empty = {
 
 export default function AdminStorage({ targets, providers, current }: Props) {
     const form = useForm({ ...empty });
+    const pageErrors = usePage<{ errors: Record<string, string> }>().props
+        .errors;
+    const editingActive = targets.some(
+        (t) => String(t.id) === form.data.id && t.active,
+    );
+    const copying = targets.some(
+        (t) => t.copy.status === "queued" || t.copy.status === "running",
+    );
+    // While files are being copied, refresh the progress every few seconds.
+    useEffect(() => {
+        if (!copying) return;
+        const timer = window.setInterval(
+            () => router.reload({ only: ["targets"] }),
+            4000,
+        );
+        return () => window.clearInterval(timer);
+    }, [copying]);
     const input = "w-full rounded-md border border-line px-2 py-1 text-sm";
     const edit = (t: Target) =>
         form.setData({
@@ -231,6 +276,13 @@ export default function AdminStorage({ targets, providers, current }: Props) {
                             }
                         />
                     </div>
+                    {editingActive && (
+                        <p className="mt-2 text-xs text-muted">
+                            This storage is in use: only its name and keys can
+                            change. New keys are tested before they are used. To
+                            move files elsewhere, add a new storage.
+                        </p>
+                    )}
                     {Object.values(form.errors)[0] && (
                         <p
                             role="alert"
@@ -268,26 +320,24 @@ export default function AdminStorage({ targets, providers, current }: Props) {
                             Add the storage and press <b>Test connection</b>.
                         </li>
                         <li>
-                            Copy existing files:{" "}
-                            <span className="font-mono text-xs">
-                                php artisan storage:copy-to-active &lt;id&gt;
-                            </span>{" "}
-                            (add{" "}
-                            <span className="font-mono text-xs">--dry-run</span>{" "}
-                            to preview). Every file is checked; nothing is
-                            deleted.
+                            Press <b>Copy files</b>. Existing files are copied
+                            in the background and every file is checked; nothing
+                            is deleted.
                         </li>
                         <li>
-                            Press <b>Activate</b>. New files go to the new
-                            storage straight away.
-                        </li>
-                        <li>
-                            Run the copy once more to catch files uploaded in
-                            between.
+                            When the copy has no failures, press <b>Activate</b>
+                            . New files go to the new storage straight away, and
+                            files uploaded since the copy are copied
+                            automatically.
                         </li>
                     </ol>
                 </Card>
             </div>
+            {pageErrors.target && (
+                <p role="alert" className="mt-4 text-sm text-status-danger">
+                    {pageErrors.target}
+                </p>
+            )}
             {targets.map((t) => (
                 <Card
                     key={t.id}
@@ -321,6 +371,14 @@ export default function AdminStorage({ targets, providers, current }: Props) {
                                     {t.lastError}
                                 </span>
                             )}
+                            {!t.active && (
+                                <span
+                                    className={`block text-xs ${t.copy.status === "failed" ? "text-status-danger" : "text-muted"}`}
+                                    aria-live="polite"
+                                >
+                                    {copyText(t)}
+                                </span>
+                            )}
                         </span>
                         <Button
                             size="sm"
@@ -345,20 +403,42 @@ export default function AdminStorage({ targets, providers, current }: Props) {
                         {!t.active && t.verified && (
                             <Button
                                 size="sm"
+                                variant="secondary"
+                                disabled={
+                                    t.copy.status === "queued" ||
+                                    t.copy.status === "running"
+                                }
                                 onClick={() =>
-                                    window.confirm(
-                                        "Activate this storage for all practices? Copy existing files first.",
-                                    ) &&
                                     router.post(
-                                        `/admin/storage/${t.id}/activate`,
+                                        `/admin/storage/${t.id}/copy`,
                                         {},
                                         { preserveScroll: true },
                                     )
                                 }
                             >
-                                Activate
+                                {t.copy.status ? "Copy again" : "Copy files"}
                             </Button>
                         )}
+                        {!t.active &&
+                            t.verified &&
+                            t.copy.status === "done" &&
+                            t.copy.current && (
+                                <Button
+                                    size="sm"
+                                    onClick={() =>
+                                        window.confirm(
+                                            "Activate this storage for all practices? New files will be kept here.",
+                                        ) &&
+                                        router.post(
+                                            `/admin/storage/${t.id}/activate`,
+                                            {},
+                                            { preserveScroll: true },
+                                        )
+                                    }
+                                >
+                                    Activate
+                                </Button>
+                            )}
                     </div>
                 </Card>
             ))}
