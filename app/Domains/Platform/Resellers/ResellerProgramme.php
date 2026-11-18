@@ -83,11 +83,12 @@ class ResellerProgramme
     }
 
     /** A reseller who registers or signs in with the reseller's email is linked automatically. */
-    public function linkByEmail(User $user): ?object
+    public function linkByEmail(User $user): ?\stdClass
     {
         $this->db()->table('resellers')->whereNull('user_id')->where('email', $user->email)->update(['user_id' => $user->id, 'updated_at' => now()]);
+        $row = $this->db()->table('resellers')->where('user_id', $user->id)->first();
 
-        return $this->db()->table('resellers')->where('user_id', $user->id)->first();
+        return $row instanceof \stdClass ? $row : null;
     }
 
     public function validCode(?string $code): ?int
