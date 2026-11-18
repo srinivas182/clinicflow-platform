@@ -30,8 +30,11 @@ class TranslatorInvitationController extends Controller
     public function register(Request $request, string $token): RedirectResponse
     {
         $inv = $this->find($token) ?? throw ValidationException::withMessages(['password' => 'This invitation has expired or was already used.']);
-        $data = $request->validate(['email' => ['required', 'email', 'max:190', 'unique:users,email'], 'phone' => ['required', 'string', 'max:20'],
-            'password' => ['required', 'confirmed', PasswordRules::make()]]);
+        $data = $request->validate(['email' => ['required', 'email', 'max:190', 'unique:users,email'], 'phone' => ['required', 'string', 'max:20', 'unique:users,phone'],
+            'password' => ['required', 'confirmed', PasswordRules::make()]], [
+                'email.unique' => 'This email already has an account. Sign in with it to accept the invitation.',
+                'phone.unique' => 'This cell number already belongs to another account. Sign in with that account, or use another number.',
+            ]);
         $user = new User;
         $user->forceFill(['name' => $inv->name, 'email' => strtolower(trim($data['email'])), 'phone' => $data['phone'], 'password' => $data['password']])->save();
         $this->grant($inv, $user);

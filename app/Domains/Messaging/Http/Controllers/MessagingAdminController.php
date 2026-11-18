@@ -141,6 +141,10 @@ class MessagingAdminController extends Controller
         if ($unknown !== []) {
             throw ValidationException::withMessages(['body' => 'Unknown placeholders: '.implode(', ', $unknown).'.']);
         }
+        $missing = MessageCatalogue::missingPlaceholders($data['key'], $data['body'].' '.($data['subject'] ?? ''));
+        if ($missing !== []) {
+            throw ValidationException::withMessages(['body' => 'This message must include '.implode(', ', array_map(fn (string $p): string => '{{'.$p.'}}', $missing)).'.']);
+        }
 
         MessageTemplate::query()->updateOrCreate(
             ['key' => $data['key'], 'channel' => $data['channel'], 'language' => $data['language']],

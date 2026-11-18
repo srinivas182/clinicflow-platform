@@ -8,7 +8,7 @@ return [
      * Platform release version. Bumped on every release (see CHANGELOG.md)
      * and reported by GET /api/v1/health.
      */
-    'version' => env('CLINICFLOW_VERSION', '0.82.0'),
+    'version' => env('CLINICFLOW_VERSION', '0.83.0'),
 
     /*
      * Hosting region. All patient data must stay in South Africa (POPIA s72).
@@ -27,6 +27,17 @@ return [
          */
         'allow_fake' => (bool) env('PAYMENTS_ALLOW_FAKE', false),
         'vat_rate' => 0.15,
+        /*
+         * Platform bank account for paying subscription invoices by EFT, shown when
+         * online payment is not available. Leave empty to show only the contact email.
+         */
+        'eft' => [
+            'bank' => env('PLATFORM_EFT_BANK', ''),
+            'account_name' => env('PLATFORM_EFT_ACCOUNT_NAME', ''),
+            'account_number' => env('PLATFORM_EFT_ACCOUNT_NUMBER', ''),
+            'branch_code' => env('PLATFORM_EFT_BRANCH_CODE', ''),
+            'email' => env('PLATFORM_BILLING_EMAIL', 'billing@clinicflow.co.za'),
+        ],
     ],
 
     'website' => [

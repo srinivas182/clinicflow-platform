@@ -60,7 +60,7 @@ class GroupController extends Controller
             'admin' => $groups->addAdmin($group ?? abort(404), $request->string('email')->toString()),
             'billing' => $group?->forceFill(['billing' => $request->string('billing')->toString() === 'combined' ? 'combined' : 'separate'])->save(),
             'invoice' => $groups->issueCombinedInvoice($group ?? abort(404)),
-            'settle' => $groups->settleCombined($request->integer('group_invoice_id'), 'eft', $request->string('reference')->toString() ?: 'EFT'),
+            'settle' => $groups->settleCombined($group ?? abort(404), $request->integer('group_invoice_id'), 'eft', $request->string('reference')->toString() ?: 'EFT'),
             default => abort(404),
         };
 

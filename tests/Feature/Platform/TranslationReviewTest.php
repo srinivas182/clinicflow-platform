@@ -164,3 +164,28 @@ it('creates AI drafts only for untranslated texts, discarding any that lose a pl
     $this->t->approve($this->reviewer, 'zu', $booking);
     expect(TemplateResolver::resolve('booking.confirmation', 'sms', 'zu')['body'])->toBe($bookingZu);
 });
+
+it('refuses a wording that leaves out the code, link or ticket the message needs (beta #281)', function (): void {
+    $confirmed = [RequireRecentConfirmation::SESSION_KEY => now()->getTimestamp()];
+    $save = fn (string $body) => $this->actingAs($this->admin)->withSession($confirmed)->put('http://localhost/admin/messaging/templates', [
+        'key' => 'pharmacy.ready', 'channel' => 'sms', 'language' => 'en', 'body' => $body,
+    ]);
+    $save('{{ practice }}: your medicine is ready.')->assertSessionHasErrors(['body' => 'This message must include {{code}}.']);
+    $save('{{ practice }}: your medicine is ready. Collection code {{ code }}.')->assertSessionHasNoErrors();
+});
+
+it('tells a new reviewer when their cell number already has an account (beta #199)', function (): void {
+    User::factory()->create(['phone' => '0821239999']);
+    $confirmed = [RequireRecentConfirmation::SESSION_KEY => now()->getTimestamp()];
+    $this->actingAs($this->admin)->withSession($confirmed)->post('http://localhost/admin/languages/invite', [
+        'name' => 'Sipho Ndlovu', 'email' => 'sipho@reviewers.test', 'languages' => ['zu'], 'clinical' => false,
+    ])->assertSessionHasNoErrors();
+    preg_match('#/translate/invite/([A-Za-z0-9]+)#', $this->outbox->sent[0][2], $m);
+    $this->post('http://localhost/logout');
+    $this->flushSession();
+
+    $this->post("http://localhost/translate/invite/{$m[1]}/register", ['email' => 'sipho@reviewers.test', 'phone' => '0821239999',
+        'password' => 'isiZulu-2026', 'password_confirmation' => 'isiZulu-2026'])
+        ->assertSessionHasErrors(['phone' => 'This cell number already belongs to another account. Sign in with that account, or use another number.']);
+    expect(User::query()->where('email', 'sipho@reviewers.test')->exists())->toBeFalse();
+});

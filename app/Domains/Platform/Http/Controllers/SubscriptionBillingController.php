@@ -109,7 +109,16 @@ class SubscriptionBillingController extends Controller
         }
 
         $config = GatewayFactory::platformDefault();
-        abort_if($config === null, 503, 'Online payment is not available yet. Please pay by EFT using the invoice number as reference.');
+        if ($config === null) {
+            // No online payment yet: show how to pay by EFT (a normal page, not a "back shortly" error).
+            return response()->view('payments.eft', [
+                'title' => 'Pay by EFT',
+                'intro' => 'Online card payment is not available yet. Please pay this invoice by EFT.',
+                'reference' => $invoice->number,
+                'amount' => 'R'.number_format($invoice->total_cents / 100, 2, '.', ' '),
+                'eft' => (array) config('clinicflow.payments.eft'),
+            ]);
+        }
 
         $owner = User::query()->whereIn('id', Membership::query()->where('tenant_id', $invoice->tenant_id)->where('role', 'owner')->pluck('user_id'))->first();
         $root = $request->getSchemeAndHttpHost();

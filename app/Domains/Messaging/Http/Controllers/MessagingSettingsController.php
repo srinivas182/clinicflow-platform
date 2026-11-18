@@ -102,6 +102,10 @@ class MessagingSettingsController extends Controller
         if ($unknown !== []) {
             throw ValidationException::withMessages(['body' => 'Unknown placeholders: '.implode(', ', $unknown).'.']);
         }
+        $missing = MessageCatalogue::missingPlaceholders($data['key'], $body.' '.($data['subject'] ?? ''));
+        if ($missing !== []) {
+            throw ValidationException::withMessages(['body' => 'This message must include '.implode(', ', array_map(fn (string $p): string => '{{'.$p.'}}', $missing)).'.']);
+        }
 
         MessageTemplateOverride::query()->updateOrCreate($where, ['subject' => $data['subject'] ?? null, 'body' => $body, 'updated_by' => $request->user()?->getAuthIdentifier()]);
         activity('settings')->causedBy($request->user())->withProperties($where)->log('Message wording changed');

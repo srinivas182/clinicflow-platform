@@ -67,7 +67,10 @@ class DeliveryController extends Controller
         $this->authorize(Permission::SETTINGS_MANAGE);
         abort_unless(CourierPartner::query()->where('driver', $driver)->where('enabled', true)->exists(), 404);
         $data = $request->validate(['account_ref' => ['required', 'string', 'max:80'], 'api_key' => ['nullable', 'string', 'max:500'], 'enabled' => ['required', 'boolean']]);
-        CourierAccount::query()->updateOrCreate(['driver' => $driver], ['account_ref' => $data['account_ref'], 'enabled' => (bool) $data['enabled'], 'credentials' => array_filter(['api_key' => $data['api_key'] ?? null])]);
+        // A blank key box keeps the saved key (as on the payment and WhatsApp pages).
+        $saved = CourierAccount::query()->where('driver', $driver)->first();
+        $key = filled($data['api_key'] ?? null) ? trim((string) $data['api_key']) : ($saved?->credentials['api_key'] ?? null);
+        CourierAccount::query()->updateOrCreate(['driver' => $driver], ['account_ref' => $data['account_ref'], 'enabled' => (bool) $data['enabled'], 'credentials' => array_filter(['api_key' => $key])]);
 
         return back()->with('success', (CourierPartner::LABELS[$driver] ?? $driver).' account saved.');
     }

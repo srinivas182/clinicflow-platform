@@ -50,6 +50,12 @@ class Package extends Model
         return is_int($value) ? $value : null;
     }
 
+    /** A free package has no price: no trial, no invoice, never read-only for non-payment. */
+    public function isFree(): bool
+    {
+        return $this->price_monthly_cents === 0 && $this->price_annual_cents === 0;
+    }
+
     public function hasFeature(string $feature): bool
     {
         return in_array($feature, $this->features, true);

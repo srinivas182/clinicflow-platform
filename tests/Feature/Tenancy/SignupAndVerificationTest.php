@@ -1,9 +1,11 @@
 <?php
 
+use App\Domains\Billing\Models\SubscriptionInvoice;
 use App\Domains\Identity\Enums\StaffRole;
 use App\Domains\Identity\Models\Membership;
 use App\Domains\Identity\Models\Staff;
 use App\Domains\Platform\Actions\EnforceSubscriptionStatus;
+use App\Domains\Platform\Actions\IssueSubscriptionInvoices;
 use App\Domains\Platform\Enums\ProviderStatus;
 use App\Domains\Platform\Enums\ProviderType;
 use App\Domains\Platform\Enums\SubscriptionStatus;
@@ -126,4 +128,30 @@ it('sets providers read-only after the trial and grace period, never before', fu
     expect(app(EnforceSubscriptionStatus::class)->handle())->toBe(1)
         ->and($expired->fresh()?->status)->toBe(ProviderStatus::ReadOnly)
         ->and($inGrace->fresh()?->status)->toBe(ProviderStatus::PendingVerification);
+});
+
+it('keeps free packages active: no trial, no invoice, never read-only (beta #28)', function (): void {
+    Package::query()->where('code', 'clinic-standard')->update(['price_monthly_cents' => 0, 'price_annual_cents' => 0]);
+    $this->post('http://localhost/start', signupPayload())->assertRedirect();
+    $provider = Provider::query()->sole();
+    expect($provider->subscription?->status)->toBe(SubscriptionStatus::Active)
+        ->and($provider->subscription?->trial_ends_at)->toBeNull()
+        ->and(app(IssueSubscriptionInvoices::class)->handle())->toBe(0)
+        ->and(SubscriptionInvoice::query()->count())->toBe(0);
+
+    $admin = User::factory()->create();
+    $admin->forceFill(['is_platform_admin' => true])->save();
+    $provider->verificationChecks->each(fn (VerificationCheck $c) => $this->actingAs($admin)->post("http://localhost/admin/verification-checks/{$c->id}", ['status' => 'verified']));
+    $this->actingAs($admin)->post("http://localhost/admin/providers/{$provider->id}/approve")->assertSessionHasNoErrors();
+    expect($provider->fresh()?->status)->toBe(ProviderStatus::Active);
+
+    // A free workspace whose old trial ended stays active; one made read-only before this fix is restored.
+    Subscription::query()->where('tenant_id', $provider->id)->update(['status' => SubscriptionStatus::Trialing->value, 'trial_ends_at' => now()->subDays(20)]);
+    expect(app(EnforceSubscriptionStatus::class)->handle())->toBe(0)
+        ->and($provider->fresh()?->subscription?->status)->toBe(SubscriptionStatus::Active)
+        ->and($provider->fresh()?->status)->toBe(ProviderStatus::Active);
+    Subscription::query()->where('tenant_id', $provider->id)->update(['status' => SubscriptionStatus::ReadOnly->value]);
+    Provider::query()->whereKey($provider->id)->update(['status' => ProviderStatus::ReadOnly->value]);
+    app(EnforceSubscriptionStatus::class)->handle();
+    expect($provider->fresh()?->status)->toBe(ProviderStatus::Active);
 });

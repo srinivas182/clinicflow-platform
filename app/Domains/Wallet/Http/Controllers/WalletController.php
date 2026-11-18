@@ -96,7 +96,10 @@ class WalletController extends Controller
         }
 
         $config = GatewayFactory::platformDefault();
-        abort_if($config === null, 503, 'Online payment is not available yet.');
+        if ($config === null) {
+            return response()->view('payments.done', ['title' => 'Top-up not available yet',
+                'message' => 'Online card payment is not available yet, so the wallet cannot be topped up right now. Nothing was charged. Please try again later or email '.config('clinicflow.payments.eft.email').'.']);
+        }
         $root = $request->getSchemeAndHttpHost();
 
         $start = GatewayFactory::fromConfig($config)->startCheckout(new CheckoutRequest(

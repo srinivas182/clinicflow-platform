@@ -57,6 +57,10 @@ class IssueSubscriptionInvoices
                 $locumFees = DB::connection((string) config('tenancy.database.central_connection'))->table('locum_fees')->where('tenant_id', $subscription->tenant_id)->whereNull('subscription_invoice_id');
                 $locumFeeIds = (clone $locumFees)->pluck('id')->all();
                 $amount += (int) $locumFees->sum('amount_cents');
+                if ($amount === 0) {
+                    // A free package with no add-ons or fees: nothing to invoice.
+                    return;
+                }
                 $vat = (int) round($amount * (float) config('clinicflow.payments.vat_rate', 0.15));
                 $year = now()->format('Y');
                 $next = SubscriptionInvoice::query()->where('number', 'like', "CF-{$year}-%")->count() + 1;

@@ -4,6 +4,20 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.83.0] — Beta testing T1b: money and data integrity
+
+### Fixed
+- Free packages were made read-only when their "trial" ended (#28). A free package now starts active with no trial, is never invoiced or made read-only for non-payment, and workspaces already made read-only on a free package are restored by the nightly check.
+- Paying a subscription invoice before online payment was set up showed the "back shortly" error page (#40). It now shows how to pay by EFT: amount, invoice number as reference and the platform bank account (`PLATFORM_EFT_*` settings). A wallet top-up link says plainly that nothing was charged.
+- One practice's error stopped the nightly automatic wallet top-up for every practice after it (#57). Each practice is now handled on its own and errors are logged. If the chosen top-up pack was removed, the closest pack is used and the owner is emailed; with no packs offered, automatic top-up is paused.
+- A combined group payment could be recorded against another group's invoice (#89). The invoice must now belong to the chosen group.
+- Saving a courier account with the key box blank wiped the saved key (#261). A blank box now keeps the saved key, as on the payment and WhatsApp pages.
+- A translation reviewer joining with a cell number that already has an account got a server error (#199). They now see a clear message.
+- A message wording could be saved without the code, link or ticket it needs (#281), e.g. a sign-in SMS with no code. Such wordings are now refused.
+
+### Security
+- Bot protection could be switched on with wrong Cloudflare Turnstile keys, which would lock everyone out (#191). The secret key is now checked with Cloudflare and the site key's format before the switch goes on. If Cloudflare later rejects the saved secret, forms are let through and Admin → Security shows a warning. Way back in from the server: `php artisan security:bot-protection-off`.
+
 ## [0.82.0] — Beta testing T1a: practice screens and security
 
 ### Fixed

@@ -89,6 +89,22 @@ final class MessageCatalogue
         return array_values(array_unique(array_diff($m[1], $allowed)));
     }
 
+    /** Placeholders a message is useless without: a sign-in code, a link to follow, a queue ticket. */
+    public const ESSENTIAL = ['code', 'link', 'ticket'];
+
+    /**
+     * Essential placeholders the message uses that a new wording leaves out.
+     *
+     * @return list<string>
+     */
+    public static function missingPlaceholders(string $key, string $text): array
+    {
+        preg_match_all('/\{\{\s*([a-z_]+)\s*\}\}/', $text, $m);
+        $needed = array_intersect(self::ESSENTIAL, self::get($key)['placeholders'] ?? []);
+
+        return array_values(array_diff($needed, $m[1]));
+    }
+
     /**
      * @param  array<string, string>  $vars
      */

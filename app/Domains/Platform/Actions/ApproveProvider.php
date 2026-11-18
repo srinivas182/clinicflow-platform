@@ -13,7 +13,7 @@ use App\Models\User;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Takes a verified provider live (trial): listed in the directory, bookings open.
+ * Takes a verified provider live (trial, or active on a free package): listed in the directory, bookings open.
  */
 class ApproveProvider
 {
@@ -36,7 +36,8 @@ class ApproveProvider
             ]);
         }
 
-        $provider->status = ProviderStatus::Trial;
+        // Free packages go straight to active; paid ones start their trial.
+        $provider->status = $provider->subscription?->package->isFree() === true ? ProviderStatus::Active : ProviderStatus::Trial;
         $provider->save();
 
         activity('platform')->causedBy($admin)->performedOn($provider)->log('Provider approved');

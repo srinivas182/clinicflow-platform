@@ -112,7 +112,11 @@ it('shows group admins totals per practice without patient records, and settles 
     }
     $gi = $groups->issueCombinedInvoice($group);
     expect(DB::table('group_invoices')->where('id', $gi)->value('total_cents'))->toBe(342700);
-    $groups->settleCombined((int) $gi, 'eft', 'EFT-2026-10');
+    // A payment cannot be recorded against another group's invoice (beta #89).
+    $otherGroup = ProviderGroup::create(['name' => 'Other chain', 'billing' => 'combined']);
+    expect(fn () => $groups->settleCombined($otherGroup, (int) $gi, 'eft', 'EFT-2026-10'))->toThrow(ValidationException::class);
+    expect(SubscriptionInvoice::query()->where('status', 'paid')->count())->toBe(0);
+    $groups->settleCombined($group, (int) $gi, 'eft', 'EFT-2026-10');
     expect(SubscriptionInvoice::query()->where('status', 'paid')->count())->toBe(2);
 });
 
