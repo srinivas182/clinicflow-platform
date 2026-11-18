@@ -27,8 +27,10 @@ The super admin runs the platform: practices and packages, providers for messagi
 ## 3. File storage
 
 1. **Add storage** (Amazon S3 Cape Town `af-south-1` recommended, or any S3-compatible provider) and **Test connection** — a target cannot be activated until the test passes.
-2. Copy existing files: `php artisan storage:copy-to-active <id> --dry-run`, then without `--dry-run`. Every file is checked by size and SHA-256; nothing is deleted.
-3. **Activate**, then run the copy once more to catch files uploaded in between.
+2. **Copy files** — existing files are copied in the background and every file is checked by size and SHA-256; nothing is deleted. The page shows progress. (From the server: `php artisan storage:copy-to-active <id>`, with `--dry-run` to preview.)
+3. **Activate** — only possible once a copy with no failures was made from where the files are now. Files uploaded since the copy are copied automatically.
+
+The storage in use cannot be moved (bucket, region, endpoint, folder); add a new storage and copy instead. Its keys can be changed, and new keys are used only after they pass the connection test.
 
 Local disk works for a single server only. Local folders must be outside the application (never inside public/).
 
