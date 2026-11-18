@@ -111,7 +111,9 @@ class LocumController extends Controller
 
     public function review(Request $request, int $profile, LocumMarketplace $market): RedirectResponse
     {
-        $data = $request->validate(['approve' => ['required', 'boolean'], 'note' => ['nullable', 'string', 'max:255']]);
+        // "Not verified" needs a reason, checked on the server too (beta #133).
+        $data = $request->validate(['approve' => ['required', 'boolean'], 'note' => ['nullable', 'required_if:approve,false,0', 'string', 'max:255']],
+            ['note.required_if' => 'Give the reason the locum is not verified.']);
         $market->review($profile, (bool) $data['approve'], $this->user($request)->id, $data['note'] ?? null);
 
         return back()->with('success', $data['approve'] ? 'Locum verified.' : 'Locum not verified.');
@@ -159,7 +161,7 @@ class LocumController extends Controller
     {
         $this->authorize(Permission::STAFF_MANAGE);
         $data = $request->validate([
-            'title' => ['required', 'string', 'max:120'], 'starts_at' => ['required', 'date'], 'ends_at' => ['required', 'date'], 'rate' => ['required', 'numeric', 'min:0'],
+            'title' => ['required', 'string', 'max:120'], 'starts_at' => ['required', 'date'], 'ends_at' => ['required', 'date'], 'rate' => ['required', 'numeric', 'gt:0', 'max:100000'],
             'rate_basis' => ['required', Rule::in(['hour', 'shift'])], 'requirements' => ['nullable', 'string', 'max:1000'], 'branch_id' => ['nullable', 'integer'], 'invited_profile_id' => ['nullable', 'integer'],
             'area' => ['nullable', 'string', 'max:60'],
         ]);

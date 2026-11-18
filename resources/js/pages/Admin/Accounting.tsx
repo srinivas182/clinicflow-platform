@@ -114,11 +114,14 @@ function AppCard({
                 >
                     Save
                 </Button>
-                <a href={`/admin/accounting/${a.driver}/connect`}>
-                    <Button size="sm" variant="secondary">
-                        Connect the platform's books
-                    </Button>
-                </a>
+                {/* Only once the app is offered and its keys are saved (beta #75). */}
+                {a.offered && a.clientId && a.hasSecret && (
+                    <a href={`/admin/accounting/${a.driver}/connect`}>
+                        <Button size="sm" variant="secondary">
+                            Connect the platform's books
+                        </Button>
+                    </a>
+                )}
             </div>
             {a.platform && (
                 <div className="mt-3 border-t border-line pt-3 text-sm">

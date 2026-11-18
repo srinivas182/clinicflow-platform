@@ -163,6 +163,11 @@ function ProviderCard({ p }: { p: ProviderRow }) {
                 <Button
                     size="sm"
                     onClick={() =>
+                        (state.mode !== "live" ||
+                            p.mode === "live" ||
+                            window.confirm(
+                                "Switch to Live? Messages will reach real patients and are charged.",
+                            )) &&
                         router.put(
                             `/admin/messaging/providers/${p.driver}`,
                             state,

@@ -13,6 +13,7 @@ import {
     CreditCard,
     Globe,
     Handshake,
+    History,
     HardDrive,
     Languages,
     Layers,
@@ -64,6 +65,7 @@ const nav = [
     { label: "Couriers", icon: Truck, href: "/admin/couriers" },
     { label: "Messaging", icon: MessageSquare, href: "/admin/messaging" },
     { label: "Website", icon: Globe, href: "/admin/pages" },
+    { label: "Activity log", icon: History, href: "/admin/activity" },
 ];
 
 /**

@@ -245,7 +245,7 @@ Route::middleware([
         Route::post('/payments/{payment}/refunds', [InvoiceController::class, 'refund'])->name('payments.refund');
 
         Route::get('/settings/payments', [PaymentSettingsController::class, 'index'])->name('settings.payments');
-        Route::put('/settings/payments/{gateway}', [PaymentSettingsController::class, 'update'])->name('settings.payments.update');
+        Route::put('/settings/payments/{gateway}', [PaymentSettingsController::class, 'update'])->name('settings.payments.update')->middleware('step-up.live');
         Route::post('/settings/payments/{gateway}/test', [PaymentSettingsController::class, 'test'])->name('settings.payments.test');
         Route::get('/settings/subscription', [SubscriptionBillingController::class, 'index'])->name('settings.subscription');
         Route::post('/settings/subscription/auto-debit/stop', [SubscriptionBillingController::class, 'stopAutoDebit'])->name('settings.subscription.autodebit.stop');

@@ -16,6 +16,7 @@ use App\Domains\Platform\Models\Package;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\Setting;
 use App\Domains\Platform\Models\Subscription;
+use App\Http\Middleware\RequireRecentConfirmation;
 use App\Models\User;
 use Database\Seeders\PackageSeeder;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
@@ -50,7 +51,12 @@ afterEach(function (): void {
 
 function supplier(object $t, string $driver, array $overrides = []): void
 {
-    $t->actingAs($t->admin)->put("http://localhost/admin/messaging/providers/{$driver}", array_merge([
+    if (($overrides['mode'] ?? 'test') === 'live') {
+        // Live needs a successful test message first (beta #278) and a fresh identity check.
+        supplier($t, $driver, ['mode' => 'test'] + $overrides);
+        MessagingProvider::query()->where('driver', $driver)->update(['last_test_ok' => true]);
+    }
+    $t->actingAs($t->admin)->withSession([RequireRecentConfirmation::SESSION_KEY => now()->getTimestamp()])->put("http://localhost/admin/messaging/providers/{$driver}", array_merge([
         'mode' => 'test', 'enabled' => true, 'is_default' => true, 'sender' => $driver === 'ses' ? 'no-reply@clinicflow.test' : 'ClinicFlow',
         'test_recipients' => '0825550000', 'credentials' => ['account_sid' => 'AC123', 'auth_token' => 'tok', 'region' => 'af-south-1', 'smtp_username' => 'u', 'smtp_password' => 'p'],
     ], $overrides))->assertSessionHasNoErrors();

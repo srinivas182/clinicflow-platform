@@ -258,13 +258,13 @@ export default function RegisterPatient() {
                             label="Cell number"
                             name="cell"
                             inputMode="tel"
-                            maxLength={10}
+                            maxLength={16}
                             disabled={form.data.no_cell}
                             value={form.data.cell}
                             onChange={(ev) =>
                                 form.setData(
                                     "cell",
-                                    ev.target.value.replace(/\D/g, ""),
+                                    ev.target.value.replace(/[^\d+ ]/g, ""),
                                 )
                             }
                             error={e.cell}
@@ -302,12 +302,12 @@ export default function RegisterPatient() {
                             <Field
                                 label="Guardian cell"
                                 name="guardian_cell"
-                                maxLength={10}
+                                maxLength={16}
                                 value={form.data.guardian_cell}
                                 onChange={(ev) =>
                                     form.setData(
                                         "guardian_cell",
-                                        ev.target.value.replace(/\D/g, ""),
+                                        ev.target.value.replace(/[^\d+ ]/g, ""),
                                     )
                                 }
                             />

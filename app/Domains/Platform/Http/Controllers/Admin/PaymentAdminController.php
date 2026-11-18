@@ -39,7 +39,7 @@ class PaymentAdminController extends Controller
 
     public function update(Request $request, string $gateway, SaveGatewayConfig $action): RedirectResponse
     {
-        $g = Gateway::from($gateway);
+        $g = Gateway::tryFrom($gateway) ?? abort(404);
         $data = PaymentSettingsController::validated($request);
         $action->handle(PlatformGatewayConfig::class, $g, GatewayMode::from($data['mode']), (bool) $data['enabled'], (bool) ($data['is_default'] ?? false),
             $data['credentials'] ?? [], $request->user() instanceof User ? $request->user() : null,
@@ -50,7 +50,7 @@ class PaymentAdminController extends Controller
 
     public function test(string $gateway): RedirectResponse
     {
-        $config = PlatformGatewayConfig::query()->where('gateway', Gateway::from($gateway)->value)->firstOrFail();
+        $config = PlatformGatewayConfig::query()->where('gateway', (Gateway::tryFrom($gateway) ?? abort(404))->value)->firstOrFail();
         $result = GatewayFactory::fromConfig($config)->testConnection();
         $config->forceFill(['last_tested_at' => now(), 'last_test_ok' => $result->ok])->save();
 

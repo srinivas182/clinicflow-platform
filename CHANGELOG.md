@@ -4,6 +4,21 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.86.0] — Beta testing T3: admin safety, validation and activity log
+
+### Added
+- **Admin → Activity log**: every change made in Admin (who, which screen, what was submitted — secrets masked), with search and filters. Platform and practice settings record old and new values. Also logged: courier accounts, delivery bookings and status changes, translation saves (who wrote which words). Covers tracker rows 56, 74, 90, 96, 121, 145, 169, 181, 206, 235, 249, 257, 262, 270, 282.
+- Price rises for packages with paying practices take effect after 30 days' notice by email; the package page shows how many practices are on each plan and the pending price (#22).
+- Cell numbers may be typed as +27 82 123 4567, 27… or with spaces/dashes; they are stored as 0821234567 (practice tab row 1).
+
+### Changed
+- Switching a payment, video or SMS/email supplier to **Live** asks "are you sure" and needs a fresh identity check (#46, #67, #278). SMS/email Live also needs a successful test message with the same keys (#278).
+- A saved connection test is cleared when keys or mode change; Test connection appears only once settings are saved; failed tests show in red (#47, #66).
+
+### Fixed
+- Validation with clear messages instead of server errors or silent success: unknown payment gateway (#48); wallet prices above R0 with ceilings, unique packs, bonus not above its pack (#54, #55); video address/key can be cleared (#65); Connect for accounting only when the app is on with keys (#75); unique group names, valid billing values, "Nothing to invoice" (#83, #86, #87); "Nothing to pay" for resellers (#120); locum "Not verified" needs a reason, shift rate above R0 (#133, #135); AI scribe price limits (#147); unique brand names, SVG logos with scripts refused, unknown brand/practice not found (#157, #161, #163); unique storage names (#173); support text length, unknown ticket, closed tickets stay closed (#211, #213, #214); status page components, future maintenance dates, unknown incidents, statuses per kind (#226, #227, #229, #230); WhatsApp supplier needs keys and a numeric sender, known key names, clearable sender, price limits (#241, #242, #244); maximum delivery fee, address and tracking length (#264, #266); one active delivery per visit; Collected only after booking with a tracking number (#267, #269); SMS sender format (#277); extra-message price above R0 (#285); reserved web addresses and unique menu positions shown next to the field (#291, #294).
+- Combined group invoices no longer pick up voided invoices.
+
 ## [0.85.0] — Beta testing T2: clinic onboarding and subscription journey
 
 ### Added

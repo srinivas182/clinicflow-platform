@@ -43,6 +43,8 @@ class Translations
         // Any change needs fresh approvals.
         $t->fill(['source' => $u['source'], 'text' => $text === '' ? null : $text, 'medical' => $u['medical'], 'status' => $text === '' ? 'missing' : $status,
             'approved_by' => null, 'approved_at' => null, 'clinical_approved_by' => null, 'clinical_approved_at' => null, 'updated_by' => $user->id])->save();
+        // Who wrote which words (beta #206).
+        activity('translation')->causedBy($user)->withProperties(['language' => $language, 'unit' => $unit, 'text' => $t->text])->log('Translation saved');
         $this->publishUnit($language, $unit);
 
         return $t;

@@ -205,12 +205,12 @@ export default function Start({
                         <Field
                             label="Cell number"
                             name="owner_phone"
-                            maxLength={10}
+                            maxLength={16}
                             value={form.data.owner_phone}
                             onChange={(ev) =>
                                 form.setData(
                                     "owner_phone",
-                                    ev.target.value.replace(/\D/g, ""),
+                                    ev.target.value.replace(/[^\d+ ]/g, ""),
                                 )
                             }
                             error={e.owner_phone}

@@ -48,7 +48,7 @@ class DeliveryController extends Controller
     {
         $this->authorize(Permission::SETTINGS_MANAGE);
         $data = $request->validate([
-            'mode' => ['required', Rule::in(['patient', 'practice', 'threshold'])], 'fee' => ['required', 'numeric', 'min:0'], 'threshold' => ['required', 'numeric', 'min:0'],
+            'mode' => ['required', Rule::in(['patient', 'practice', 'threshold'])], 'fee' => ['required', 'numeric', 'min:0', 'max:1000'], 'threshold' => ['required', 'numeric', 'min:0', 'max:100000'],
             'below_payer' => ['required', Rule::in(['patient', 'practice'])], 'above_payer' => ['required', Rule::in(['patient', 'practice'])],
             'allow_scheduled' => ['required', 'boolean'], 'publish_stock' => ['required', 'boolean'],
         ]);
@@ -71,6 +71,8 @@ class DeliveryController extends Controller
         $saved = CourierAccount::query()->where('driver', $driver)->first();
         $key = filled($data['api_key'] ?? null) ? trim((string) $data['api_key']) : ($saved?->credentials['api_key'] ?? null);
         CourierAccount::query()->updateOrCreate(['driver' => $driver], ['account_ref' => $data['account_ref'], 'enabled' => (bool) $data['enabled'], 'credentials' => array_filter(['api_key' => $key])]);
+        activity('settings')->causedBy($request->user())->withProperties(['driver' => $driver, 'account_ref' => $data['account_ref'], 'enabled' => (bool) $data['enabled'],
+            'key_changed' => filled($data['api_key'] ?? null)])->log('Courier account saved');
 
         return back()->with('success', (CourierPartner::LABELS[$driver] ?? $driver).' account saved.');
     }

@@ -4,10 +4,17 @@ declare(strict_types=1);
 
 namespace App\Domains\Platform\Http\Controllers\Admin;
 
+use App\Domains\Platform\Enums\SubscriptionStatus;
 use App\Domains\Platform\Models\Package;
+use App\Domains\Platform\Models\Provider;
+use App\Domains\Platform\Models\Subscription;
+use App\Domains\Platform\Notifications\PracticeNotice;
+use App\Domains\Platform\Support\PracticeContacts;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,7 +30,9 @@ class PackageAdminController extends Controller
                 'id' => $p->id,
                 'name' => $p->name,
                 'providerType' => $p->provider_type->label(),
-                'priceMonthly' => $p->price_monthly_cents / 100,
+                'priceMonthly' => ($p->pending_price_monthly_cents ?? $p->price_monthly_cents) / 100,
+                'pending' => $p->pending_price_from === null ? null : ['from' => $p->pending_price_from->toDateString(), 'current' => $p->price_monthly_cents / 100],
+                'paying' => $this->paying($p)->count(),
                 'trialDays' => $p->trial_days,
                 'limits' => $p->limits,
                 'features' => $p->features,
@@ -41,15 +50,46 @@ class PackageAdminController extends Controller
         ]);
 
         $cents = (int) round(((float) $data['price_monthly']) * 100);
-        $package->forceFill([
-            'price_monthly_cents' => $cents,
-            'price_annual_cents' => (int) round($cents * 12 * 0.85),
-            'trial_days' => (int) $data['trial_days'],
-            'is_active' => (bool) $data['is_active'],
-        ])->save();
+        $old = $package->price_monthly_cents;
+        $package->forceFill(['trial_days' => (int) $data['trial_days'], 'is_active' => (bool) $data['is_active']]);
+        $paying = $this->paying($package);
+        $message = "{$package->name} updated.";
+        if ($cents > $old && $package->pending_price_monthly_cents === $cents) {
+            $message .= ' The price rise already notified still applies from '.$package->pending_price_from?->toDateString().'.';
+        } elseif ($cents > $old && $paying->isNotEmpty()) {
+            // A price rise for paying practices: 30 days' notice by email; it applies from that date (beta #22).
+            $from = now()->addDays(Package::NOTICE_DAYS)->startOfDay();
+            $package->forceFill(['pending_price_monthly_cents' => $cents, 'pending_price_from' => $from]);
+            $this->notify($package, $paying, $old, $cents, $from->toDateString());
+            $message .= " The new price applies from {$from->toDateString()}; {$paying->count()} paying practice(s) were emailed 30 days' notice.";
+        } elseif ($cents !== $old || $package->pending_price_from !== null) {
+            $package->forceFill(['price_monthly_cents' => $cents, 'price_annual_cents' => (int) round($cents * 12 * 0.85), 'pending_price_monthly_cents' => null, 'pending_price_from' => null]);
+            $message .= $paying->isNotEmpty() && $cents < $old ? ' Paying practices move to the lower price at their next invoice.' : '';
+        }
+        $package->save();
+        activity('platform')->causedBy($request->user())->performedOn($package)->withProperties(['old_cents' => $old, 'new_cents' => $cents, 'paying' => $paying->count()])->log('Package updated');
 
-        activity('platform')->causedBy($request->user())->performedOn($package)->log('Package updated');
+        return back()->with('success', $message);
+    }
 
-        return back()->with('success', "{$package->name} updated. Existing providers move to the new price at their next billing date.");
+    /** @return Collection<int, string> tenant ids of practices paying for (or trialling) this package */
+    private function paying(Package $package): Collection
+    {
+        return Subscription::query()->where('package_id', $package->id)->whereIn('status', [SubscriptionStatus::Active->value, SubscriptionStatus::PastDue->value, SubscriptionStatus::Trialing->value])
+            ->pluck('tenant_id')->map(fn ($id): string => (string) $id)->values();
+    }
+
+    /** @param  Collection<int, string>  $tenants */
+    private function notify(Package $package, Collection $tenants, int $old, int $new, string $from): void
+    {
+        $r = fn (int $c): string => 'R'.number_format($c / 100, 2, '.', ' ');
+        foreach (Provider::query()->whereIn('id', $tenants)->get() as $provider) {
+            if (! $provider instanceof Provider) {
+                continue;
+            }
+            Notification::send(PracticeContacts::owners($provider->id), new PracticeNotice("Price change for {$package->name} from {$from}",
+                ["The {$package->name} plan changes from {$r($old)} to {$r($new)} a month (excl. VAT) from {$from}.", 'Invoices for periods starting before then keep the current price. You can change plan at any time in Settings → Subscription.'],
+                'View plans', PracticeContacts::url($provider, '/settings/subscription'), 'price_change'));
+        }
     }
 }

@@ -20,6 +20,7 @@ export interface GatewayRow {
     offered: boolean;
     apiRefunds: boolean;
     lastTestOk: boolean | null;
+    saved?: boolean;
     webhookUrl: string;
     fields: GatewayField[];
 }
@@ -49,6 +50,15 @@ export function GatewayCard({
 
     const submit = (e: FormEvent) => {
         e.preventDefault();
+        // Live takes real money (beta #46): ask first; the server also asks for a fresh sign-in check.
+        if (
+            form.data.mode === "live" &&
+            row.mode !== "live" &&
+            !window.confirm(
+                `Switch ${row.label} to Live? Real payments will be taken from patients and practices.`,
+            )
+        )
+            return;
         form.put(`${base}/${row.gateway}`, { preserveScroll: true });
     };
 
@@ -67,6 +77,9 @@ export function GatewayCard({
                     </Badge>
                     {row.lastTestOk === true && (
                         <Badge tone="teal">Tested</Badge>
+                    )}
+                    {row.lastTestOk === false && (
+                        <Badge tone="danger">Test failed</Badge>
                     )}
                 </span>
             }
@@ -155,19 +168,21 @@ export function GatewayCard({
                     <Button type="submit" disabled={form.processing}>
                         Save
                     </Button>
-                    <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={() =>
-                            router.post(
-                                `${base}/${row.gateway}/test`,
-                                {},
-                                { preserveScroll: true },
-                            )
-                        }
-                    >
-                        Test connection
-                    </Button>
+                    {row.saved !== false && !form.isDirty && (
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() =>
+                                router.post(
+                                    `${base}/${row.gateway}/test`,
+                                    {},
+                                    { preserveScroll: true },
+                                )
+                            }
+                        >
+                            Test connection
+                        </Button>
+                    )}
                 </div>
             </form>
         </Card>

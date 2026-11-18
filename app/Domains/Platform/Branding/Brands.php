@@ -38,6 +38,13 @@ class Brands
         } elseif ($this->db()->table('brands')->where('slug', $slug)->when($id !== null, fn ($q) => $q->where('id', '!=', $id))->exists()) {
             $errors['slug'] = 'That short name is taken.';
         }
+        // Unique brand names (beta #157).
+        if ($this->db()->table('brands')->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($data['name']))])->when($id !== null, fn ($q) => $q->where('id', '!=', $id))->exists()) {
+            $errors['name'] = 'Another brand has this name.';
+        }
+        if ($id !== null && ! $this->db()->table('brands')->where('id', $id)->exists()) {
+            abort(404);
+        }
         foreach (['primary_color', 'accent_color'] as $c) {
             if (preg_match('/^#[0-9a-fA-F]{6}$/', $data[$c]) !== 1) {
                 $errors[$c] = 'Use a colour like #0f7c74.';
@@ -50,6 +57,9 @@ class Brands
         }
         if ($logo !== null && (! in_array($logo->getMimeType(), ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp'], true) || $logo->getSize() > 200 * 1024)) {
             $errors['logo'] = 'Upload a PNG, JPG, WebP or SVG logo up to 200 KB.';
+        } elseif ($logo !== null && $logo->getMimeType() === 'image/svg+xml' && self::unsafeSvg((string) file_get_contents($logo->getRealPath()))) {
+            // An SVG can carry scripts that run when the logo is opened (beta #161).
+            $errors['logo'] = 'This SVG contains scripts or links to other files. Upload a plain SVG, or a PNG.';
         }
         if ($errors !== []) {
             throw ValidationException::withMessages($errors);
@@ -142,8 +152,16 @@ class Brands
             'sms' => $brand !== null && (bool) $brand->sms_sender_approved && $brand->sms_sender !== null ? (string) $brand->sms_sender : null];
     }
 
+    /** Scripts, event handlers, foreign objects or external references in an SVG. */
+    public static function unsafeSvg(string $svg): bool
+    {
+        return preg_match('/<\s*script|<\s*foreignObject|\son[a-z]+\s*=|javascript:|<!ENTITY|xlink:href\s*=\s*["\'](?!#)|\shref\s*=\s*["\'](?!#)/i', $svg) === 1;
+    }
+
     public function assign(string $providerId, ?int $brandId): void
     {
+        // Unknown practice: not found instead of a silent "updated" (beta #163).
+        abort_unless(Provider::query()->whereKey($providerId)->exists(), 404);
         if ($brandId !== null && ! $this->db()->table('brands')->where('id', $brandId)->exists()) {
             throw ValidationException::withMessages(['brand_id' => 'Choose a brand.']);
         }

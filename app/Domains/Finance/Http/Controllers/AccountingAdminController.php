@@ -40,7 +40,7 @@ class AccountingAdminController extends Controller
     public function save(Request $request, string $driver): RedirectResponse
     {
         $data = $request->validate(['offered' => ['required', 'boolean'], 'client_id' => ['nullable', 'string', 'max:255'], 'client_secret' => ['nullable', 'string', 'max:255'], 'region' => ['nullable', Rule::in(['com', 'eu', 'in', 'com.au'])]]);
-        $app = AccountingApp::query()->firstOrNew(['driver' => AccountingDriver::from($driver)->value]);
+        $app = AccountingApp::query()->firstOrNew(['driver' => (AccountingDriver::tryFrom($driver) ?? abort(404))->value]);
         $app->fill(['offered' => (bool) $data['offered'], 'client_id' => $data['client_id'] ?? $app->client_id, 'region' => $data['region'] ?? $app->region]);
         if (filled($data['client_secret'] ?? null)) {
             $app->client_secret = (string) $data['client_secret'];
@@ -52,7 +52,13 @@ class AccountingAdminController extends Controller
 
     public function connect(string $driver): HttpResponse
     {
-        return FinanceOpsController::redirectToApp(AccountingDriver::from($driver), 'platform');
+        $d = AccountingDriver::tryFrom($driver) ?? abort(404);
+        $app = AccountingApp::query()->where('driver', $d->value)->first();
+        if (! $app instanceof AccountingApp || ! $app->offered || blank($app->client_id) || blank($app->client_secret)) {
+            return back()->with('error', "Switch {$d->label()} on and save its client ID and secret first.");
+        }
+
+        return FinanceOpsController::redirectToApp($d, 'platform');
     }
 
     public function updatePlatform(Request $request, string $driver): RedirectResponse

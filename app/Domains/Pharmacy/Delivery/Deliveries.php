@@ -68,6 +68,14 @@ class Deliveries
         if (trim($address) === '') {
             throw ValidationException::withMessages(['address' => 'Enter the delivery address.']);
         }
+        if (mb_strlen(trim($address)) > 255) {
+            throw ValidationException::withMessages(['address' => 'Keep the address to 255 characters.']);
+        }
+        // One delivery at a time per visit (beta #267): a second would charge the fee twice.
+        $open = Delivery::query()->where('visit_id', $visit->id)->whereNotIn('status', ['delivered', 'failed'])->first();
+        if ($open instanceof Delivery) {
+            throw ValidationException::withMessages(['driver' => "This visit already has a delivery in progress ({$open->status}). Mark it failed before requesting another."]);
+        }
         $scheduled = PrescriptionItem::query()->whereIn('prescription_id', Prescription::query()->whereIn('consultation_id', Consultation::query()->where('visit_id', $visit->id)->select('id'))->where('status', Prescription::SIGNED)->select('id'))
             ->whereIn('schedule', ['S5', 'S6', 'S7', 'S8'])->exists();
         if ($scheduled && ! self::rules()['allow_scheduled']) {
@@ -99,10 +107,14 @@ class Deliveries
 
     public function book(Delivery $delivery, string $tracking): Delivery
     {
+        if (mb_strlen(trim($tracking)) > 60) {
+            throw ValidationException::withMessages(['tracking_number' => 'A tracking number is at most 60 characters.']);
+        }
         if ($delivery->status !== 'requested' || trim($tracking) === '') {
             throw ValidationException::withMessages(['tracking_number' => 'Enter the courier\'s tracking or waybill number.']);
         }
         $delivery->forceFill(['status' => 'booked', 'tracking_number' => trim($tracking)])->save();
+        activity('pharmacy')->performedOn($delivery)->causedBy(auth()->user())->withProperties(['tracking_number' => trim($tracking)])->log('Delivery booked');
 
         return $delivery;
     }
@@ -112,10 +124,19 @@ class Deliveries
         if (! in_array($status, ['collected', 'in_transit', 'failed'], true) || in_array($delivery->status, ['delivered', 'failed'], true)) {
             throw ValidationException::withMessages(['status' => 'This delivery cannot move to that status.']);
         }
+        // Collected only after the courier was booked with a tracking number (beta #269).
+        if ($status === 'collected' && ($delivery->status !== 'booked' || blank($delivery->tracking_number))) {
+            throw ValidationException::withMessages(['status' => 'Book the courier with a tracking number before marking it collected.']);
+        }
+        if ($status === 'in_transit' && ! in_array($delivery->status, ['booked', 'collected'], true)) {
+            throw ValidationException::withMessages(['status' => 'Book the courier before marking it in transit.']);
+        }
         if ($status === 'failed' && trim((string) $reason) === '') {
             throw ValidationException::withMessages(['reason' => 'Say why the delivery failed.']);
         }
+        $from = $delivery->status;
         $delivery->forceFill(['status' => $status, 'failure_reason' => $reason])->save();
+        activity('pharmacy')->performedOn($delivery)->causedBy(auth()->user())->withProperties(['from' => $from, 'to' => $status, 'reason' => $reason])->log("Delivery {$status}");
 
         return $delivery;
     }

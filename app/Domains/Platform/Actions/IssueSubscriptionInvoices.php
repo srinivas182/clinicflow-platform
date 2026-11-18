@@ -7,6 +7,7 @@ namespace App\Domains\Platform\Actions;
 use App\Domains\Billing\Models\SubscriptionInvoice;
 use App\Domains\Messaging\Support\MessagingUsage;
 use App\Domains\Platform\Enums\SubscriptionStatus;
+use App\Domains\Platform\Models\Package;
 use App\Domains\Platform\Models\Subscription;
 use App\Domains\Platform\Notifications\PracticeNotice;
 use App\Domains\Platform\Support\PracticeContacts;
@@ -25,6 +26,11 @@ class IssueSubscriptionInvoices
     public function handle(): int
     {
         $count = 0;
+        // Notified price rises become the package price once their date arrives.
+        Package::query()->whereNotNull('pending_price_from')->whereDate('pending_price_from', '<=', now()->toDateString())->each(function (Package $p): void {
+            $cents = (int) $p->pending_price_monthly_cents;
+            $p->forceFill(['price_monthly_cents' => $cents, 'price_annual_cents' => (int) round($cents * 12 * 0.85), 'pending_price_monthly_cents' => null, 'pending_price_from' => null])->save();
+        });
 
         Subscription::query()->with('package')
             ->whereIn('status', [SubscriptionStatus::Trialing->value, SubscriptionStatus::Active->value, SubscriptionStatus::PastDue->value, SubscriptionStatus::ReadOnly->value])
@@ -52,7 +58,7 @@ class IssueSubscriptionInvoices
         }
 
         $annual = $subscription->billing_period === 'annual';
-        $amount = $annual ? $subscription->package->price_annual_cents : $subscription->package->price_monthly_cents;
+        $amount = $annual ? $subscription->package->annualCentsOn($periodStart) : $subscription->package->monthlyCentsOn($periodStart);
         // Messaging above the package allowance in the month before this period.
         $usage = MessagingUsage::overage($subscription->tenant_id, $periodStart->copy()->subMonthNoOverflow()->format('Y-m'), $subscription->package);
         $amount += $usage['overage_cents'];

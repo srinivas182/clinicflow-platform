@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Wallet\Support;
 
+use App\Domains\Platform\Support\AuditRedactor;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -40,9 +41,17 @@ final class WalletSettings
 
     public static function put(string $key, mixed $value): void
     {
-        DB::connection((string) config('tenancy.database.central_connection'))->table('platform_settings')
+        $central = DB::connection((string) config('tenancy.database.central_connection'));
+        $stored = $central->table('platform_settings')->where('key', $key)->value('value');
+        $old = $stored === null ? self::DEFAULTS[$key] ?? null : json_decode((string) $stored, true);
+        $central->table('platform_settings')
             ->updateOrInsert(['key' => $key], ['value' => json_encode($value), 'updated_at' => now(), 'created_at' => now()]);
         Cache::forget('platform-setting:'.$key);
+        if ($old !== $value) {
+            // Old and new value of every platform setting (prices, packs, switches); secrets masked (beta #56).
+            activity('settings')->causedBy(auth()->user())->withProperties(['key' => $key, 'old' => AuditRedactor::value($key, $old), 'new' => AuditRedactor::value($key, $value)])
+                ->log("Setting changed: {$key}");
+        }
     }
 
     public static function thresholdCents(): int

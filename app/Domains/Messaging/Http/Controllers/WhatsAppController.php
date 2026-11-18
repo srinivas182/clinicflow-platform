@@ -22,6 +22,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -48,10 +49,20 @@ class WhatsAppController extends Controller
     public function saveProvider(Request $request, string $driver): RedirectResponse
     {
         abort_unless(array_key_exists($driver, WhatsAppProvider::DRIVERS), 404);
-        $data = $request->validate(['enabled' => ['required', 'boolean'], 'sender' => ['nullable', 'string', 'max:40'], 'credentials' => ['array'], 'credentials.*' => ['nullable', 'string', 'max:500']]);
+        $fields = WhatsAppProvider::DRIVERS[$driver]['fields'];
+        // Beta #241, #242: known key names only; sender is a number (Meta: the phone number ID); clearable.
+        $data = $request->validate([
+            'enabled' => ['required', 'boolean'],
+            'sender' => ['nullable', 'string', 'max:40', $driver === 'meta' ? 'regex:/^\d{5,20}$/' : 'regex:/^\+?\d{9,15}$/'],
+            'credentials' => ['array:'.implode(',', array_keys($fields))], 'credentials.*' => ['nullable', 'string', 'max:500'],
+        ], ['sender.regex' => $driver === 'meta' ? 'The phone number ID is digits only.' : 'Enter the WhatsApp number, e.g. +27821234567.', 'credentials.array' => 'Unknown key name.']);
         $p = WhatsAppProvider::query()->firstOrNew(['driver' => $driver]);
         $merged = array_merge((array) ($p->credentials ?? []), array_filter((array) ($data['credentials'] ?? []), fn ($v) => filled($v)));
-        $p->fill(['enabled' => (bool) $data['enabled'], 'sender' => $data['sender'] ?? $p->sender, 'credentials' => $merged])->save();
+        $sender = $request->exists('sender') ? ($data['sender'] ?? null) : $p->sender;
+        if ((bool) $data['enabled'] && (blank($sender) || array_diff(array_keys($fields), array_keys(array_filter($merged, fn ($v) => filled($v)))) !== [])) {
+            throw ValidationException::withMessages(['credentials' => 'Enter every key and the sender before switching this supplier on.']);
+        }
+        $p->fill(['enabled' => (bool) $data['enabled'], 'sender' => $sender, 'credentials' => $merged])->save();
         if ($p->enabled) {
             WhatsAppProvider::query()->whereKeyNot($p->id)->update(['enabled' => false]);
         }
@@ -81,7 +92,8 @@ class WhatsAppController extends Controller
 
     public function savePrices(Request $request): RedirectResponse
     {
-        $data = $request->validate(['utility' => ['required', 'numeric', 'min:0'], 'marketing' => ['required', 'numeric', 'min:0'], 'authentication' => ['required', 'numeric', 'min:0']]);
+        // Per-message prices above R0 and at most R10 (beta #244).
+        $data = $request->validate(['utility' => ['required', 'numeric', 'gt:0', 'max:10'], 'marketing' => ['required', 'numeric', 'gt:0', 'max:10'], 'authentication' => ['required', 'numeric', 'gt:0', 'max:10']]);
         foreach ($data as $category => $rand) {
             WalletSettings::put("wallet.price_whatsapp_{$category}_cents", (int) round(((float) $rand) * 100));
         }

@@ -76,7 +76,7 @@ class ProviderGroups
         if ($group->billing !== 'combined') {
             throw ValidationException::withMessages(['billing' => 'This group pays per practice.']);
         }
-        $invoices = SubscriptionInvoice::query()->whereIn('tenant_id', $group->members()->pluck('id'))->where('status', '!=', 'paid')->whereNull('group_invoice_id')->get();
+        $invoices = SubscriptionInvoice::query()->whereIn('tenant_id', $group->members()->pluck('id'))->where('status', 'open')->whereNull('group_invoice_id')->get();
         if ($invoices->isEmpty()) {
             return null;
         }

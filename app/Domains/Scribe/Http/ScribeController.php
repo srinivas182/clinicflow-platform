@@ -109,7 +109,8 @@ class ScribeController extends Controller
 
     public function savePrices(Request $request): RedirectResponse
     {
-        $data = $request->validate(['monthly' => ['required', 'numeric', 'min:0'], 'minutes' => ['required', 'integer', 'min:0'], 'per_minute' => ['required', 'numeric', 'min:0'],
+        // Sensible price limits (beta #147).
+        $data = $request->validate(['monthly' => ['required', 'numeric', 'min:0', 'max:20000'], 'minutes' => ['required', 'integer', 'min:0', 'max:100000'], 'per_minute' => ['required', 'numeric', 'gt:0', 'max:50'],
             'max_minutes' => ['required', 'integer', Rule::in(range(5, 60))]]);
         WalletSettings::put('ai.addon_monthly_cents', (int) round((float) $data['monthly'] * 100));
         WalletSettings::put('ai.addon_minutes', (int) $data['minutes']);

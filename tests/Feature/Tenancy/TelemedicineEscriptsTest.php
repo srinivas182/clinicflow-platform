@@ -125,6 +125,7 @@ it('keeps one active video option and tests the connection', function (): void {
     $admin = User::factory()->create();
     $admin->forceFill(['is_platform_admin' => true])->save();
 
+    $this->withSession([RequireRecentConfirmation::SESSION_KEY => now()->getTimestamp()]);
     $this->actingAs($admin)->put('http://localhost/admin/telemedicine/self_hosted', ['mode' => 'live', 'enabled' => true, 'url' => 'wss://video.clinicflow.test'])
         ->assertSessionHasErrors('url');
     $this->actingAs($admin)->put('http://localhost/admin/telemedicine/self_hosted', ['mode' => 'live', 'enabled' => true, 'url' => 'wss://video.clinicflow.test', 'api_key' => 'K2', 'api_secret' => 'S2-long-secret'])
