@@ -13,7 +13,7 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 - The staff menu offered screens the person's role cannot open (the owner saw My queue and Results, then a permission error). The menu now shows only screens the person may open; the server still checks every action.
 - Security: any signed-in staff member could read an AI scribe draft clinical note; only the doctor who started the session can now.
 - Search engines could index patient and staff areas: a fixed robots.txt overrode each site's own rules. Removed; the platform site now has its own rules.
-- Finance, Rosters and Templates were wider than a phone screen; KPI tile rows wrap on phones.
+- Finance, Rosters, Templates and Appointments were wider than a phone screen; KPI tile rows wrap on phones.
 
 ### Changed
 - The phone check also fails when a page raises a script error, cannot load its scripts or styles, or shows no content — a blank page used to pass.
