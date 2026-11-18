@@ -31,6 +31,7 @@ use App\Domains\Telemedicine\Support\LiveKit;
 use App\Domains\Visits\Enums\PayerType;
 use App\Domains\Wallet\Models\Wallet;
 use App\Domains\Wallet\Models\WalletReservation;
+use App\Http\Middleware\RequireRecentConfirmation;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Seeders\ClinicalReferenceSeeder;

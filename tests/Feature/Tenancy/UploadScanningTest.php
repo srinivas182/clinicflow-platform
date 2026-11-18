@@ -59,7 +59,7 @@ it('refuses uploads when the scanner is down unless set to fail open, and does n
 
     config(['clinicflow.security.virus_scan.enabled' => false]);
     $calls = $this->scanner->calls;
-    $this->actingAs($this->admin)->post('http://localhost/admin/brands', array_merge(($this->brand)(), ['slug' => 'other']))->assertSessionHasNoErrors();
+    $this->actingAs($this->admin)->post('http://localhost/admin/brands', array_merge(($this->brand)(), ['slug' => 'other', 'name' => 'Other Brand']))->assertSessionHasNoErrors();
     expect($this->scanner->calls)->toBe($calls);
 });
 

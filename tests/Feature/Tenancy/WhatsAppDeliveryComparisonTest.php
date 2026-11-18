@@ -141,7 +141,11 @@ it('applies the delivery fee rule, guards scheduled medicine and confirms delive
     expect($delivery->fresh()?->status)->toBe('delivered');
 
     app(AddInvoiceLine::class)->handle($invoice->fresh(), LineKind::Medicine, 'Insulin', 30000);
-    expect($deliveries->request($visit, 'manual', '12 Vilakazi St')->payer)->toBe('practice');
+    $manual = $deliveries->request($visit, 'manual', '12 Vilakazi St');
+    expect($manual->payer)->toBe('practice');
+    // One delivery at a time per visit (beta #267).
+    expect(fn () => $deliveries->request($visit, 'manual', '12 Vilakazi St'))->toThrow(ValidationException::class, 'already has a delivery in progress');
+    $deliveries->update($manual, 'failed', 'Patient will collect instead');
 
     $consult = Consultation::query()->where('visit_id', $visit->id)->sole();
     $rx = Prescription::create(['consultation_id' => $consult->id, 'patient_id' => $visit->patient_id, 'prescriber_staff_id' => $this->doctor->id, 'version' => 1, 'status' => Prescription::SIGNED, 'signed_at' => now()]);
