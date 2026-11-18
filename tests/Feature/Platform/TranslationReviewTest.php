@@ -37,6 +37,9 @@ beforeEach(function (): void {
     $this->reviewer = User::factory()->create(['email' => 'zulu@reviewers.test', 'password' => 'review-pass-2026']);
     $this->clinical = User::factory()->create();
     TranslatorLanguage::query()->create(['user_id' => $this->reviewer->id, 'language' => 'zu', 'clinical' => false]);
+    // Four-eyes (beta #204): a second reviewer approves what the first one wrote.
+    $this->second = User::factory()->create();
+    TranslatorLanguage::query()->create(['user_id' => $this->second->id, 'language' => 'zu', 'clinical' => false]);
     TranslatorLanguage::query()->create(['user_id' => $this->clinical->id, 'language' => 'zu', 'clinical' => true]);
     $this->admin = User::factory()->create();
     $this->admin->forceFill(['is_platform_admin' => true])->save();
@@ -56,7 +59,8 @@ it('publishes a translation only when an assigned reviewer approves it, and send
     expect(fn () => $this->t->save($this->admin, 'zu', $booking, $bookingZu))->toThrow(ValidationException::class, 'not a reviewer');
     $this->t->save($this->reviewer, 'zu', $booking, $bookingZu);
     expect(TemplateResolver::resolve('booking.confirmation', 'sms', 'zu')['body'])->not->toBe($bookingZu);
-    $this->t->approve($this->reviewer, 'zu', $booking);
+    expect(fn () => $this->t->approve($this->reviewer, 'zu', $booking))->toThrow(ValidationException::class, 'Another reviewer must approve');
+    $this->t->approve($this->second, 'zu', $booking);
     expect(TemplateResolver::resolve('booking.confirmation', 'sms', 'zu')['body'])->toBe($bookingZu);
 
     // Changing it resets the approval: English until approved again.
@@ -68,7 +72,7 @@ it('needs a clinical reviewer as well for medical wording', function (): void {
     $unit = 'message:lab.results_ready:sms';
     $text = '{{ practice }}: imiphumela yakho yaselabhorethri isilungile. Vula uhlelo lokusebenza lwe-Dr Business Flow ukuze uyibone.';
     $this->t->save($this->reviewer, 'zu', $unit, $text);
-    $this->t->approve($this->reviewer, 'zu', $unit);
+    $this->t->approve($this->second, 'zu', $unit);
     expect(MessageTemplate::query()->where(['key' => 'lab.results_ready', 'channel' => 'sms', 'language' => 'zu'])->exists())->toBeFalse();
     expect(fn () => $this->t->approveClinical($this->reviewer, 'zu', $unit))->toThrow(ValidationException::class, 'Only a clinical reviewer');
     $this->t->approveClinical($this->clinical, 'zu', $unit);
@@ -78,23 +82,23 @@ it('needs a clinical reviewer as well for medical wording', function (): void {
 it('publishes an email only when its subject and body are both approved', function (): void {
     $body = "Sawubona {{ patient }},\n\nUkuqokwa kwakho no-{{ doctor }} e-{{ practice }} kungomhla ka-{{ date }} ngo-{{ time }}.\n\n{{ practice }}";
     $this->t->save($this->reviewer, 'zu', 'message:booking.confirmation:email', $body);
-    $this->t->approve($this->reviewer, 'zu', 'message:booking.confirmation:email');
+    $this->t->approve($this->second, 'zu', 'message:booking.confirmation:email');
     expect(MessageTemplate::query()->where(['key' => 'booking.confirmation', 'channel' => 'email', 'language' => 'zu'])->exists())->toBeFalse();
     $this->t->save($this->reviewer, 'zu', 'message:booking.confirmation:subject', 'Ukubhukha kwakho kuqinisekisiwe');
-    $this->t->approve($this->reviewer, 'zu', 'message:booking.confirmation:subject');
+    $this->t->approve($this->second, 'zu', 'message:booking.confirmation:subject');
     $email = TemplateResolver::resolve('booking.confirmation', 'email', 'zu');
     expect($email['subject'])->toBe('Ukubhukha kwakho kuqinisekisiwe')->and($email['body'])->toBe($body);
 });
 
 it('falls back to English when the English changes, until a reviewer re-checks', function () use ($booking, $bookingZu): void {
     $this->t->save($this->reviewer, 'zu', $booking, $bookingZu);
-    $this->t->approve($this->reviewer, 'zu', $booking);
+    $this->t->approve($this->second, 'zu', $booking);
     $confirmed = [RequireRecentConfirmation::SESSION_KEY => now()->getTimestamp()];
     $this->actingAs($this->admin)->withSession($confirmed)->put('http://localhost/admin/messaging/templates', [
         'key' => 'booking.confirmation', 'channel' => 'sms', 'language' => 'en', 'body' => '{{ practice }}: you are booked for {{ date }} at {{ time }} with {{ doctor }}.',
     ])->assertRedirect()->assertSessionHasNoErrors()->assertSessionHas('success');
     expect(TemplateResolver::resolve('booking.confirmation', 'sms', 'zu')['body'])->toBe('{{ practice }}: you are booked for {{ date }} at {{ time }} with {{ doctor }}.');
-    expect(fn () => $this->t->approve($this->reviewer, 'zu', $booking))->toThrow(ValidationException::class, 'English has changed');
+    expect(fn () => $this->t->approve($this->second, 'zu', $booking))->toThrow(ValidationException::class, 'English has changed');
     // The admin editor no longer writes other languages directly (they go through review).
     $this->actingAs($this->admin)->withSession($confirmed)->put('http://localhost/admin/messaging/templates', [
         'key' => 'booking.confirmation', 'channel' => 'sms', 'language' => 'zu', 'body' => 'x {{ practice }}',
@@ -188,4 +192,22 @@ it('tells a new reviewer when their cell number already has an account (beta #19
         'password' => 'isiZulu-2026', 'password_confirmation' => 'isiZulu-2026'])
         ->assertSessionHasErrors(['phone' => 'This cell number already belongs to another account. Sign in with that account, or use another number.']);
     expect(User::query()->where('email', 'sipho@reviewers.test')->exists())->toBeFalse();
+});
+
+it('puts texts approved by a removed reviewer on the re-check list until another reviewer approves them (beta #205)', function () use ($booking, $bookingZu): void {
+    $this->t->save($this->reviewer, 'zu', $booking, $bookingZu);
+    $this->t->approve($this->second, 'zu', $booking);
+    $assignment = TranslatorLanguage::query()->where('user_id', $this->second->id)->sole();
+    $confirmed = [RequireRecentConfirmation::SESSION_KEY => now()->getTimestamp()];
+    $this->actingAs($this->admin)->withSession($confirmed)->delete("http://localhost/admin/languages/reviewers/{$assignment->id}")->assertSessionHas('success');
+
+    // Still live, but flagged for the remaining reviewer — who wrote it, so a third reviewer must approve.
+    expect(TemplateResolver::resolve('booking.confirmation', 'sms', 'zu')['body'])->toBe($bookingZu);
+    $this->flushSession();
+    $this->actingAs($this->reviewer)->get('http://localhost/translate?language=zu')->assertOk()->assertInertia(fn ($p) => $p->where('items', fn ($items) => collect($items)
+        ->contains(fn ($i) => $i['unit'] === $booking && $i['recheck'] === 'Approved by a reviewer who was removed' && $i['mine'] === true)));
+    $third = User::factory()->create();
+    TranslatorLanguage::query()->create(['user_id' => $third->id, 'language' => 'zu', 'clinical' => false]);
+    $this->t->approve($third, 'zu', $booking);
+    expect(Translation::query()->where(['language' => 'zu', 'unit' => $booking])->value('recheck_reason'))->toBeNull();
 });

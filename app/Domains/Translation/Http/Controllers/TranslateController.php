@@ -34,12 +34,13 @@ class TranslateController extends Controller
             'language' => $language,
             'languages' => Language::query()->whereIn('code', $mine->keys())->orderBy('name')->get(['code', 'name'])->values(),
             'clinicalReviewer' => (bool) $mine->get($language)?->clinical,
-            'items' => collect($units)->map(function (array $u, string $unit) use ($rows): array {
+            'items' => collect($units)->map(function (array $u, string $unit) use ($rows, $user): array {
                 $t = $rows->get($unit);
 
                 return ['unit' => $unit, 'english' => $u['source'], 'context' => $u['context'], 'placeholders' => $u['placeholders'], 'medical' => $u['medical'], 'sms' => $u['sms'],
                     'text' => $t?->text, 'status' => $t !== null ? $t->status : 'missing', 'englishChanged' => $t !== null && $t->text !== null && $t->source !== $u['source'],
-                    'approved' => $t?->approved_at !== null, 'clinicalApproved' => $t?->clinical_approved_at !== null, 'live' => $t?->isLive($u['source']) ?? false];
+                    'approved' => $t?->approved_at !== null, 'clinicalApproved' => $t?->clinical_approved_at !== null, 'live' => $t?->isLive($u['source']) ?? false,
+                    'recheck' => $t?->recheck_reason, 'mine' => $t?->updated_by !== null && (int) $t->updated_by === $user->id];
             })->values(),
         ]);
     }

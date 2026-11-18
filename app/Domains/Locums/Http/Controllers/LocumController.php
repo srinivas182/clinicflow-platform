@@ -64,7 +64,10 @@ class LocumController extends Controller
             'hpcsa_number' => ['required', 'string', 'max:20'], 'qualifications' => ['required', 'string', 'max:500'], 'languages' => ['required', 'array', 'min:1'], 'languages.*' => ['string', 'max:30'],
             'areas' => ['required', 'array', 'min:1'], 'areas.*' => ['string', 'max:60'], 'hourly_rate' => ['nullable', 'numeric', 'min:0'], 'bio' => ['nullable', 'string', 'max:1000'],
             'vat_number' => ['nullable', 'regex:/^4\d{9}$/'], 'alerts_email' => ['boolean'], 'alerts_sms' => ['boolean'],
-        ], ['vat_number.regex' => 'A South African VAT number has 10 digits and starts with 4.']);
+            // Locum shifts are for doctors only (beta #129): an MP number (checked in saveProfile) and a declaration.
+            'doctor_declaration' => ['accepted'],
+        ], ['vat_number.regex' => 'A South African VAT number has 10 digits and starts with 4.',
+            'doctor_declaration.accepted' => 'Confirm that you are a medical practitioner registered with the HPCSA.']);
         $market->saveProfile($this->user($request), ['hpcsa_number' => $data['hpcsa_number'], 'qualifications' => $data['qualifications'], 'languages' => array_values($data['languages']),
             'areas' => array_values($data['areas']), 'hourly_rate_cents' => isset($data['hourly_rate']) ? (int) round(((float) $data['hourly_rate']) * 100) : null, 'bio' => $data['bio'] ?? null,
             'vat_number' => $data['vat_number'] ?? null, 'alerts_email' => (bool) ($data['alerts_email'] ?? true), 'alerts_sms' => (bool) ($data['alerts_sms'] ?? false)]);

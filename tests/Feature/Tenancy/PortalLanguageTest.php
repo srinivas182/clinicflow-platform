@@ -22,6 +22,8 @@ beforeEach(function (): void {
     $this->clinical = User::factory()->create();
     TranslatorLanguage::query()->create(['user_id' => $this->reviewer->id, 'language' => 'zu', 'clinical' => false]);
     TranslatorLanguage::query()->create(['user_id' => $this->clinical->id, 'language' => 'zu', 'clinical' => true]);
+    $this->second = User::factory()->create();
+    TranslatorLanguage::query()->create(['user_id' => $this->second->id, 'language' => 'zu', 'clinical' => false]);
     $this->t = app(Translations::class);
 });
 
@@ -39,7 +41,7 @@ it('shows the portal in English until a translation is approved and the language
     $this->t->save($this->reviewer, 'zu', 'ui:portal.login.sign_in', 'Ngena');
     $this->get('http://sunrise.clinicflow.test/my/login')->assertInertia(fn ($p) => $p->where('portalText', fn ($texts) => $texts['portal.login.sign_in'] === 'Sign in')); // draft only
 
-    $this->t->approve($this->reviewer, 'zu', 'ui:portal.login.sign_in');
+    $this->t->approve($this->second, 'zu', 'ui:portal.login.sign_in');
     $this->get('http://sunrise.clinicflow.test/my/login')->assertInertia(fn ($p) => $p->where('portalLanguage', 'zu')
         ->where('portalText', fn ($texts) => $texts['portal.login.sign_in'] === 'Ngena' && $texts['portal.login.send_code'] === 'Send code'));
 });
@@ -48,7 +50,7 @@ it('needs a clinical approval as well for results-page wording', function (): vo
     Language::query()->whereKey('zu')->update(['enabled' => true]);
     $unit = 'ui:portal.results.your_doctor_reviews_results_before_you_s';
     $this->t->save($this->reviewer, 'zu', $unit, 'Udokotela wakho uhlola imiphumela ngaphambi kokuthi uyibone.');
-    $this->t->approve($this->reviewer, 'zu', $unit);
+    $this->t->approve($this->second, 'zu', $unit);
     expect(PortalText::dictionary('zu')['portal.results.your_doctor_reviews_results_before_you_s'])->toBe('Your doctor reviews results before you see them.');
     $this->t->approveClinical($this->clinical, 'zu', $unit);
     expect(PortalText::dictionary('zu')['portal.results.your_doctor_reviews_results_before_you_s'])->toBe('Udokotela wakho uhlola imiphumela ngaphambi kokuthi uyibone.');

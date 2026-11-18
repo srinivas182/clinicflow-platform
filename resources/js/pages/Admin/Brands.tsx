@@ -15,6 +15,8 @@ interface Brand {
     footer: string | null;
     poweredBy: boolean;
     practiceDomain: string | null;
+    domainVerified?: boolean;
+    domainRecord?: { host: string; value: string } | null;
     resellerId: number | null;
     active: boolean;
     signupLink: string;
@@ -310,7 +312,45 @@ export default function AdminBrands({ brands, resellers, providers }: Props) {
                             </span>
                             {b.practiceDomain && (
                                 <span className="block text-xs text-muted">
-                                    Practices at *.{b.practiceDomain}
+                                    Practices at *.{b.practiceDomain}{" "}
+                                    {b.domainVerified ? (
+                                        <Badge tone="success">verified</Badge>
+                                    ) : (
+                                        <>
+                                            <Badge tone="warning">
+                                                not verified — not used yet
+                                            </Badge>
+                                            {b.domainRecord && (
+                                                <span className="mt-1 block break-all">
+                                                    Add a TXT record{" "}
+                                                    <code>
+                                                        {b.domainRecord.host}
+                                                    </code>{" "}
+                                                    ={" "}
+                                                    <code>
+                                                        {b.domainRecord.value}
+                                                    </code>
+                                                    , then{" "}
+                                                    <button
+                                                        type="button"
+                                                        className="font-medium text-teal-deep"
+                                                        onClick={() =>
+                                                            router.post(
+                                                                `/admin/brands/${b.id}/senders/domain`,
+                                                                {},
+                                                                {
+                                                                    preserveScroll: true,
+                                                                },
+                                                            )
+                                                        }
+                                                    >
+                                                        check the domain
+                                                    </button>
+                                                    .
+                                                </span>
+                                            )}
+                                        </>
+                                    )}
                                 </span>
                             )}
                         </span>

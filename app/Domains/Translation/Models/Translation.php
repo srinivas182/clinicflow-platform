@@ -22,6 +22,8 @@ use Stancl\Tenancy\Database\Concerns\CentralConnection;
  * @property Carbon|null $approved_at
  * @property int|null $clinical_approved_by
  * @property Carbon|null $clinical_approved_at
+ * @property string|null $recheck_reason
+ * @property int|null $updated_by
  */
 class Translation extends Model
 {

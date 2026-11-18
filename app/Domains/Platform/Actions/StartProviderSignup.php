@@ -49,7 +49,8 @@ class StartProviderSignup
         // Signing up through a white-label brand's link puts the practice under that brand and its domain.
         $brandCookie = request()->cookie(Brands::COOKIE);
         $brand = app(Brands::class)->bySlug(is_string($brandCookie) ? $brandCookie : null);
-        $base = $brand?->practice_domain !== null ? (string) $brand->practice_domain : null;
+        // A brand's own domain only once its ownership is proved by DNS (beta #159).
+        $base = $brand?->practice_domain !== null && $brand->domain_verified_at !== null ? (string) $brand->practice_domain : null;
 
         if (! SubdomainPolicy::isValid($subdomain)) {
             $errors['subdomain'] = 'Use 3–40 lowercase letters, numbers or hyphens. Some words are reserved.';

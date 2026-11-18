@@ -59,6 +59,11 @@ class StorageController extends Controller
                 ? back()->with('success', 'Connection works: a test file was written, read back and deleted.')
                 : back()->with('error', 'The connection test failed. Check the details and the bucket permissions.');
         }
+        if ($action === 'delete') {
+            $targets->delete($target);
+
+            return back()->with('success', 'Storage entry deleted. Files already at that storage were not touched.');
+        }
         if ($action === 'copy') {
             $targets->startCopy($target);
 
@@ -67,5 +72,14 @@ class StorageController extends Controller
         $targets->activate($target);
 
         return back()->with('success', 'Storage activated. New files now go here; files uploaded since the copy are being copied too.');
+    }
+
+    /** Adds (or finds) the entry for this server's disk, ready to test, copy and activate (beta #182). */
+    public function serverDisk(StorageTargets $targets): RedirectResponse
+    {
+        $id = $targets->serverDisk();
+        $targets->test($id);
+
+        return back()->with('success', "This server's disk is listed below. Copy the files to it, then activate it.");
     }
 }

@@ -21,6 +21,9 @@ use Stancl\Tenancy\Database\Concerns\CentralConnection;
  * @property int|null $reviewed_by
  * @property Carbon|null $reviewed_at
  * @property Carbon|null $resubmitted_at
+ * @property string|null $document_path
+ * @property string|null $document_name
+ * @property Carbon|null $document_uploaded_at
  * @property-read Provider $provider
  */
 class VerificationCheck extends Model
@@ -39,6 +42,7 @@ class VerificationCheck extends Model
             'status' => VerificationStatus::class,
             'reviewed_at' => 'datetime',
             'resubmitted_at' => 'datetime',
+            'document_uploaded_at' => 'datetime',
         ];
     }
 

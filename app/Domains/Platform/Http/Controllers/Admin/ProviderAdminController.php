@@ -10,13 +10,16 @@ use App\Domains\Platform\Enums\ProviderStatus;
 use App\Domains\Platform\Enums\VerificationStatus;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\VerificationCheck;
+use App\Domains\Platform\Storage\FileStore;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 /**
  * Super admin: providers, verification queue and approval.
@@ -73,6 +76,10 @@ class ProviderAdminController extends Controller
                 'status' => $c->status->value,
                 'notes' => $c->notes,
                 'resubmitted' => $c->resubmitted_at?->toDateString(),
+                'document' => $c->document_name, 'documentAt' => $c->document_uploaded_at?->toDateString(),
+                // Who reviewed and when (beta #18).
+                'reviewedBy' => $c->reviewed_by === null ? null : User::query()->whereKey($c->reviewed_by)->value('name'),
+                'reviewedAt' => $c->reviewed_at?->toDateString(),
             ])->values(),
         ]);
     }
@@ -104,5 +111,22 @@ class ProviderAdminController extends Controller
         $user = $request->user();
 
         return $user;
+    }
+
+    /** Opens a check's uploaded document from the practice's own file store (logged). */
+    public function document(Request $request, VerificationCheck $check): HttpResponse
+    {
+        abort_if($check->document_path === null, 404);
+        $provider = $check->provider;
+        $path = (string) $check->document_path;
+        $file = $provider->run(fn (): ?array => Storage::disk(FileStore::DISK)->exists($path)
+            ? ['body' => (string) Storage::disk(FileStore::DISK)->get($path), 'mime' => (string) Storage::disk(FileStore::DISK)->mimeType($path)] : null);
+        abort_unless(is_array($file), 404);
+        $body = (string) $file['body'];
+        $mime = (string) $file['mime'];
+        activity('platform')->causedBy($request->user())->performedOn($check)->log('Verification document viewed');
+
+        return response($body, 200, ['Content-Type' => (string) $mime, 'Content-Disposition' => 'inline; filename="'.addslashes((string) $check->document_name).'"',
+            'X-Content-Type-Options' => 'nosniff', 'Cache-Control' => 'private, no-store']);
     }
 }

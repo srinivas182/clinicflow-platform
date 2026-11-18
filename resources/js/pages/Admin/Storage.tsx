@@ -439,9 +439,50 @@ export default function AdminStorage({ targets, providers, current }: Props) {
                                     Activate
                                 </Button>
                             )}
+                        {!t.active &&
+                            t.copy.status !== "queued" &&
+                            t.copy.status !== "running" && (
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() =>
+                                        window.confirm(
+                                            `Delete "${t.name}"? Only this entry is removed; files already stored there are not touched.`,
+                                        ) &&
+                                        router.post(
+                                            `/admin/storage/${t.id}/delete`,
+                                            {},
+                                            { preserveScroll: true },
+                                        )
+                                    }
+                                >
+                                    Delete
+                                </Button>
+                            )}
                     </div>
                 </Card>
             ))}
+            {targets.some((t) => t.active) && (
+                <p className="mt-4 text-sm">
+                    <button
+                        type="button"
+                        className="font-medium text-teal-deep"
+                        onClick={() =>
+                            router.post(
+                                "/admin/storage/server-disk",
+                                {},
+                                { preserveScroll: true },
+                            )
+                        }
+                    >
+                        Go back to this server's disk
+                    </button>{" "}
+                    <span className="text-muted">
+                        — adds it to the list; copy the files to it, then
+                        activate it.
+                    </span>
+                </p>
+            )}
         </AdminShell>
     );
 }

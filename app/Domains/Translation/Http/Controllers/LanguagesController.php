@@ -98,8 +98,12 @@ class LanguagesController extends Controller
     public function removeReviewer(Request $request, TranslatorLanguage $reviewer): RedirectResponse
     {
         $reviewer->delete();
-        activity('translation')->causedBy($request->user())->withProperties(['language' => $reviewer->language])->log('Translation reviewer removed');
+        // Their approved texts stay live but go on the re-check list for another reviewer (beta #205).
+        $flagged = Translation::query()->where('language', $reviewer->language)
+            ->where(fn ($q) => $q->where('approved_by', $reviewer->user_id)->orWhere('clinical_approved_by', $reviewer->user_id))
+            ->update(['recheck_reason' => 'Approved by a reviewer who was removed']);
+        activity('translation')->causedBy($request->user())->withProperties(['language' => $reviewer->language, 'recheck' => $flagged])->log('Translation reviewer removed');
 
-        return back()->with('success', 'Reviewer removed for this language.');
+        return back()->with('success', 'Reviewer removed for this language.'.($flagged > 0 ? " {$flagged} text(s) they approved are on the re-check list for another reviewer." : ''));
     }
 }
