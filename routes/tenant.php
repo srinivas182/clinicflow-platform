@@ -44,6 +44,7 @@ use App\Domains\Platform\Http\Controllers\CustomDomainController;
 use App\Domains\Platform\Http\Controllers\ProviderSiteController;
 use App\Domains\Platform\Http\Controllers\SubscriptionBillingController;
 use App\Domains\Platform\Http\Controllers\SupportController;
+use App\Domains\Platform\Http\Controllers\VerificationSettingsController;
 use App\Domains\Platform\Http\Controllers\WebsiteSettingsController;
 use App\Domains\Portal\Http\Controllers\PortalCareController;
 use App\Domains\Portal\Http\Controllers\PortalController;
@@ -198,6 +199,15 @@ Route::middleware([
 
     Route::post('/staff/logout', [StaffSessionController::class, 'destroy'])->name('staff.logout');
 
+    // Still open when the workspace is read-only or suspended: fixing registration details and
+    // paying the subscription are how a practice gets out of that state.
+    Route::middleware(['auth', 'workspace'])->group(function (): void {
+        Route::get('/settings/verification', [VerificationSettingsController::class, 'index'])->name('settings.verification');
+        Route::post('/settings/verification/{check}', [VerificationSettingsController::class, 'resubmit'])->whereNumber('check')->name('settings.verification.resubmit');
+        Route::post('/settings/subscription/invoices/{number}/auto-pay', [SubscriptionBillingController::class, 'payWithAutoDebit'])->name('settings.subscription.autopay');
+        Route::post('/settings/subscription/plan', [SubscriptionBillingController::class, 'changePlan'])->name('settings.subscription.plan');
+    });
+
     Route::middleware(['auth', 'workspace', 'provider.writable'])->group(function (): void {
         Route::get('/workspace', ProviderHomeController::class)->name('provider.home');
 
@@ -238,7 +248,6 @@ Route::middleware([
         Route::put('/settings/payments/{gateway}', [PaymentSettingsController::class, 'update'])->name('settings.payments.update');
         Route::post('/settings/payments/{gateway}/test', [PaymentSettingsController::class, 'test'])->name('settings.payments.test');
         Route::get('/settings/subscription', [SubscriptionBillingController::class, 'index'])->name('settings.subscription');
-        Route::post('/settings/subscription/invoices/{number}/auto-pay', [SubscriptionBillingController::class, 'payWithAutoDebit'])->name('settings.subscription.autopay');
         Route::post('/settings/subscription/auto-debit/stop', [SubscriptionBillingController::class, 'stopAutoDebit'])->name('settings.subscription.autodebit.stop');
 
         Route::get('/settings/billing', [BillingSettingsController::class, 'edit'])->name('settings.billing');

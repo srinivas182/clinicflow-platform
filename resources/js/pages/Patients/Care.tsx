@@ -1,4 +1,5 @@
-import { Head, router } from "@inertiajs/react";
+import { Head, router, usePage } from "@inertiajs/react";
+import { useState } from "react";
 import { Flash } from "@/components/Flash";
 import { Badge, Button, Card } from "@/components/ui";
 import { ConnectedSystems } from "@/components/ConnectedSystems";
@@ -13,6 +14,7 @@ interface Props {
         sex: string | null;
         medicalAid: string | null;
         whatsappOptIn?: boolean;
+        whatsappConsent?: string | null;
     };
     problems: Row[];
     monitoring: {
@@ -47,6 +49,71 @@ interface Props {
 const ask = (label: string, initial = "") =>
     window.prompt(label, initial) ?? "";
 
+/** WhatsApp consent (POPIA): how the patient agreed is recorded with who recorded it. */
+function WhatsAppConsent({
+    patientId,
+    optedIn,
+    record,
+}: {
+    patientId: string | number;
+    optedIn?: boolean;
+    record: string | null;
+}) {
+    const [method, setMethod] = useState("");
+    const errors = usePage<{ errors: Record<string, string> }>().props.errors;
+    const post = (data: { opt_in: boolean; method?: string }) =>
+        router.post(`/patients/${patientId}/whatsapp`, data, {
+            preserveScroll: true,
+        });
+    if (optedIn) {
+        return (
+            <p className="mb-3 text-xs text-muted">
+                WhatsApp: agreed — {record}.{" "}
+                <button
+                    type="button"
+                    className="text-teal-deep"
+                    onClick={() =>
+                        window.confirm("Record that the patient withdrew?") &&
+                        post({ opt_in: false })
+                    }
+                >
+                    Withdraw
+                </button>
+            </p>
+        );
+    }
+    return (
+        <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
+            <label className="flex items-center gap-2">
+                WhatsApp opt-in: patient agreed
+                <select
+                    className="rounded-md border border-line px-2 py-1"
+                    value={method}
+                    onChange={(e) => setMethod(e.target.value)}
+                >
+                    <option value="">choose how…</option>
+                    <option value="in_person">in person, verbally</option>
+                    <option value="signed_form">on a signed form</option>
+                    <option value="message">by message</option>
+                </select>
+            </label>
+            <button
+                type="button"
+                className="text-teal-deep disabled:opacity-50"
+                disabled={method === ""}
+                onClick={() => post({ opt_in: true, method })}
+            >
+                Record opt-in
+            </button>
+            {errors.method && (
+                <span role="alert" className="text-status-danger">
+                    {errors.method}
+                </span>
+            )}
+        </div>
+    );
+}
+
 export default function Care({
     patient,
     problems,
@@ -77,20 +144,11 @@ export default function Care({
                 {shared.length ? shared.join(", ") : "none"}
             </p>
             <Flash />
-            <button
-                className="mb-3 text-xs text-teal-deep"
-                onClick={() =>
-                    router.post(
-                        `/patients/${patient.id}/whatsapp`,
-                        { opt_in: !patient.whatsappOptIn },
-                        { preserveScroll: true },
-                    )
-                }
-            >
-                {patient.whatsappOptIn
-                    ? "WhatsApp: opted in (withdraw)"
-                    : "Record WhatsApp opt-in"}
-            </button>
+            <WhatsAppConsent
+                patientId={patient.id}
+                optedIn={patient.whatsappOptIn}
+                record={patient.whatsappConsent ?? null}
+            />
             <div className="grid grid-cols-2 gap-4">
                 <Card
                     title="Problem list"

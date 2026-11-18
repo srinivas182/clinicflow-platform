@@ -4,6 +4,27 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.85.0] — Beta testing T2: clinic onboarding and subscription journey
+
+### Added
+- **Change plan** on Settings → Subscription (now in the practice menu) (#9, practice tab row 4). Upgrading from a free plan issues the first invoice at once (due now, usual 7-day grace); moving between paid plans re-issues an unpaid invoice at the new price; moving to a free plan voids unpaid invoices and reopens a read-only workspace. Works while read-only.
+- Workspace banner: trial ending (from 7 days before), overdue invoice, read-only with **Pay now**, suspended with what to fix (#10).
+- Emails to practice owners: trial ending at 7, 3 and 1 days; each new invoice with its Pay link; a reminder 3 days before an invoice is due (#10, #11) — `subscriptions:remind`, daily at 08:00.
+- **Settings → Verification** for practices: each registration check, its status and the reviewer's reason, with **Edit and resubmit**; the platform team is emailed on resubmission (#13).
+- Approval email to the owner ("your practice is live") (#16).
+- Support emails: the practice when Support replies, the support team when a ticket is opened or the practice replies (#220).
+- Major and critical incidents: practice owners are emailed when one starts and when it is resolved, with a one-click opt-out (#236).
+- Package messaging changes (allowance, extra-message price, message types) are emailed to every practice on the package and logged in each practice's activity log (#286).
+- WhatsApp consent record (POPIA): staff choose how the patient agreed (in person, signed form, by message); the method, date and who recorded it are stored and shown to staff and to the patient in the portal (#252).
+
+### Fixed
+- Admin menu: Verification and Providers opened the same page (#3). Verification now lists practices awaiting approval or with corrected details to review.
+- Approve could reset a live or paying practice to a trial (#14); it is now offered and allowed only for practices awaiting verification.
+- Reject needs a reason, which the practice sees and is emailed (#15). Rejecting a required check of a live practice can suspend it (read-only, unlisted) until the corrected check is verified, when its earlier status returns (#5).
+- Approve, Verify and Reject ask "Are you sure?" (#17).
+- A paid subscription whose period ended unpaid never became read-only; it now does after the 7-day grace period, like an ended trial.
+- A read-only practice could not turn on automatic payment for its unpaid invoice.
+
 ## [0.84.0] — Beta testing T1c: switching file storage safely
 
 ### Fixed

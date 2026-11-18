@@ -17,8 +17,10 @@ use App\Domains\Platform\Models\Subscription;
 use App\Domains\Portal\Actions\PortalSignIn;
 use App\Domains\Wallet\Support\WalletSettings;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -121,13 +123,35 @@ class WhatsAppController extends Controller
         return back()->with('success', $request->boolean('enabled') ? 'WhatsApp is on. Messages are paid from your wallet.' : 'WhatsApp is off. Messages go by SMS.');
     }
 
+    /** How a patient can agree to WhatsApp messages, as recorded by staff (the portal records "portal"). */
+    public const CONSENT_METHODS = ['in_person' => 'In person, verbally', 'signed_form' => 'Signed form', 'message' => 'By message (SMS or WhatsApp reply)', 'portal' => 'In the patient portal'];
+
+    /** "Agreed in person, verbally on 2026-11-20 (recorded by Thandi Nkosi)" — shown to staff and the patient. */
+    public static function consentRecord(Patient $patient): ?string
+    {
+        $at = $patient->getAttribute('whatsapp_opt_in_at');
+        if ($at === null) {
+            return null;
+        }
+        $method = self::CONSENT_METHODS[(string) $patient->getAttribute('whatsapp_opt_in_method')] ?? 'Method not recorded (before November 2026)';
+        $by = $patient->getAttribute('whatsapp_opt_in_by');
+        $name = $by === null ? null : User::query()->whereKey((int) $by)->value('name');
+
+        return $method.' on '.Carbon::parse($at)->toDateString().($name !== null ? ' (recorded by '.$name.')' : '');
+    }
+
     public function optIn(Request $request, Patient $patient): RedirectResponse
     {
         $this->authorize(Permission::PATIENTS_REGISTER);
         $on = $request->boolean('opt_in');
+        // POPIA: how the patient agreed is recorded with who recorded it (beta #252).
+        $method = $on ? (string) $request->validate(['method' => ['required', 'in:'.implode(',', array_keys(self::CONSENT_METHODS))]], [
+            'method.required' => 'Choose how the patient agreed.',
+        ])['method'] : null;
         // Opting in makes WhatsApp the patient's channel; withdrawing returns them to SMS.
-        $patient->forceFill(['whatsapp_opt_in_at' => $on ? now() : null, 'preferred_channel' => $on ? Channel::WhatsApp : Channel::Sms])->save();
-        activity('patients')->performedOn($patient)->causedBy($request->user())->log($on ? 'WhatsApp opt-in recorded' : 'WhatsApp opt-in withdrawn');
+        $patient->forceFill(['whatsapp_opt_in_at' => $on ? now() : null, 'whatsapp_opt_in_method' => $method, 'whatsapp_opt_in_by' => $on ? $request->user()?->getAuthIdentifier() : null,
+            'preferred_channel' => $on ? Channel::WhatsApp : Channel::Sms])->save();
+        activity('patients')->performedOn($patient)->causedBy($request->user())->withProperties(['method' => $method])->log($on ? 'WhatsApp opt-in recorded' : 'WhatsApp opt-in withdrawn');
 
         return back()->with('success', $on ? 'WhatsApp opt-in recorded.' : 'WhatsApp opt-in withdrawn.');
     }
@@ -140,7 +164,8 @@ class WhatsAppController extends Controller
         $on = $request->boolean('opt_in');
         foreach ($signIn->profiles((string) $request->session()->get('portal_cell')) as $patient) {
             /** @var Patient $patient */
-            $patient->forceFill(['whatsapp_opt_in_at' => $on ? now() : null, 'preferred_channel' => $on ? Channel::WhatsApp : Channel::Sms])->save();
+            $patient->forceFill(['whatsapp_opt_in_at' => $on ? now() : null, 'whatsapp_opt_in_method' => $on ? 'portal' : null, 'whatsapp_opt_in_by' => null,
+                'preferred_channel' => $on ? Channel::WhatsApp : Channel::Sms])->save();
             activity('portal')->performedOn($patient)->log($on ? 'Patient opted in to WhatsApp' : 'Patient stopped WhatsApp messages');
         }
 

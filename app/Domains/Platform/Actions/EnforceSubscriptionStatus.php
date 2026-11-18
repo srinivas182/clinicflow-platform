@@ -31,7 +31,8 @@ class EnforceSubscriptionStatus
             ->with(['provider', 'package'])
             ->where(function ($q) use ($cutoff): void {
                 $q->where(fn ($t) => $t->where('status', SubscriptionStatus::Trialing->value)->where('trial_ends_at', '<', $cutoff))
-                    ->orWhere(fn ($p) => $p->where('status', SubscriptionStatus::PastDue->value)->where('current_period_ends_at', '<', $cutoff));
+                    // A paid period that ended more than the grace period ago without the next invoice being paid.
+                    ->orWhere(fn ($p) => $p->whereIn('status', [SubscriptionStatus::PastDue->value, SubscriptionStatus::Active->value])->where('current_period_ends_at', '<', $cutoff));
             })
             ->each(function (Subscription $subscription) use (&$count): void {
                 if ($subscription->package->isFree()) {

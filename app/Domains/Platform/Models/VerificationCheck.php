@@ -20,6 +20,7 @@ use Stancl\Tenancy\Database\Concerns\CentralConnection;
  * @property string|null $notes
  * @property int|null $reviewed_by
  * @property Carbon|null $reviewed_at
+ * @property Carbon|null $resubmitted_at
  * @property-read Provider $provider
  */
 class VerificationCheck extends Model
@@ -37,6 +38,7 @@ class VerificationCheck extends Model
             'type' => VerificationType::class,
             'status' => VerificationStatus::class,
             'reviewed_at' => 'datetime',
+            'resubmitted_at' => 'datetime',
         ];
     }
 

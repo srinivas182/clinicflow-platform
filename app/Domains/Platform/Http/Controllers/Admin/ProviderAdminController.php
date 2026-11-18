@@ -6,6 +6,7 @@ namespace App\Domains\Platform\Http\Controllers\Admin;
 
 use App\Domains\Platform\Actions\ApproveProvider;
 use App\Domains\Platform\Actions\ReviewVerificationCheck;
+use App\Domains\Platform\Enums\ProviderStatus;
 use App\Domains\Platform\Enums\VerificationStatus;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\VerificationCheck;
@@ -22,17 +23,24 @@ use Inertia\Response;
  */
 class ProviderAdminController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $rows = [];
+        // Verification: practices waiting for approval, or with a corrected check to review.
+        $verification = $request->query('filter') === 'verification';
+        $query = Provider::query()->with('subscription.package')->latest();
+        if ($verification) {
+            $query->where(fn ($q) => $q->where('status', ProviderStatus::PendingVerification->value)
+                ->orWhereHas('verificationChecks', fn ($c) => $c->whereNotNull('resubmitted_at')->where('status', VerificationStatus::Pending->value)));
+        }
 
-        foreach (Provider::query()->with('subscription.package')->latest()->get() as $provider) {
+        foreach ($query->get() as $provider) {
             if ($provider instanceof Provider) {
                 $rows[] = $this->row($provider);
             }
         }
 
-        return Inertia::render('Admin/Providers/Index', ['providers' => $rows]);
+        return Inertia::render('Admin/Providers/Index', ['providers' => $rows, 'filter' => $verification ? 'verification' : null]);
     }
 
     /**
@@ -56,13 +64,15 @@ class ProviderAdminController extends Controller
         $model = Provider::query()->with('verificationChecks')->findOrFail($provider);
 
         return Inertia::render('Admin/Providers/Show', [
-            'provider' => ['id' => $model->id, 'name' => $model->name, 'type' => $model->type->label(), 'status' => $model->status->value],
+            'provider' => ['id' => $model->id, 'name' => $model->name, 'type' => $model->type->label(), 'status' => $model->status->value,
+                'canApprove' => $model->status === ProviderStatus::PendingVerification, 'live' => $model->status->isLive()],
             'checks' => $model->verificationChecks->map(fn (VerificationCheck $c): array => [
                 'id' => $c->id,
                 'label' => $c->type->label(),
                 'reference' => $c->reference,
                 'status' => $c->status->value,
                 'notes' => $c->notes,
+                'resubmitted' => $c->resubmitted_at?->toDateString(),
             ])->values(),
         ]);
     }
@@ -72,18 +82,20 @@ class ProviderAdminController extends Controller
         $data = $request->validate([
             'status' => ['required', Rule::enum(VerificationStatus::class)],
             'notes' => ['nullable', 'string', 'max:500'],
+            'suspend' => ['boolean'],
         ]);
 
-        $action->handle($check, VerificationStatus::from($data['status']), $this->admin($request), $data['notes'] ?? null);
+        $status = VerificationStatus::from($data['status']);
+        $action->handle($check, $status, $this->admin($request), $data['notes'] ?? null, (bool) ($data['suspend'] ?? false));
 
-        return back()->with('success', 'Check updated.');
+        return back()->with('success', $status === VerificationStatus::Rejected ? 'Check rejected. The practice has been emailed the reason.' : 'Check updated.');
     }
 
     public function approve(Request $request, string $provider, ApproveProvider $action): RedirectResponse
     {
         $action->handle(Provider::query()->findOrFail($provider), $this->admin($request));
 
-        return back()->with('success', 'Provider approved and live.');
+        return back()->with('success', 'Provider approved and live. The owner has been emailed.');
     }
 
     private function admin(Request $request): User
