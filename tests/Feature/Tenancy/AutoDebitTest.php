@@ -15,10 +15,13 @@ use App\Domains\Platform\Enums\SubscriptionStatus;
 use App\Domains\Platform\Models\Package;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Models\Subscription;
+use App\Domains\Platform\Notifications\PracticeNotice;
+use App\Http\Middleware\RequireRecentConfirmation;
 use App\Models\User;
 use Database\Seeders\PackageSeeder;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Http\Client\Request as ClientRequest;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 
@@ -155,7 +158,48 @@ it('retries a failed debit twice, two days apart, then stops', function (): void
     expect(DebitAttempt::query()->where('subscription_invoice_id', $next->id)->count())->toBe(3)
         ->and($next->fresh()?->status)->toBe('open');
     Notification::assertSentTo($this->owner, SubscriptionDebitNotice::class, fn ($n) => $n->outcome === 'failed' && $n->detail === 'Insufficient Funds');
-    Notification::assertSentTo($this->owner, SubscriptionDebitNotice::class, fn ($n) => $n->outcome === 'stopped');
+    Notification::assertSentTo($this->owner, SubscriptionDebitNotice::class, fn ($n) => $n->outcome === 'stopped' && str_contains((string) $n->payUrl, $next->checkout_token));
+    // After the third failure the card is switched off and the admin alerted (beta decision on row 34).
+    expect(BillingMandate::query()->sole()->status)->toBe(BillingMandate::REVOKED);
+    Notification::assertSentTo($this->admin, PracticeNotice::class, fn (PracticeNotice $n) => $n->kind === 'debit_stopped');
+});
+
+it('lets the admin see why a debit failed, retry now and stop auto-debit (beta #33)', function (): void {
+    $mandate = setUpPaystackMandate($this);
+    $next = nextInvoice($this);
+    Http::fake(['api.paystack.co/transaction/charge_authorization' => Http::sequence()
+        ->push(['status' => true, 'data' => ['status' => 'failed', 'gateway_response' => 'Do not honour']])
+        ->push(['status' => true, 'data' => ['status' => 'success']])]);
+    app(CollectSubscriptionDebits::class)->handle();
+    $confirmed = [RequireRecentConfirmation::SESSION_KEY => now()->getTimestamp()];
+    $this->actingAs($this->admin)->get('http://localhost/admin/auto-debits')
+        ->assertInertia(fn ($p) => $p->where('mandates.0.lastFailure.reason', 'Do not honour')->where('mandates.0.openInvoice.number', $next->number));
+
+    $this->actingAs($this->admin)->post("http://localhost/admin/auto-debits/{$mandate->id}/retry")->assertRedirect('http://localhost/confirm-identity');
+    $this->actingAs($this->admin)->withSession($confirmed)->post("http://localhost/admin/auto-debits/{$mandate->id}/retry")->assertSessionHas('success');
+    expect($next->fresh()?->status)->toBe('paid');
+
+    $this->actingAs($this->admin)->withSession($confirmed)->post("http://localhost/admin/auto-debits/{$mandate->id}/stop", ['note' => 'Card reported stolen'])->assertSessionHasNoErrors();
+    expect($mandate->fresh()?->status)->toBe(BillingMandate::REVOKED)->and($mandate->fresh()?->revoke_note)->toContain('Card reported stolen');
+});
+
+it('saves a card at any time with a R1 check that is refunded (beta decision on rows 2 and 12)', function (): void {
+    connectPlatform($this, 'paystack', ['public_key' => 'pk_test_p', 'secret_key' => 'sk_test_platform']);
+    $this->actingAs($this->owner)->get('http://sunrise.clinicflow.test/settings/subscription')->assertInertia(fn ($p) => $p->where('cardSaveAvailable', true));
+    $this->actingAs($this->owner)->post('http://sunrise.clinicflow.test/settings/subscription/save-card', [])->assertSessionHasErrors('consent');
+    $this->actingAs($this->owner)->post('http://sunrise.clinicflow.test/settings/subscription/save-card', ['consent' => true]);
+    $token = (string) DB::connection((string) config('tenancy.database.central_connection'))->table('card_checks')->value('checkout_token');
+
+    Http::fake(['api.paystack.co/transaction/initialize' => Http::response(['status' => true, 'data' => ['authorization_url' => 'https://checkout.paystack.com/x', 'reference' => $token]]),
+        'api.paystack.co/refund' => Http::response(['status' => true, 'data' => ['status' => 'pending']])]);
+    $this->get("http://localhost/billing/card/{$token}")->assertRedirect('https://checkout.paystack.com/x');
+    paystackChargeWebhook($this, $token, 100);
+
+    $mandate = BillingMandate::query()->sole();
+    expect($mandate->status)->toBe('active')->and($mandate->consented_by)->toBe($this->owner->id)
+        ->and(DB::connection((string) config('tenancy.database.central_connection'))->table('card_checks')->value('status'))->toBe('refunded')
+        ->and($this->invoice->fresh()?->status)->toBe('open');
+    Http::assertSent(fn ($r) => str_contains($r->url(), 'api.paystack.co/refund'));
 });
 
 it('switches auto-debit off, removes the card at Paystack and never charges again', function (): void {

@@ -56,6 +56,24 @@ class Package extends Model
 
     public const NOTICE_DAYS = 30;
 
+    /** Features a package can include (codes used across the app), with the label admins see. */
+    public const FEATURES = [
+        'front_desk' => 'Front desk', 'consults' => 'Consultations', 'billing' => 'Billing', 'claims' => 'Medical aid claims',
+        'patient_app' => 'Patient app', 'subdomain' => 'Own web address', 'custom_domain' => 'Custom domain', 'multi_doctor' => 'Several doctors',
+        'in_house_pharmacy' => 'In-house pharmacy', 'in_house_lab' => 'In-house lab', 'procedures' => 'Procedures', 'revenue_by_doctor' => 'Revenue by doctor',
+        'reports_advanced' => 'Advanced reports', 'group_dashboards' => 'Group dashboards', 'accounting_sync' => 'Accounting sync', 'priority_support' => 'Priority support',
+        'api' => 'API access', 'e_scripts' => 'Network e-scripts', 'dispensing' => 'Dispensing', 'stock' => 'Stock', 'delivery' => 'Delivery',
+        'lab_orders' => 'Lab orders', 'samples' => 'Samples', 'reports' => 'Lab reports', 'home_collection' => 'Home collection',
+        'msg_booking' => 'Booking confirmations', 'msg_billing' => 'Payment links', 'msg_reminders' => 'Booking reminders',
+        'msg_queue_alerts' => 'Queue alerts', 'msg_pharmacy' => 'Medicine-ready messages', 'msg_recalls' => 'Recalls',
+    ];
+
+    /** Limits set on the package page (0 = unlimited). Messaging allowances are set under Messaging. */
+    public const LIMITS = ['doctors' => 'Doctors', 'branches' => 'Branches', 'storage_gb' => 'Storage (GB)'];
+
+    /** Add-ons a practice on this package may buy. */
+    public const ADDONS = ['telemedicine' => 'Online consults', 'whatsapp' => 'WhatsApp', 'ai_scribe' => 'AI scribe', 'extra_messaging' => 'Extra messaging', 'custom_domain' => 'Custom domain'];
+
     /** Monthly price for a period starting on $date: a notified price rise applies from its date. */
     public function monthlyCentsOn(\DateTimeInterface $date): int
     {

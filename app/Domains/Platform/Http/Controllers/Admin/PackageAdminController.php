@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domains\Platform\Http\Controllers\Admin;
 
+use App\Domains\Platform\Enums\ProviderType;
 use App\Domains\Platform\Enums\SubscriptionStatus;
 use App\Domains\Platform\Models\Package;
 use App\Domains\Platform\Models\Provider;
@@ -15,6 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -37,8 +39,106 @@ class PackageAdminController extends Controller
                 'limits' => $p->limits,
                 'features' => $p->features,
                 'isActive' => $p->is_active,
+                'code' => $p->code,
+                'summary' => $p->summary,
+                'type' => $p->provider_type->value,
+                'addons' => $p->addons,
             ])->values(),
+            'catalogue' => ['features' => Package::FEATURES, 'limits' => Package::LIMITS, 'addons' => Package::ADDONS,
+                'types' => collect(ProviderType::cases())->mapWithKeys(fn (ProviderType $t) => [$t->value => $t->label()])],
         ]);
+    }
+
+    /** Add a package (beta #19). New packages start switched off so they can be checked first. */
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'code' => ['required', 'string', 'max:40', 'regex:/^[a-z0-9-]+$/', Rule::unique(Package::class, 'code')],
+            'name' => ['required', 'string', 'max:80', Rule::unique(Package::class, 'name')],
+            'provider_type' => ['required', Rule::enum(ProviderType::class)],
+            'summary' => ['nullable', 'string', 'max:160'],
+            'price_monthly' => ['required', 'numeric', 'min:0', 'max:1000000'],
+            'trial_days' => ['required', 'integer', 'min:0', 'max:90'],
+            ...$this->detailRules(),
+        ], ['code.regex' => 'Use lower-case letters, digits and dashes, e.g. clinic-plus.']);
+        $cents = (int) round(((float) $data['price_monthly']) * 100);
+        $package = new Package;
+        $package->forceFill([
+            'code' => $data['code'], 'name' => trim((string) $data['name']), 'provider_type' => $data['provider_type'], 'summary' => $data['summary'] ?? null,
+            'price_monthly_cents' => $cents, 'price_annual_cents' => (int) round($cents * 12 * 0.85), 'trial_days' => $cents === 0 ? 0 : (int) $data['trial_days'],
+            // Messaging allowances start at zero and are set under Messaging.
+            'limits' => $this->limitsFrom($data) + ['sms' => 0, 'email' => 0, 'sms_overage_cents' => 35, 'email_overage_cents' => 5],
+            'features' => array_values($data['features'] ?? []), 'addons' => array_values($data['addons'] ?? []),
+            'is_active' => false, 'sort_order' => (int) Package::query()->max('sort_order') + 1,
+        ])->save();
+        activity('platform')->causedBy($request->user())->performedOn($package)->log('Package created');
+
+        return back()->with('success', "{$package->name} added. It is switched off until you switch it on.");
+    }
+
+    /**
+     * Edit what a package includes (beta #20). Practices already on it are emailed what they lose.
+     */
+    public function details(Request $request, Package $package): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:80', Rule::unique(Package::class, 'name')->ignore($package->id)],
+            'summary' => ['nullable', 'string', 'max:160'],
+            ...$this->detailRules(),
+        ]);
+        $before = ['features' => $package->features, 'addons' => $package->addons, 'limits' => $package->limits];
+        $limits = $this->limitsFrom($data) + array_diff_key($package->limits, Package::LIMITS);
+        $package->forceFill(['name' => trim((string) $data['name']), 'summary' => $data['summary'] ?? null, 'limits' => $limits,
+            'features' => array_values($data['features'] ?? []), 'addons' => array_values($data['addons'] ?? [])])->save();
+
+        $lost = array_merge(
+            array_map(fn (string $f) => 'No longer included: '.(Package::FEATURES[$f] ?? $f).'.', array_values(array_diff($before['features'], $package->features))),
+            array_map(fn (string $a) => 'Add-on no longer offered: '.(Package::ADDONS[$a] ?? $a).'.', array_values(array_diff($before['addons'], $package->addons))),
+        );
+        foreach (Package::LIMITS as $key => $label) {
+            $old = (int) ($before['limits'][$key] ?? 0);
+            $new = (int) ($limits[$key] ?? 0);
+            if ($old !== $new && ($new !== 0 && ($old === 0 || $new < $old))) {
+                $lost[] = "{$label}: ".($old === 0 ? 'unlimited' : $old)." → {$new}.";
+            }
+        }
+        $paying = $this->paying($package);
+        if ($lost !== [] && $paying->isNotEmpty()) {
+            foreach (Provider::query()->whereIn('id', $paying)->get() as $provider) {
+                if ($provider instanceof Provider) {
+                    Notification::send(PracticeContacts::owners($provider->id), new PracticeNotice("Changes to your {$package->name} plan", ["Dr Business Flow changed what {$package->name} includes:", ...$lost, 'You can change plan at any time in Settings → Subscription.'],
+                        'View plans', PracticeContacts::url($provider, '/settings/subscription'), 'package_changed'));
+                }
+            }
+        }
+        activity('platform')->causedBy($request->user())->performedOn($package)->withProperties(['before' => $before, 'lost' => $lost])->log('Package details updated');
+
+        return back()->with('success', "{$package->name} saved.".($lost !== [] && $paying->isNotEmpty() ? " {$paying->count()} practice(s) on it were emailed what changed." : ''));
+    }
+
+    /** @return array<string, list<mixed>> */
+    private function detailRules(): array
+    {
+        $rules = ['features' => ['array'], 'features.*' => [Rule::in(array_keys(Package::FEATURES))], 'addons' => ['array'], 'addons.*' => [Rule::in(array_keys(Package::ADDONS))], 'limits' => ['array']];
+        foreach (array_keys(Package::LIMITS) as $key) {
+            $rules["limits.{$key}"] = ['required', 'integer', 'min:0', 'max:100000'];
+        }
+
+        return $rules;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, int>
+     */
+    private function limitsFrom(array $data): array
+    {
+        $limits = [];
+        foreach (array_keys(Package::LIMITS) as $key) {
+            $limits[$key] = (int) ($data['limits'][$key] ?? 0);
+        }
+
+        return $limits;
     }
 
     public function update(Request $request, Package $package): RedirectResponse

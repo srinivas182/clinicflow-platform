@@ -4,6 +4,18 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.87.0] — Beta testing T4a: billing admin
+
+### Added
+- **Add package** and **Details** on Admin → Packages: name, summary, limits (doctors, branches, storage), features and add-ons. New packages start switched off. Practices on a package are emailed anything removed or reduced (#19, #20). Packages are never deleted: switching one off hides it from new sign-ups and practices keep it until they change plan (decision on #21).
+- Admin → Auto-debits shows the last failure reason and the unpaid invoice, with **Retry now** and **Stop auto-debit** (identity check, logged, practice emailed) (#33).
+- **Save a card for automatic payment** at any time on Settings → Subscription, before the first invoice: the owner consents and a R1 card check is charged and refunded straight away (decision on #2, #12).
+- Platform books: on/off switch and schedule (off, daily, hourly) under Admin → Accounting (#78).
+- Resellers: change commission (applies to practices referred from now on; each referral keeps its terms), switch a reseller off, and **Invite to the reseller portal** (creates or links their sign-in with a set-password email). A reseller who signs in with their reseller email is linked automatically (#122, #124).
+
+### Changed
+- After the third failed automatic payment the saved card is switched off, the platform team is alerted and the owner is emailed a Pay now link (decision on #34).
+
 ## [0.86.0] — Beta testing T3: admin safety, validation and activity log
 
 ### Added

@@ -7,6 +7,7 @@ namespace App\Domains\Platform\Http\Controllers;
 use App\Domains\Platform\Models\Provider;
 use App\Domains\Platform\Resellers\ResellerProgramme;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,7 @@ class ResellerController extends Controller
         return Inertia::render('Admin/Resellers', [
             'resellers' => DB::connection((string) config('tenancy.database.central_connection'))->table('resellers')->orderBy('name')->get()->map(fn ($r) => [
                 'id' => $r->id, 'name' => $r->name, 'email' => $r->email, 'code' => $r->code, 'percent' => (float) $r->commission_percent, 'months' => (int) $r->commission_months,
+                'active' => (bool) $r->active, 'linked' => $r->user_id !== null,
                 'link' => rtrim((string) config('app.url'), '/').'/?ref='.$r->code,
                 'referrals' => $programme->statement((int) $r->id)['referrals'], 'periods' => $programme->statement((int) $r->id)['months'],
             ])->values(),
@@ -50,7 +52,8 @@ class ResellerController extends Controller
 
     public function portal(Request $request, ResellerProgramme $programme): Response
     {
-        $reseller = DB::connection((string) config('tenancy.database.central_connection'))->table('resellers')->where('user_id', $request->user()?->getAuthIdentifier())->first();
+        $user = $request->user();
+        $reseller = $user instanceof User ? $programme->linkByEmail($user) : null;
         abort_if($reseller === null, 403, 'You are not a Dr Business Flow reseller.');
 
         return Inertia::render('Reseller/Portal', [
@@ -69,5 +72,22 @@ class ResellerController extends Controller
                         'since' => substr((string) $p->getAttribute('created_at'), 0, 10)])->values()];
             })->values(),
         ]);
+    }
+
+    /** Change commission for new referrals, or switch a reseller on/off (beta #122). */
+    public function update(Request $request, int $reseller, ResellerProgramme $programme): RedirectResponse
+    {
+        $data = $request->validate(['commission_percent' => ['required', 'numeric', 'min:0', 'max:50'], 'commission_months' => ['required', 'integer', 'min:1', 'max:60'], 'active' => ['required', 'boolean']]);
+        $programme->update($reseller, (float) $data['commission_percent'], (int) $data['commission_months'], (bool) $data['active']);
+
+        return back()->with('success', 'Reseller saved. New commission terms apply to practices referred from now on.');
+    }
+
+    /** Invite the reseller to their portal (beta #124). */
+    public function invite(int $reseller, ResellerProgramme $programme): RedirectResponse
+    {
+        $programme->invite($reseller);
+
+        return back()->with('success', 'Invitation emailed. The reseller is linked to their sign-in.');
     }
 }

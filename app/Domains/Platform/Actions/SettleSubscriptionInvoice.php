@@ -7,6 +7,7 @@ namespace App\Domains\Platform\Actions;
 use App\Domains\Billing\Actions\SaveBillingMandate;
 use App\Domains\Billing\Enums\Gateway;
 use App\Domains\Billing\Gateways\GatewayFactory;
+use App\Domains\Billing\Gateways\WebhookResult;
 use App\Domains\Billing\Models\BillingMandate;
 use App\Domains\Billing\Models\DebitAttempt;
 use App\Domains\Billing\Models\PlatformGatewayConfig;
@@ -47,6 +48,12 @@ class SettleSubscriptionInvoice
             return true;
         }
 
+        // A R1 card check: save the card, refund the R1, never touch invoices.
+        $check = DB::connection((string) config('tenancy.database.central_connection'))->table('card_checks')->where('checkout_token', $result->reference)->first();
+        if ($check !== null) {
+            return $this->completeCardCheck($check, $gateway, $config, $result);
+        }
+
         $invoice = SubscriptionInvoice::query()->where('checkout_token', $result->reference)->first();
 
         // A later charge on a saved card (PayFast runs the subscription itself):
@@ -63,6 +70,30 @@ class SettleSubscriptionInvoice
 
         if ($invoice->save_card && $result->mandate !== null && $gateway->supportsAutoDebit()) {
             app(SaveBillingMandate::class)->handle($invoice, $gateway, $config->mode, $result->mandate);
+        }
+
+        return true;
+    }
+
+    private function completeCardCheck(object $check, Gateway $gateway, PlatformGatewayConfig $config, WebhookResult $result): bool
+    {
+        $row = (array) $check;
+        $central = DB::connection((string) config('tenancy.database.central_connection'))->table('card_checks')->where('id', $row['id']);
+        if ($row['status'] !== 'open') {
+            return true; // repeated notification
+        }
+        if ($result->mandate === null || ! $gateway->supportsAutoDebit()) {
+            $central->update(['status' => 'failed', 'note' => 'The payment provider did not return a reusable card.', 'updated_at' => now()]);
+
+            return false;
+        }
+        app(SaveBillingMandate::class)->forTenant((string) $row['tenant_id'], $gateway, $config->mode, $result->mandate,
+            $row['consented_by'] === null ? null : (int) $row['consented_by'], $row['consent_ip'] === null ? null : (string) $row['consent_ip']);
+        $refund = GatewayFactory::fromConfig($config)->refund((string) ($result->gatewayReference ?? ''), (int) $row['amount_cents']);
+        $central->update(['status' => $refund->ok ? 'refunded' : 'saved', 'gateway_reference' => $result->gatewayReference,
+            'note' => $refund->ok ? null : 'Card saved; the R1 refund needs doing by hand: '.$refund->error, 'updated_at' => now()]);
+        if (! $refund->ok) {
+            activity('platform')->withProperties(['card_check' => $row['id'], 'error' => $refund->error])->log('Card check refund failed — refund R1 by hand');
         }
 
         return true;

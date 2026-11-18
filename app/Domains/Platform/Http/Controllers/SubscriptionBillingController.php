@@ -20,6 +20,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -68,6 +70,7 @@ class SubscriptionBillingController extends Controller
                 'chargedBy' => $mandate->gateway->chargesMandateItself() ? $mandate->gateway->label() : 'Dr Business Flow',
             ],
             'autoDebitAvailable' => $platformGateway !== null && $platformGateway->gateway->supportsAutoDebit(),
+            'cardSaveAvailable' => $platformGateway !== null && $platformGateway->gateway->supportsAutoDebit() && ! $platformGateway->gateway->chargesMandateItself(),
             'platformGateway' => $platformGateway?->gateway->label(),
         ]);
     }
@@ -92,6 +95,61 @@ class SubscriptionBillingController extends Controller
         $invoice->forceFill(['save_card' => true, 'save_card_consented_by' => $request->user()?->getAuthIdentifier(), 'save_card_consent_ip' => $request->ip()])->save();
 
         return Inertia::location(rtrim((string) config('app.url'), '/')."/billing/pay/{$invoice->checkout_token}");
+    }
+
+    /**
+     * Save a card for automatic payment at any time, before any invoice (decision on beta rows 2
+     * and 12). The owner consents; a R1 card check is charged and refunded straight away.
+     */
+    public function saveCard(Request $request): HttpResponse
+    {
+        $this->authorize(Permission::PAYMENTS_CONFIGURE);
+        $provider = tenant();
+        abort_unless($provider instanceof Provider, 404);
+        $request->validate(['consent' => ['accepted']], ['consent.accepted' => 'Tick the box to agree to automatic payment.']);
+        $config = GatewayFactory::platformDefault();
+        if ($config === null || ! $config->gateway->supportsAutoDebit() || $config->gateway->chargesMandateItself()) {
+            throw ValidationException::withMessages(['consent' => 'A card can be saved when you pay your first invoice with the current payment provider.']);
+        }
+        $token = Str::random(40);
+        DB::connection((string) config('tenancy.database.central_connection'))->table('card_checks')->insert([
+            'tenant_id' => $provider->id, 'checkout_token' => $token, 'amount_cents' => 100, 'status' => 'open',
+            'consented_by' => $request->user()?->getAuthIdentifier(), 'consent_ip' => $request->ip(), 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        activity('platform')->causedBy($request->user())->performedOn($provider)->log('Card check started (save card for automatic payment)');
+
+        return Inertia::location(rtrim((string) config('app.url'), '/')."/billing/card/{$token}");
+    }
+
+    /** Central: starts the R1 card check at the payment provider. */
+    public function cardCheck(Request $request, string $token): HttpResponse
+    {
+        $check = DB::connection((string) config('tenancy.database.central_connection'))->table('card_checks')->where('checkout_token', $token)->first();
+        abort_if($check === null, 404);
+        if ($check->status !== 'open') {
+            return response()->view('payments.done', ['title' => 'Card saved', 'message' => 'Your card is saved for automatic payment. The R1 check has been refunded.']);
+        }
+        $config = GatewayFactory::platformDefault();
+        abort_if($config === null, 404);
+        $owner = User::query()->whereIn('id', Membership::query()->where('tenant_id', $check->tenant_id)->where('role', 'owner')->pluck('user_id'))->first();
+        $root = $request->getSchemeAndHttpHost();
+        $start = GatewayFactory::fromConfig($config)->startCheckout(new CheckoutRequest(
+            amountCents: (int) $check->amount_cents,
+            reference: $token,
+            description: 'Dr Business Flow card check (R1, refunded)',
+            returnUrl: "{$root}/billing/done",
+            cancelUrl: "{$root}/billing/done?cancelled=1",
+            notifyUrl: "{$root}/api/webhooks/platform/{$config->gateway->value}",
+            email: $owner instanceof User ? $owner->email : 'billing@clinicflow.co.za',
+            customerName: $owner instanceof User ? $owner->name : '',
+            saveCard: true,
+        ));
+        DB::connection((string) config('tenancy.database.central_connection'))->table('card_checks')->where('id', $check->id)
+            ->update(['gateway' => $config->gateway->value, 'gateway_reference' => $start->gatewayReference, 'updated_at' => now()]);
+
+        return $start->formAction !== null
+            ? response()->view('payments.redirect', ['action' => $start->formAction, 'fields' => $start->formFields])
+            : redirect()->away((string) $start->redirectUrl);
     }
 
     public function changePlan(Request $request, ChangePlan $action): RedirectResponse

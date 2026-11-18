@@ -59,6 +59,7 @@ foreach ($centralDomains as $index => $domain) {
         Route::get('/pages/{slug}', [PublicSiteController::class, 'page'])->where('slug', '[a-z0-9-]+')->name('cms.page');
         Route::get('/pricing', PricingController::class)->name('pricing');
         Route::get('/billing/pay/{token}', [SubscriptionBillingController::class, 'pay'])->middleware('throttle:30,1')->name('billing.pay');
+        Route::get('/billing/card/{token}', [SubscriptionBillingController::class, 'cardCheck'])->middleware('throttle:30,1')->name('billing.card');
         Route::get('/billing/done', [SubscriptionBillingController::class, 'done'])->name('billing.done');
         Route::get('/billing/topup/{token}', [WalletController::class, 'pay'])->middleware('throttle:30,1')->name('wallet.pay');
 
@@ -125,6 +126,8 @@ foreach ($centralDomains as $index => $domain) {
             Route::post('/verification-checks/{check}', [ProviderAdminController::class, 'review'])->name('checks.review');
             Route::get('/packages', [PackageAdminController::class, 'index'])->name('packages.index');
             Route::get('/auto-debits', [AutoDebitAdminController::class, 'index'])->name('autodebits.index');
+            Route::post('/auto-debits/{mandate}/retry', [AutoDebitAdminController::class, 'retry'])->middleware('step-up')->name('autodebits.retry');
+            Route::post('/auto-debits/{mandate}/stop', [AutoDebitAdminController::class, 'stop'])->middleware('step-up')->name('autodebits.stop');
             Route::get('/wallet', [WalletController::class, 'adminSettings'])->name('wallet.settings');
             Route::get('/telemedicine', [TelemedicineAdminController::class, 'index'])->name('telemedicine.index');
             Route::get('/accounting', [AccountingAdminController::class, 'index'])->name('accounting.index');
@@ -156,6 +159,8 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/resellers', [ResellerController::class, 'admin'])->name('resellers.index');
             Route::post('/resellers', [ResellerController::class, 'store'])->name('resellers.store');
             Route::post('/resellers/{reseller}/pay', [ResellerController::class, 'pay'])->name('resellers.pay');
+            Route::put('/resellers/{reseller}', [ResellerController::class, 'update'])->whereNumber('reseller')->name('resellers.update');
+            Route::post('/resellers/{reseller}/invite', [ResellerController::class, 'invite'])->whereNumber('reseller')->name('resellers.invite');
             Route::get('/reviews', [FlaggedReviewsController::class, 'index'])->name('reviews.index');
             Route::post('/reviews/{flag}', [FlaggedReviewsController::class, 'decide'])->name('reviews.decide');
             Route::get('/groups', [GroupController::class, 'admin'])->name('groups.index');
@@ -184,6 +189,8 @@ foreach ($centralDomains as $index => $domain) {
             Route::get('/pages', [CmsAdminController::class, 'index'])->name('pages.index');
             Route::post('/pages', [CmsAdminController::class, 'save'])->name('pages.save');
             Route::put('/packages/{package}', [PackageAdminController::class, 'update'])->name('packages.update');
+            Route::post('/packages', [PackageAdminController::class, 'store'])->name('packages.store');
+            Route::put('/packages/{package}/details', [PackageAdminController::class, 'details'])->name('packages.details');
             Route::get('/payments', [PaymentAdminController::class, 'index'])->name('payments.index');
             Route::put('/payments/{gateway}', [PaymentAdminController::class, 'update'])->name('payments.update')->middleware('step-up.live');
             Route::post('/payments/{gateway}/test', [PaymentAdminController::class, 'test'])->name('payments.test');
