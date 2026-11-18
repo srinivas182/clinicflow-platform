@@ -134,6 +134,7 @@ export default function Subscription({
     invoices,
     autoDebit,
     autoDebitAvailable,
+    cardSaveAvailable = false,
     platformGateway,
 }: {
     plan: {
@@ -148,6 +149,7 @@ export default function Subscription({
     invoices: Inv[];
     autoDebit: AutoDebit | null;
     autoDebitAvailable: boolean;
+    cardSaveAvailable?: boolean;
     platformGateway: string | null;
 }) {
     const [consent, setConsent] = useState(false);
@@ -266,6 +268,38 @@ export default function Subscription({
                         >
                             Pay {rand(open.total, 2)} and turn on automatic
                             payment
+                        </Button>
+                    </div>
+                ) : cardSaveAvailable ? (
+                    <div className="text-sm">
+                        <label className="flex items-start gap-2">
+                            <input
+                                type="checkbox"
+                                checked={consent}
+                                onChange={(e) => setConsent(e.target.checked)}
+                                className="mt-0.5 accent-teal"
+                            />
+                            <span>
+                                I authorise Dr Business Flow to save my card
+                                with {platformGateway} and charge it for future
+                                subscription invoices on their due date. A R1
+                                card check is charged and refunded straight
+                                away. I can switch this off at any time.
+                            </span>
+                        </label>
+                        <Button
+                            className="mt-3"
+                            disabled={!consent}
+                            onClick={() =>
+                                router.post(
+                                    "/settings/subscription/save-card",
+                                    {
+                                        consent: true,
+                                    },
+                                )
+                            }
+                        >
+                            Save a card for automatic payment
                         </Button>
                     </div>
                 ) : (

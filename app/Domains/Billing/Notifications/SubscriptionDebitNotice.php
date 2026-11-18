@@ -22,6 +22,7 @@ class SubscriptionDebitNotice extends Notification
         public string $amount,
         public string $card,
         public ?string $detail = null,
+        public ?string $payUrl = null,
     ) {}
 
     /**
@@ -45,8 +46,9 @@ class SubscriptionDebitNotice extends Notification
             'failed' => $mail->line("We could not collect {$this->amount} from your {$this->card} for invoice {$this->invoiceNumber}.")
                 ->line($this->detail ?? '')
                 ->line('We will try again automatically. You can also pay now from Settings → Subscription.'),
-            default => $mail->line("We tried three times to collect {$this->amount} for invoice {$this->invoiceNumber} and stopped.")
-                ->line('Please pay from Settings → Subscription. Your workspace becomes read-only 7 days after the due date if the invoice stays unpaid.'),
+            default => tap($mail->line("We tried three times to collect {$this->amount} for invoice {$this->invoiceNumber} and stopped. The saved card has been switched off.")
+                ->line('Please pay now. Your workspace becomes read-only 7 days after the due date if the invoice stays unpaid. You can save a new card on the Subscription page.'),
+                fn (MailMessage $m) => $this->payUrl !== null ? $m->action('Pay now', $this->payUrl) : null),
         };
     }
 }

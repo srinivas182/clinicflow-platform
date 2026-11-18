@@ -19,18 +19,24 @@ class SaveBillingMandate
 {
     public function handle(SubscriptionInvoice $invoice, Gateway $gateway, GatewayMode $mode, MandateDetails $details): BillingMandate
     {
-        return DB::transaction(function () use ($invoice, $gateway, $mode, $details): BillingMandate {
-            $existing = BillingMandate::query()->where('tenant_id', $invoice->tenant_id)
+        return $this->forTenant($invoice->tenant_id, $gateway, $mode, $details, $invoice->save_card_consented_by, $invoice->save_card_consent_ip);
+    }
+
+    /** Saves a card with the owner's recorded consent (from an invoice payment or a R1 card check). */
+    public function forTenant(string $tenantId, Gateway $gateway, GatewayMode $mode, MandateDetails $details, ?int $consentedBy, ?string $consentIp): BillingMandate
+    {
+        return DB::transaction(function () use ($tenantId, $gateway, $mode, $details, $consentedBy, $consentIp): BillingMandate {
+            $existing = BillingMandate::query()->where('tenant_id', $tenantId)
                 ->where('token_hash', BillingMandate::hashToken($details->token))->first();
             if ($existing instanceof BillingMandate) {
                 return $existing;
             }
 
-            BillingMandate::query()->where('tenant_id', $invoice->tenant_id)->where('status', BillingMandate::ACTIVE)
+            BillingMandate::query()->where('tenant_id', $tenantId)->where('status', BillingMandate::ACTIVE)
                 ->update(['status' => BillingMandate::REVOKED, 'revoked_at' => now(), 'revoke_note' => 'Replaced by a new card']);
 
             $mandate = BillingMandate::create([
-                'tenant_id' => $invoice->tenant_id,
+                'tenant_id' => $tenantId,
                 'gateway' => $gateway,
                 'mode' => $mode,
                 'token' => $details->token,
@@ -40,12 +46,12 @@ class SaveBillingMandate
                 'card_last4' => $details->last4,
                 'card_expiry' => $details->expiry,
                 'status' => BillingMandate::ACTIVE,
-                'consented_by' => $invoice->save_card_consented_by,
-                'consent_ip' => $invoice->save_card_consent_ip,
+                'consented_by' => $consentedBy,
+                'consent_ip' => $consentIp,
                 'consented_at' => now(),
             ]);
 
-            activity('platform')->performedOn($invoice->provider)->withProperties(['gateway' => $gateway->value, 'card' => $mandate->label()])
+            activity('platform')->performedOn($mandate->provider)->withProperties(['gateway' => $gateway->value, 'card' => $mandate->label()])
                 ->log('Automatic payment switched on');
 
             return $mandate;

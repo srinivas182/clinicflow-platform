@@ -206,6 +206,7 @@ Route::middleware([
         Route::post('/settings/verification/{check}', [VerificationSettingsController::class, 'resubmit'])->whereNumber('check')->name('settings.verification.resubmit');
         Route::post('/settings/subscription/invoices/{number}/auto-pay', [SubscriptionBillingController::class, 'payWithAutoDebit'])->name('settings.subscription.autopay');
         Route::post('/settings/subscription/plan', [SubscriptionBillingController::class, 'changePlan'])->name('settings.subscription.plan');
+        Route::post('/settings/subscription/save-card', [SubscriptionBillingController::class, 'saveCard'])->name('settings.subscription.savecard');
     });
 
     Route::middleware(['auth', 'workspace', 'provider.writable'])->group(function (): void {

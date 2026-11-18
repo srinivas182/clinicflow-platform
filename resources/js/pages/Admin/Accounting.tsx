@@ -38,6 +38,9 @@ function AppCard({
     const [map, setMap] = useState<Record<string, string>>(
         a.platform?.map ?? {},
     );
+    // On/off and schedule for the platform's own books (beta #78).
+    const [enabled, setEnabled] = useState(a.platform?.enabled ?? false);
+    const [schedule, setSchedule] = useState(a.platform?.autoExport ?? "daily");
 
     return (
         <Card
@@ -130,6 +133,31 @@ function AppCard({
                             {a.platform.error}
                         </p>
                     )}
+                    <div className="mb-2 flex flex-wrap items-center gap-4">
+                        <label className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                className="accent-teal"
+                                checked={enabled}
+                                onChange={(e) => setEnabled(e.target.checked)}
+                            />
+                            Post the platform's books to {a.label}
+                        </label>
+                        <label className="flex items-center gap-2">
+                            Schedule
+                            <select
+                                className="rounded-md border border-line px-2 py-1"
+                                value={schedule}
+                                onChange={(e) => setSchedule(e.target.value)}
+                            >
+                                <option value="off">
+                                    Off (export by hand)
+                                </option>
+                                <option value="daily">Daily</option>
+                                <option value="hourly">Hourly</option>
+                            </select>
+                        </label>
+                    </div>
                     {accounts.map((k) => (
                         <label key={k} className="mb-1 flex items-center gap-2">
                             <span className="w-48">{k}</span>
@@ -149,15 +177,15 @@ function AppCard({
                             router.put(
                                 `/admin/accounting/${a.driver}/platform`,
                                 {
-                                    enabled: true,
-                                    auto_export: "daily",
+                                    enabled,
+                                    auto_export: schedule,
                                     account_map: map,
                                 },
                                 { preserveScroll: true },
                             )
                         }
                     >
-                        Save and make active
+                        Save
                     </Button>{" "}
                     {a.platform.enabled && (
                         <Button

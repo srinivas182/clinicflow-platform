@@ -18,6 +18,8 @@ interface Reseller {
     percent: number;
     months: number;
     link: string;
+    active?: boolean;
+    linked?: boolean;
     referrals: { practice: string; referred: string }[];
     periods: Period[];
 }
@@ -56,13 +58,82 @@ export default function Resellers({ resellers }: { resellers: Reseller[] }) {
                     key={r.id}
                     title={`${r.name} · ${r.code}`}
                     aside={
-                        <Badge>
-                            {r.percent}% for {r.months} months
+                        <Badge tone={r.active === false ? "neutral" : "teal"}>
+                            {r.active === false
+                                ? "switched off"
+                                : `${r.percent}% for ${r.months} months`}
                         </Badge>
                     }
                     className="mb-4"
                 >
                     <p className="mb-2 font-mono text-xs">{r.link}</p>
+                    <p className="mb-2 flex flex-wrap gap-3 text-xs">
+                        <button
+                            type="button"
+                            className="font-medium text-teal-deep"
+                            onClick={() => {
+                                const percent = ask(
+                                    "Commission % for practices referred from now on (0–50)",
+                                    String(r.percent),
+                                );
+                                const months = percent
+                                    ? ask(
+                                          "For how many months (1–60)",
+                                          String(r.months),
+                                      )
+                                    : "";
+                                if (percent && months)
+                                    router.put(
+                                        `/admin/resellers/${r.id}`,
+                                        {
+                                            commission_percent: percent,
+                                            commission_months: months,
+                                            active: r.active !== false,
+                                        },
+                                        { preserveScroll: true },
+                                    );
+                            }}
+                        >
+                            Change commission
+                        </button>
+                        <button
+                            type="button"
+                            className="font-medium text-teal-deep"
+                            onClick={() =>
+                                window.confirm(
+                                    r.active === false
+                                        ? `Switch ${r.name} on again?`
+                                        : `Switch ${r.name} off? Their link stops working; commission already earned is still paid.`,
+                                ) &&
+                                router.put(
+                                    `/admin/resellers/${r.id}`,
+                                    {
+                                        commission_percent: r.percent,
+                                        commission_months: r.months,
+                                        active: r.active === false,
+                                    },
+                                    { preserveScroll: true },
+                                )
+                            }
+                        >
+                            {r.active === false ? "Switch on" : "Switch off"}
+                        </button>
+                        <button
+                            type="button"
+                            className="font-medium text-teal-deep"
+                            onClick={() =>
+                                router.post(
+                                    `/admin/resellers/${r.id}/invite`,
+                                    {},
+                                    { preserveScroll: true },
+                                )
+                            }
+                        >
+                            {r.linked
+                                ? "Email portal link again"
+                                : "Invite to the reseller portal"}
+                        </button>
+                    </p>
                     <p className="mb-2 text-sm">
                         Referred:{" "}
                         {r.referrals
