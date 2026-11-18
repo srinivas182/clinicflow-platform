@@ -50,7 +50,7 @@ class DemoDataCommand extends Command
         if ($this->option('remove')) {
             return $this->remove();
         }
-        $email = strtolower(trim((string) $this->option('email')));
+        $email = strtolower(trim(is_string($given = $this->option('email')) ? $given : ''));
         if ($email !== '' && ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $this->error('That email does not look right. Leave --email out to use demo addresses.');
 
