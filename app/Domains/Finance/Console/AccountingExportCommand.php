@@ -19,7 +19,7 @@ class AccountingExportCommand extends Command
 
     public function handle(JournalExporter $exporter): int
     {
-        $frequency = is_string($value = $this->argument('frequency')) ? $value : '';
+        $frequency = (string) $this->argument('frequency');
         $platform = PlatformAccountingConnection::query()->where('enabled', true)->where('auto_export', $frequency)->first();
         $platformApp = $platform === null ? null : AccountingApp::query()->where('driver', $platform->driver->value)->first();
         if ($platform instanceof PlatformAccountingConnection && $platformApp instanceof AccountingApp) {
