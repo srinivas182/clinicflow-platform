@@ -21,7 +21,7 @@ class SetupAuthenticatorCommand extends Command
 
     public function handle(): int
     {
-        $user = User::query()->where('email', strtolower(trim((string) $this->argument('email'))))->first();
+        $user = User::query()->where('email', strtolower(trim(is_string($email = $this->argument('email')) ? $email : '')))->first();
         if (! $user instanceof User) {
             $this->error('No account with that email.');
 
