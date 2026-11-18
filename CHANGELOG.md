@@ -4,6 +4,11 @@ All notable changes to Clinic Flow are recorded here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.81.3] — Security: dependency advisories
+
+### Security
+- Updated Laravel (13.34 → 13.43) and Symfony components (8.1.x patch releases) to clear 9 published advisories: Laravel concurrency task output injection; Symfony filesystem path escape, trusted-proxy and host/URL handling in http-foundation and http-kernel, email header injection in mime (medium), and routing host placeholders. Patch and minor releases only, within the existing version ranges.
+
 ## [0.81.2] — Centred website footer
 
 ### Changed
