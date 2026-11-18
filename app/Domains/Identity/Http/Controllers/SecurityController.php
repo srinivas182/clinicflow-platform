@@ -10,7 +10,6 @@ use App\Domains\Identity\Support\PasswordRules;
 use App\Domains\Messaging\Actions\SendMessage;
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Auth\SessionGuard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -85,9 +84,7 @@ class SecurityController extends Controller
             throw ValidationException::withMessages(['current_password' => 'Your current password is not correct.']);
         }
         $user->forceFill(['password' => $data['password']])->save();
-        $guard = Auth::guard('web');
-        abort_unless($guard instanceof SessionGuard, 500);
-        $guard->logoutOtherDevices($data['password']);
+        Auth::guard('web')->logoutOtherDevices($data['password']);
         app(TrustedDevices::class)->forget($user);
         activity('auth')->causedBy($user)->log('Password changed');
         if ($user->email !== '') {
@@ -106,9 +103,7 @@ class SecurityController extends Controller
         if (! Hash::check($request->string('password')->toString(), (string) $user->password)) {
             throw ValidationException::withMessages(['password' => 'That password is not correct.']);
         }
-        $guard = Auth::guard('web');
-        abort_unless($guard instanceof SessionGuard, 500);
-        $guard->logoutOtherDevices($request->string('password')->toString());
+        Auth::guard('web')->logoutOtherDevices($request->string('password')->toString());
         app(TrustedDevices::class)->forget($user);
         activity('auth')->causedBy($user)->log('Signed out other devices');
 
